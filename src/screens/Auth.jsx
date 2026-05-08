@@ -56,14 +56,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop }) {
     try {
       const { error: signUpError } = await supabase.auth.signUp({ email, password })
       if (signUpError) throw signUpError
-      // Sign in immediately to get a guaranteed fresh session before the RLS insert
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password })
       if (loginError) throw loginError
       const user = loginData.user
-      const { error: insertError } = await supabase.from('users').insert({
-        id: user.id, name, email, grade, zip, school, role: 'teen', interests,
-      })
-      if (insertError) throw insertError
+      // Trigger already created the row — just update it with profile details
+      const { error: updateError } = await supabase.from('users')
+        .update({ name, grade, zip, school, role: 'teen', interests })
+        .eq('id', user.id)
+      if (updateError) throw updateError
       const dbUser = { id: user.id, name, email, grade, zip, school, role: 'teen', interests }
       onLoggedIn(user, dbUser)
     } catch (e) {
