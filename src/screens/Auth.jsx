@@ -54,13 +54,12 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop }) {
     setLoading(true)
     setError('')
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+      const { error: signUpError } = await supabase.auth.signUp({ email, password })
       if (signUpError) throw signUpError
-      const user = data.user
-      // Ensure session is active before insert so RLS auth.uid() is populated
-      if (data.session) {
-        await supabase.auth.setSession(data.session)
-      }
+      // Sign in immediately to get a guaranteed fresh session before the RLS insert
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password })
+      if (loginError) throw loginError
+      const user = loginData.user
       const { error: insertError } = await supabase.from('users').insert({
         id: user.id, name, email, grade, zip, school, role: 'teen', interests,
       })
