@@ -1,122 +1,155 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
+import { T } from './lib/theme'
+import Auth from './screens/Auth'
+import Feed from './screens/Feed'
+import Explore from './screens/Explore'
+import OpportunityDetail from './screens/OpportunityDetail'
+import LogHours from './screens/LogHours'
+import Impact from './screens/Impact'
+import Profile from './screens/Profile'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+const NAV = [
+  { id: 'feed',     icon: '🏠', label: 'Feed' },
+  { id: 'explore',  icon: '🔍', label: 'Explore' },
+  { id: 'loghours', icon: '⏱', label: 'Log Hours' },
+  { id: 'impact',   icon: '⭐', label: 'Impact' },
+  { id: 'profile',  icon: '👤', label: 'Profile' },
+]
+
+const PROTECTED = ['feed', 'loghours', 'impact', 'profile']
+
+export default function App() {
+  const [authUser, setAuthUser]       = useState(null)
+  const [dbUser, setDbUser]           = useState(null)
+  const [activeScreen, setActiveScreen] = useState('landing')
+  const [selectedOpp, setSelectedOpp] = useState(null)
+  const [isGuest, setIsGuest]         = useState(false)
+  const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
+  const [appLoading, setAppLoading]   = useState(true)
+
+  useEffect(() => {
+    const handle = () => setIsDesktop(window.innerWidth >= 1024)
+    window.addEventListener('resize', handle)
+    return () => window.removeEventListener('resize', handle)
+  }, [])
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session) {
+        setAuthUser(session.user)
+        const { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
+        setDbUser(data)
+        setActiveScreen('feed')
+      }
+      setAppLoading(false)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setAuthUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const navigate = (screen) => {
+    if (PROTECTED.includes(screen) && !authUser && !isGuest) {
+      setActiveScreen('landing')
+      return
+    }
+    setSelectedOpp(null)
+    setActiveScreen(screen)
+  }
+
+  const handleLoggedIn = (user, db) => {
+    setAuthUser(user)
+    setDbUser(db)
+    setIsGuest(false)
+    setActiveScreen('feed')
+  }
+
+  const handleSignOut = () => {
+    setAuthUser(null)
+    setDbUser(null)
+    setIsGuest(false)
+    setActiveScreen('landing')
+  }
+
+  const handleGuest = () => {
+    setIsGuest(true)
+    setActiveScreen('explore')
+  }
+
+  if (appLoading) {
+    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: 16, color: T.textMuted }}>Loading Give Hour...</div>
+  }
+
+  const showNav = authUser && !selectedOpp && NAV.some(n => n.id === activeScreen)
+
+  const mainContent = () => {
+    if (selectedOpp) {
+      return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest} onSignUp={() => { setSelectedOpp(null); setActiveScreen('userType') }} />
+    }
+    if (!authUser && !isGuest) {
+      return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} />
+    }
+    switch (activeScreen) {
+      case 'feed':     return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
+      case 'explore':  return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => setActiveScreen('userType')} />
+      case 'loghours': return <LogHours user={dbUser} />
+      case 'impact':   return <Impact user={dbUser} />
+      case 'profile':  return <Profile user={dbUser} onSignOut={handleSignOut} />
+      default:         return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} />
+    }
+  }
+
+  if (isDesktop && showNav) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+        {/* sidebar */}
+        <div style={{ width: 220, background: T.card, borderRight: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+          <div style={{ padding: '22px 20px 18px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #18A050, #0E7A3C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16, fontWeight: 700, flexShrink: 0 }}>GH</div>
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Give Hour</div>
+              <div style={{ fontSize: 10, color: T.textMuted }}>Teen Portal</div>
+            </div>
+          </div>
+          <nav style={{ padding: '14px 12px', flex: 1 }}>
+            {NAV.map(({ id, icon, label }) => (
+              <button key={id} onClick={() => navigate(id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D', fontWeight: activeScreen === id ? 600 : 400, fontSize: 14, fontFamily: 'inherit', marginBottom: 4 }}>
+                <span style={{ fontSize: 16 }}>{icon}</span>
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
+        {/* main */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          {mainContent()}
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        {mainContent()}
+      </div>
+      {showNav && (
+        <nav style={{ background: T.card, borderTop: `1px solid ${T.border}`, paddingBottom: 8, display: 'flex', flexShrink: 0 }}>
+          {NAV.map(({ id, icon, label }) => {
+            const active = activeScreen === id
+            return (
+              <button key={id} onClick={() => navigate(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px 0', background: 'none', border: 'none', cursor: 'pointer', gap: 3 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: active ? T.primaryLight : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</div>
+                <span style={{ fontSize: 9, fontWeight: active ? 600 : 400, color: active ? T.primary : T.textMuted }}>{label}</span>
+              </button>
+            )
+          })}
+        </nav>
+      )}
+    </div>
   )
 }
-
-export default App
