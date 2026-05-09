@@ -61,7 +61,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin 
       {isGuest ? (
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg, #18A050, #0E7A3C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>GH</div>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Give Hour</div>
           </div>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

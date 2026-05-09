@@ -90,7 +90,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     return wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: isDesktop ? 'auto' : '100%', background: T.card }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
-          <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #18A050, #0E7A3C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 24, fontWeight: 700, boxShadow: '0 8px 24px rgba(24,160,80,0.3)', marginBottom: 24 }}>GH</div>
+          <img src="/logo.png" alt="Give Hour" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 8px 24px rgba(24,160,80,0.3)', marginBottom: 24 }} />
           <h1 style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2, margin: '0 0 10px', color: T.text }}>Give an Hour.<br />Change a Life.</h1>
           <p style={{ fontSize: 14, color: T.textSub, maxWidth: 280, lineHeight: 1.7, margin: '0 0 28px' }}>Find personalized volunteer opportunities, track your hours, and build your college application story.</p>
           <div style={{ display: 'flex', gap: 20, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, padding: '14px 20px' }}>

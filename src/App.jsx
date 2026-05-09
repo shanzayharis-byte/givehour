@@ -110,7 +110,7 @@ export default function App() {
         {/* sidebar */}
         <div style={{ width: 220, background: T.card, borderRight: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <button onClick={() => navigate('feed')} style={{ padding: '22px 20px 18px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #18A050, #0E7A3C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16, fontWeight: 700, flexShrink: 0 }}>GH</div>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Give Hour</div>
               <div style={{ fontSize: 10, color: T.textMuted }}>Teen Portal</div>
