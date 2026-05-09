@@ -22,7 +22,7 @@ function OppCard({ opp, onSelect }) {
   )
 }
 
-export default function Explore({ user, onSelectOpp, isGuest, onSignUp }) {
+export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin }) {
   const [opps, setOpps] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeCause, setActiveCause] = useState('All')
@@ -58,26 +58,23 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp }) {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg, display: 'flex', flexDirection: 'column' }}>
-      {isGuest && (
-        <div style={{ background: T.primary, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.9)' }}>Sign up to track hours & personalize your feed</span>
-          <button onClick={onSignUp} style={{ background: '#fff', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 700, color: T.primary, cursor: 'pointer' }}>Sign up</button>
-        </div>
-      )}
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {isGuest && (
+      {isGuest ? (
+        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg, #18A050, #0E7A3C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>GH</div>
-          )}
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>{isGuest ? 'Give Hour' : 'Explore'}</div>
-            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>{isGuest ? 'Browse volunteer opportunities' : 'Browse all opportunities'}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Give Hour</div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button onClick={onLogin} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 20, padding: '7px 18px', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Log in</button>
+            <button onClick={onSignUp} style={{ background: T.primary, border: 'none', borderRadius: 20, padding: '7px 18px', fontSize: 13, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Sign up free</button>
           </div>
         </div>
-        {isGuest && (
-          <button onClick={onSignUp} style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 20, padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Sign up free</button>
-        )}
-      </div>
+      ) : (
+        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Explore</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Browse all opportunities</div>
+        </div>
+      )}
       <div style={{ padding: isDesktop ? '32px 40px' : '14px 20px', flex: 1 }}>
         {/* search */}
         <div style={{ display: 'flex', flexDirection: 'row', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', gap: 8, marginBottom: 14, alignItems: 'center' }}>

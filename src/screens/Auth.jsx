@@ -28,8 +28,8 @@ const topBar = (title, subtitle, onBack) => (
   </div>
 )
 
-export default function Auth({ onLoggedIn, onGuest, isDesktop }) {
-  const [screen, setScreen] = useState('landing')
+export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) {
+  const [screen, setScreen] = useState(initialScreen || 'landing')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 

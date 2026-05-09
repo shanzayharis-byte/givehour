@@ -91,15 +91,15 @@ export default function App() {
       return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest} onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('landing') }} />
     }
     if (!authUser && !isGuest) {
-      return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} />
+      return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : 'landing'} />
     }
     switch (activeScreen) {
       case 'feed':     return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
-      case 'explore':  return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('landing') }} />
+      case 'explore':  return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('landing') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} />
       case 'loghours': return <LogHours user={dbUser} />
       case 'impact':   return <Impact user={dbUser} />
       case 'profile':  return <Profile user={dbUser} onSignOut={handleSignOut} />
-      default:         return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} />
+      default:         return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : 'landing'} />
     }
   }
 
