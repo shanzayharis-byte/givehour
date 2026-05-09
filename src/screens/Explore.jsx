@@ -64,9 +64,19 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp }) {
           <button onClick={onSignUp} style={{ background: '#fff', border: 'none', borderRadius: 20, padding: '5px 12px', fontSize: 12, fontWeight: 700, color: T.primary, cursor: 'pointer' }}>Sign up</button>
         </div>
       )}
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0 }}>
-        <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Explore</div>
-        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Browse all opportunities</div>
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {isGuest && (
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg, #18A050, #0E7A3C)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700, flexShrink: 0 }}>GH</div>
+          )}
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>{isGuest ? 'Give Hour' : 'Explore'}</div>
+            <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>{isGuest ? 'Browse volunteer opportunities' : 'Browse all opportunities'}</div>
+          </div>
+        </div>
+        {isGuest && (
+          <button onClick={onSignUp} style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 20, padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Sign up free</button>
+        )}
       </div>
       <div style={{ padding: isDesktop ? '32px 40px' : '14px 20px', flex: 1 }}>
         {/* search */}
