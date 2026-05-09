@@ -913,11 +913,28 @@ Settings card (white, border, border-radius 12px, overflow hidden):
 
 ## System 2 — Data pipeline reference
 
-> Build System 2 only after System 1 is live and approved.
+> **Status: NOT STARTED — waiting on Azure account setup by Shanzay**
+> Build System 2 only after System 1 is live and approved. System 1 is complete as of 2026-05-09.
 
 ### What it does
 
 Runs automatically every night at midnight via Azure Data Factory. Takes raw data, cleans it, scores it against every teen's profile, aggregates hours, and builds a personalized feed. Writes 4 processed tables back to Supabase.
+
+### Azure setup checklist (Shanzay creates these)
+
+- [ ] Sign up at portal.azure.com (free tier — $200 credit for 30 days)
+- [ ] Create Resource Group: `givehour-rg`
+- [ ] Create Azure Data Lake Storage account inside `givehour-rg` — containers: `raw/` and `processed/`
+- [ ] Create Azure Data Factory: `givehour-adf` inside `givehour-rg`
+- [ ] Create Databricks workspace inside `givehour-rg`
+- [ ] Share Resource Group name when done so we can start writing notebooks
+
+### Build checklist (Claude + Faiz do this once Azure exists)
+
+- [ ] Write 4 Python notebooks in Databricks (see table below)
+- [ ] Connect Databricks to Supabase (read users/opportunities, write output tables)
+- [ ] Wire ADF pipeline to run 4 notebooks in sequence nightly at midnight Pacific
+- [ ] Test a full pipeline run end to end
 
 ### The 4 Databricks notebooks
 
