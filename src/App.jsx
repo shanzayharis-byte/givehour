@@ -88,14 +88,14 @@ export default function App() {
 
   const mainContent = () => {
     if (selectedOpp) {
-      return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest} onSignUp={() => { setSelectedOpp(null); setActiveScreen('userType') }} />
+      return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest} onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('landing') }} />
     }
     if (!authUser && !isGuest) {
       return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} />
     }
     switch (activeScreen) {
       case 'feed':     return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
-      case 'explore':  return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => setActiveScreen('userType')} />
+      case 'explore':  return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('landing') }} />
       case 'loghours': return <LogHours user={dbUser} />
       case 'impact':   return <Impact user={dbUser} />
       case 'profile':  return <Profile user={dbUser} onSignOut={handleSignOut} />
