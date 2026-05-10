@@ -20,6 +20,41 @@ function deriveCause(activities = []) {
   return 'Education' // sensible default
 }
 
+// AGE_GROUP values: '18+ Only' | '16+' | '15+' | 'Teens (13-17)' | 'All Ages' | 'Open'
+function deriveAgeGroup(description = '', title = '') {
+  const text = (description + ' ' + title).toLowerCase()
+
+  // Adults only — hard stop for teens
+  if (/must be 18|18\s*\+|18 years or older|18 and over|18 or older|minimum age.*18|age.*18.*require|adults only/.test(text)) return '18+ Only'
+
+  // 16 or 17 minimum
+  if (/must be 16|16\s*\+|minimum.*16|at least 16|16 years or older|16 and over/.test(text)) return '16+'
+
+  // 15 minimum
+  if (/must be 15|15\s*\+|minimum.*15|at least 15/.test(text)) return '15+'
+
+  // 14 minimum or explicitly for teens
+  if (/must be 14|14\s*\+|minimum.*14|at least 14/.test(text)) return '14+'
+
+  // Explicitly for youth / teens / high school
+  if (/\bteen\b|teenager|high school student|ages?\s+1[3-7]|youth.*1[3-7]|1[3-7].*youth|grades?\s+[6-9]|grades?\s+1[012]|middle school|secondary school/.test(text)) return 'Teens (13-17)'
+
+  // All ages or family friendly
+  if (/all ages|family.{0,15}friendly|open to all|no age|any age|everyone/.test(text)) return 'All Ages'
+
+  return 'Open' // no restriction stated
+}
+
+const AGE_STYLE = {
+  '18+ Only':     { bg: '#FEE8E8', text: '#C0180A', label: '18+ Only' },
+  '16+':          { bg: '#FFF3E0', text: '#B45000', label: '16+' },
+  '15+':          { bg: '#FFF8E0', text: '#8A6000', label: '15+' },
+  '14+':          { bg: '#FFFDE0', text: '#6B5800', label: '14+' },
+  'Teens (13-17)':{ bg: '#E6F7EE', text: '#0A6830', label: '🧑 Teens' },
+  'All Ages':     { bg: '#E8F0FF', text: '#1A4DA0', label: '✓ All Ages' },
+  'Open':         { bg: '#F2F4F6', text: '#60666D', label: 'Open' },
+}
+
 function deriveLocation(item) {
   if (item.remote_or_online) return 'Remote / Online'
   const { audience } = item
@@ -34,6 +69,7 @@ function mapOpp(item) {
     org:         item.organization?.name || '',
     orgLogo:     item.organization?.logo || '',
     cause:       deriveCause(item.activities),
+    ageGroup:    deriveAgeGroup(item.description, item.title),
     hours:       item.duration || '',
     location:    deriveLocation(item),
     date:        item.dates || '',
@@ -46,9 +82,13 @@ function mapOpp(item) {
 
 function OppCard({ opp, onSelect }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
+  const age   = AGE_STYLE[opp.ageGroup] || AGE_STYLE['Open']
   return (
     <div onClick={() => onSelect(opp)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
-      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 3 }}>{opp.org}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 3, gap: 8 }}>
+        <div style={{ fontSize: 12, color: T.textMuted }}>{opp.org}</div>
+        <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: age.bg, color: age.text, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0 }}>{age.label}</span>
+      </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
         <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500 }}>{opp.cause}</span>
@@ -69,6 +109,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError]         = useState(null)
   const [activeCause, setActiveCause] = useState('All')
+  const [teenOnly, setTeenOnly]   = useState(false)
   const [search, setSearch]       = useState('')
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
 
@@ -98,14 +139,16 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
 
   useEffect(() => { fetchPage(1, true) }, [fetchPage])
 
+  const TEEN_OK = new Set(['Teens (13-17)', 'All Ages', 'Open', '14+', '15+', '16+'])
   const filtered = opps.filter(o => {
     const matchCause  = activeCause === 'All' ? true
                       : activeCause === 'Remote' ? o.remote
                       : o.cause === activeCause
+    const matchTeen   = !teenOnly || TEEN_OK.has(o.ageGroup)
     const matchSearch = !search
       || o.title.toLowerCase().includes(search.toLowerCase())
       || o.org.toLowerCase().includes(search.toLowerCase())
-    return matchCause && matchSearch
+    return matchCause && matchTeen && matchSearch
   })
 
   return (
@@ -135,13 +178,17 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search opportunities..." style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
         </div>
 
-        {/* cause pills */}
-        <div style={{ display: 'flex', flexDirection: 'row', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
+        {/* cause pills + teen filter */}
+        <div style={{ display: 'flex', flexDirection: 'row', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4, alignItems: 'center' }}>
           {CAUSES.map(c => (
             <button key={c} onClick={() => setActiveCause(c)} style={{ borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 500, whiteSpace: 'nowrap', cursor: 'pointer', border: `1.5px solid ${activeCause === c ? T.primary : T.border}`, background: activeCause === c ? T.primary : '#fff', color: activeCause === c ? '#fff' : T.textSub }}>
               {c}
             </button>
           ))}
+          <div style={{ width: 1, height: 24, background: T.border, flexShrink: 0, margin: '0 2px' }} />
+          <button onClick={() => setTeenOnly(v => !v)} style={{ borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0, border: `1.5px solid ${teenOnly ? '#0A6830' : T.border}`, background: teenOnly ? '#E6F7EE' : '#fff', color: teenOnly ? '#0A6830' : T.textSub }}>
+            🧑 Teen Friendly
+          </button>
         </div>
 
         {/* cards */}
