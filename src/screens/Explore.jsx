@@ -61,8 +61,8 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
       {isGuest ? (
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button onClick={onHome} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Give Hour</div>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+            <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>Give Hour</div>
           </button>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button onClick={onLogin} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 20, padding: '7px 18px', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Log in</button>
