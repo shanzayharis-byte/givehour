@@ -51,11 +51,13 @@ export default function Feed({ user, onSelectOpp }) {
           // load personalized feed from clean_listings
           const { data: feed } = await supabase
             .from('personalized_feed')
-            .select('score, rank, clean_listings(*)')
+            .select('score, rank, clean_listings!inner(*)')
             .eq('user_id', user.id)
+            .not('clean_listings.age_group', 'eq', '18+ Only')
             .order('rank')
+            .limit(10)
           if (feed && feed.length > 0) {
-            setOpps(feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) })).filter(o => o.age_group !== '18+ Only'))
+            setOpps(feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) })))
             setLoading(false)
             return
           }
@@ -66,7 +68,7 @@ export default function Feed({ user, onSelectOpp }) {
             setOrgCount(new Set(hours.map(r => r.org)).size)
           }
         }
-        const { data } = await supabase.from('clean_listings').select('*').neq('age_group', '18+ Only').order('fetched_at', { ascending: false }).limit(20)
+        const { data } = await supabase.from('clean_listings').select('*').neq('age_group', '18+ Only').order('fetched_at', { ascending: false }).limit(10)
         setOpps(data || [])
       } catch (e) {
         console.error(e)
