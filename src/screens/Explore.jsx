@@ -4,24 +4,18 @@ import { T, CAUSE } from '../lib/theme'
 // ---------- constants ----------
 const AGE_GROUPS = [
   { key: 'All',           label: 'All' },
-  { key: 'Teens (13-17)', label: '🧑 Teens (13–17)' },
   { key: 'All Ages',      label: '✓ All Ages' },
-  { key: '16+',           label: '16+' },
-  { key: '15+',           label: '15+' },
-  { key: '14+',           label: '14+' },
-  { key: 'Open',          label: 'No Age Listed' },
+  { key: 'Teens (13-17)', label: '🧑 Teens (13–17)' },
   { key: '18+ Only',      label: '18+ Only' },
+  { key: 'Open',          label: 'No Age Listed' },
 ]
 
 // Ordered sections shown when "All" is active
 const SECTIONS = [
-  { key: 'Teens (13-17)', label: '🧑 Teens (13–17)',   desc: 'Made for teen volunteers' },
-  { key: 'All Ages',      label: '✓ All Ages',         desc: 'Everyone is welcome' },
-  { key: '16+',           label: '16 & Up',            desc: 'Open to 16-year-olds and older' },
-  { key: '15+',           label: '15 & Up',            desc: 'Open to 15-year-olds and older' },
-  { key: '14+',           label: '14 & Up',            desc: 'Open to 14-year-olds and older' },
-  { key: 'Open',          label: 'No Age Listed',      desc: 'Age not stated — check the details' },
-  { key: '18+ Only',      label: '18+ Only',           desc: 'Adults only' },
+  { key: 'All Ages',      label: '✓ All Ages',       desc: 'Everyone is welcome' },
+  { key: 'Teens (13-17)', label: '🧑 Teens (13–17)', desc: 'Open to teen volunteers' },
+  { key: '18+ Only',      label: '18+ Only',         desc: 'Adults only' },
+  { key: 'Open',          label: 'No Age Listed',    desc: 'Age not stated — check the details' },
 ]
 
 // ---------- helpers ----------
@@ -43,9 +37,8 @@ function deriveCause(activities = []) {
 function deriveAgeGroup(description = '', title = '', extra = '') {
   const text = (description + ' ' + title + ' ' + extra).toLowerCase()
   if (/must be 18|18\s*[\+&]|18 years or older|18 and over|18 or older|minimum age.*18|age.*18.*require|adults only|adult volunteer|at least 18|18 years of age|age 18|over 18|aged 18/.test(text)) return '18+ Only'
-  if (/must be 16|16\s*[\+&]|minimum.*16|at least 16|16 years or older|16 and over|16 years of age|minimum age.*16|age.*16|over 16|aged 16/.test(text)) return '16+'
-  if (/must be 15|15\s*[\+&]|minimum.*15|at least 15|15 years of age|age.*15|over 15|aged 15/.test(text)) return '15+'
-  if (/must be 14|14\s*[\+&]|minimum.*14|at least 14|14 years of age|age.*14|over 14|aged 14/.test(text)) return '14+'
+  // 14–16 minimums are still teen-accessible, so group with teens
+  if (/must be 1[4-6]|1[4-6]\s*[\+&]|minimum.*1[4-6]|at least 1[4-6]|1[4-6] years or older|1[4-6] and over|1[4-6] years of age|over 1[4-6]|aged 1[4-6]/.test(text)) return 'Teens (13-17)'
   if (/\bteen\b|teenager|high school|high-school|grades?\s+[6-9]|grades?\s+1[012]|middle school|secondary school|ages?\s+1[3-7]|youth.*1[3-7]|1[3-7].*youth|student volunteer|youth volunteer|for youth|youth program|for students/.test(text)) return 'Teens (13-17)'
   if (/all ages|family.{0,20}friendly|open to all|no age|any age|everyone welcome|all welcome|no minimum|no age requirement|any background|of any age/.test(text)) return 'All Ages'
   return 'Open'
