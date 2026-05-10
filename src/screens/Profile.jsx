@@ -7,6 +7,7 @@ const US_REGIONS   = ['Bay Area, CA', 'Los Angeles, CA', 'San Diego, CA', 'New Y
 const DAYS         = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const HOURS_OPTS   = ['1–3 hrs/week', '3–5 hrs/week', '5–10 hrs/week', '10+ hrs/week']
 const GRADES       = ['8th', '9th', '10th', '11th', '12th']
+const AGES         = [13, 14, 15, 16, 17, 18, 19]
 
 function Modal({ title, subtitle, onClose, children }) {
   return (
@@ -33,6 +34,11 @@ export default function Profile({ user, onSignOut }) {
   // school info
   const [schoolName, setSchoolName]   = useState(user?.school_name || '')
   const [grade, setGrade]             = useState(user?.grade || '')
+  const [age, setAge]                 = useState(user?.age || '')
+
+  // name editing
+  const [editingName, setEditingName] = useState(false)
+  const [nameVal, setNameVal]         = useState(user?.name || '')
 
   // availability
   const [availDays, setAvailDays]     = useState(user?.availability_days || [])
@@ -44,6 +50,7 @@ export default function Profile({ user, onSignOut }) {
 
   // modals
   const [showCause, setShowCause]       = useState(false)
+  const [showEditProfile, setShowEditProfile] = useState(false)
   const [showRegion, setShowRegion]     = useState(false)
   const [showSchool, setShowSchool]     = useState(false)
   const [showAvail, setShowAvail]       = useState(false)
@@ -95,8 +102,13 @@ export default function Profile({ user, onSignOut }) {
   }
 
   const saveSchool = async () => {
-    await save({ school_name: schoolName, grade })
+    await save({ school_name: schoolName, grade, age: age ? parseInt(age) : null })
     setShowSchool(false)
+  }
+
+  const saveName = async () => {
+    await save({ name: nameVal })
+    setShowEditProfile(false)
   }
 
   const toggleDay = (day) => {
@@ -123,12 +135,15 @@ export default function Profile({ user, onSignOut }) {
   const profileCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 14 }}>
-        <div style={{ width: 60, height: 60, borderRadius: '50%', background: T.primaryLight, color: T.primary, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(24,160,80,0.3)', flexShrink: 0 }}>{initial}</div>
-        <div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{user?.name || 'Teen'}</div>
-          <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>{grade || user?.grade || ''}{(grade || user?.grade) && (region || user?.zip) ? ' · ' : ''}{region || user?.zip || ''}</div>
+        <div style={{ width: 60, height: 60, borderRadius: '50%', background: T.primaryLight, color: T.primary, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(24,160,80,0.3)', flexShrink: 0 }}>{(nameVal || user?.name || 'U')[0].toUpperCase()}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{nameVal || user?.name || 'Teen'}</div>
+          <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>
+            {age ? `Age ${age}` : ''}{age && (grade || user?.grade) ? ' · ' : ''}{grade || user?.grade || ''}{(age || grade) && (region || user?.zip) ? ' · ' : ''}{region || user?.zip || ''}
+          </div>
           <div style={{ fontSize: 12, color: T.primary, fontWeight: 700, marginTop: 2 }}>{totalHours} hours · {orgCount} orgs helped</div>
         </div>
+        <button onClick={() => setShowEditProfile(true)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
         <div>
@@ -224,6 +239,17 @@ export default function Profile({ user, onSignOut }) {
         </Modal>
       )}
 
+      {/* edit profile */}
+      {showEditProfile && (
+        <Modal title="Edit profile" onClose={() => setShowEditProfile(false)}>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>Name</div>
+            <input value={nameVal} onChange={e => setNameVal(e.target.value)} placeholder="Your name" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+          </div>
+          <button onClick={saveName} style={{ width: '100%', padding: 12, background: T.primary, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Save</button>
+        </Modal>
+      )}
+
       {/* school info */}
       {showSchool && (
         <Modal title="School information" onClose={() => setShowSchool(false)}>
@@ -231,11 +257,19 @@ export default function Profile({ user, onSignOut }) {
             <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>School name</div>
             <input value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="e.g. Mission High School" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 12 }}>
             <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>Grade</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {GRADES.map(g => (
                 <button key={g} onClick={() => setGrade(g)} style={{ padding: '8px 16px', borderRadius: 20, background: grade === g ? T.primary : T.bg, color: grade === g ? '#fff' : T.text, border: `1px solid ${grade === g ? T.primary : T.border}`, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{g}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>Age</div>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {AGES.map(a => (
+                <button key={a} onClick={() => setAge(a)} style={{ padding: '8px 16px', borderRadius: 20, background: age === a ? T.primary : T.bg, color: age === a ? '#fff' : T.text, border: `1px solid ${age === a ? T.primary : T.border}`, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{a}</button>
               ))}
             </div>
           </div>
