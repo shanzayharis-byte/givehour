@@ -7,6 +7,8 @@ const MOCK = [{ cause: 'Housing', hours: 12 }, { cause: 'Education', hours: 8 },
 export default function Impact({ user }) {
   const [totalHours, setTotalHours] = useState(0)
   const [byCause, setByCause] = useState([])
+  const [streakDays, setStreakDays] = useState(0)
+  const [oppCount, setOppCount] = useState(0)
   const [showLetter, setShowLetter] = useState(false)
   const [letter, setLetter] = useState('')
   const [letterLoading, setLetterLoading] = useState(false)
@@ -22,22 +24,18 @@ export default function Impact({ user }) {
   useEffect(() => {
     async function load() {
       try {
-        const { data: stats } = await supabase.from('impact_stats').select('*').eq('user_id', user?.id)
-        if (stats && stats.length > 0) {
-          const total = stats.reduce((s, r) => s + (parseFloat(r.total_hours) || 0), 0)
-          setTotalHours(total)
-          setByCause(stats.map(r => ({ cause: r.cause, hours: parseFloat(r.total_hours) || 0 })))
+        const { data: stats } = await supabase.from('impact_stats').select('*').eq('user_id', user?.id).maybeSingle()
+        if (stats) {
+          setTotalHours(parseFloat(stats.total_hours) || 0)
+          setStreakDays(stats.streak_days || 0)
+          setOppCount(stats.opportunities_count || 0)
+          const causes = stats.causes_helped || []
+          // distribute hours evenly across causes for display
+          const hoursEach = causes.length > 0 ? Math.round((parseFloat(stats.total_hours) || 0) / causes.length * 10) / 10 : 0
+          setByCause(causes.map(cause => ({ cause, hours: hoursEach })))
         } else {
-          const { data: logs } = await supabase.from('hours_log').select('hours, org').eq('user_id', user?.id)
-          if (logs && logs.length > 0) {
-            // we don't have cause in hours_log directly so use mock structure
-            const total = logs.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0)
-            setTotalHours(total)
-            setByCause(MOCK)
-          } else {
-            setTotalHours(26)
-            setByCause(MOCK)
-          }
+          setTotalHours(0)
+          setByCause([])
         }
       } catch (e) {
         setTotalHours(26)
@@ -131,7 +129,7 @@ export default function Impact({ user }) {
         {isDesktop ? (
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 20 }}>
-              {[[totalHours, 'Total Hours', T.primary], [byCause.length, 'Causes', T.accent], [Math.ceil(totalHours / 3), 'Weeks Active', T.warning], [1, 'Letters Ready', '#5B1FA0']].map(([val, lbl, color]) => (
+              {[[totalHours, 'Total Hours', T.primary], [byCause.length, 'Causes', T.accent], [streakDays, 'Day Streak', T.warning], [oppCount, 'Opportunities', '#5B1FA0']].map(([val, lbl, color]) => (
                 <div key={lbl} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: '20px 22px' }}>
                   <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 4 }}>{lbl}</div>
                   <div style={{ fontSize: 30, fontWeight: 700, color }}>{val}</div>

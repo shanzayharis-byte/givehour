@@ -47,26 +47,26 @@ export default function Feed({ user, onSelectOpp }) {
   useEffect(() => {
     async function load() {
       try {
-        // try personalized feed first
         if (user?.id) {
+          // load personalized feed from clean_listings
           const { data: feed } = await supabase
             .from('personalized_feed')
-            .select('*, opportunities(*)')
+            .select('score, rank, clean_listings(*)')
             .eq('user_id', user.id)
             .order('rank')
           if (feed && feed.length > 0) {
-            setOpps(feed.map(r => ({ ...r.opportunities, score: Math.round(r.score) })))
+            setOpps(feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) })))
             setLoading(false)
             return
           }
-          // load hours stats
+          // fallback: load hours stats
           const { data: hours } = await supabase.from('hours_log').select('hours, org').eq('user_id', user.id)
           if (hours) {
             setTotalHours(hours.reduce((s, r) => s + (r.hours || 0), 0))
             setOrgCount(new Set(hours.map(r => r.org)).size)
           }
         }
-        const { data } = await supabase.from('opportunities').select('*').order('created_at', { ascending: false })
+        const { data } = await supabase.from('clean_listings').select('*').order('fetched_at', { ascending: false }).limit(20)
         setOpps(data || [])
       } catch (e) {
         console.error(e)
