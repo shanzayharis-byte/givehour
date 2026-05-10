@@ -40,14 +40,14 @@ function deriveCause(activities = []) {
   return 'Education'
 }
 
-function deriveAgeGroup(description = '', title = '') {
-  const text = (description + ' ' + title).toLowerCase()
-  if (/must be 18|18\s*\+|18 years or older|18 and over|18 or older|minimum age.*18|age.*18.*require|adults only/.test(text)) return '18+ Only'
-  if (/must be 16|16\s*\+|minimum.*16|at least 16|16 years or older|16 and over/.test(text)) return '16+'
-  if (/must be 15|15\s*\+|minimum.*15|at least 15/.test(text)) return '15+'
-  if (/must be 14|14\s*\+|minimum.*14|at least 14/.test(text)) return '14+'
-  if (/\bteen\b|teenager|high school student|ages?\s+1[3-7]|youth.*1[3-7]|1[3-7].*youth|grades?\s+[6-9]|grades?\s+1[012]|middle school|secondary school/.test(text)) return 'Teens (13-17)'
-  if (/all ages|family.{0,15}friendly|open to all|no age|any age|everyone/.test(text)) return 'All Ages'
+function deriveAgeGroup(description = '', title = '', extra = '') {
+  const text = (description + ' ' + title + ' ' + extra).toLowerCase()
+  if (/must be 18|18\s*[\+&]|18 years or older|18 and over|18 or older|minimum age.*18|age.*18.*require|adults only|adult volunteer|at least 18|18 years of age|age 18|over 18|aged 18/.test(text)) return '18+ Only'
+  if (/must be 16|16\s*[\+&]|minimum.*16|at least 16|16 years or older|16 and over|16 years of age|minimum age.*16|age.*16|over 16|aged 16/.test(text)) return '16+'
+  if (/must be 15|15\s*[\+&]|minimum.*15|at least 15|15 years of age|age.*15|over 15|aged 15/.test(text)) return '15+'
+  if (/must be 14|14\s*[\+&]|minimum.*14|at least 14|14 years of age|age.*14|over 14|aged 14/.test(text)) return '14+'
+  if (/\bteen\b|teenager|high school|high-school|grades?\s+[6-9]|grades?\s+1[012]|middle school|secondary school|ages?\s+1[3-7]|youth.*1[3-7]|1[3-7].*youth|student volunteer|youth volunteer|for youth|youth program|for students/.test(text)) return 'Teens (13-17)'
+  if (/all ages|family.{0,20}friendly|open to all|no age|any age|everyone welcome|all welcome|no minimum|no age requirement|any background|of any age/.test(text)) return 'All Ages'
   return 'Open'
 }
 
@@ -65,7 +65,7 @@ function mapOpp(item) {
     org:         item.organization?.name || '',
     orgLogo:     item.organization?.logo || '',
     cause:       deriveCause(item.activities),
-    ageGroup:    deriveAgeGroup(item.description, item.title),
+    ageGroup:    deriveAgeGroup(item.description, item.title, [item.requirements, item.age_restriction, (item.activities || []).map(a => a.name).join(' ')].filter(Boolean).join(' ')),
     hours:       item.duration || '',
     location:    deriveLocation(item),
     date:        item.dates || '',
@@ -95,13 +95,13 @@ function OppCard({ opp, onSelect }) {
 }
 
 // ---------- section header ----------
-function SectionHeader({ section, count }) {
+function SectionHeader({ section, count, hasMore }) {
   const is18 = section.key === '18+ Only'
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12, marginTop: 8 }}>
       <div style={{ fontSize: 16, fontWeight: 700, color: is18 ? T.textSub : T.text }}>{section.label}</div>
       <div style={{ fontSize: 12, color: T.textMuted }}>{section.desc}</div>
-      <div style={{ marginLeft: 'auto', fontSize: 12, color: T.textMuted, fontWeight: 600 }}>{count}</div>
+      <div style={{ marginLeft: 'auto', fontSize: 12, color: T.textMuted, fontWeight: 600 }}>{count}{hasMore ? '+' : ''}</div>
     </div>
   )
 }
@@ -225,7 +225,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
             {grouped.map(({ section, items }) => (
               <div key={section.key} style={{ marginBottom: 32 }}>
                 <div style={{ borderBottom: `2px solid ${section.key === '18+ Only' ? '#F0C8D0' : T.border}`, paddingBottom: 10, marginBottom: 14 }}>
-                  <SectionHeader section={section} count={items.length} />
+                  <SectionHeader section={section} count={items.length} hasMore={hasMore} />
                 </div>
                 <div style={gridStyle}>
                   {items.map(opp => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} />)}
@@ -250,6 +250,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
             </div>
             {hasMore && (
               <div style={{ textAlign: 'center', marginTop: 24 }}>
+                <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10 }}>Showing {filtered.length} from loaded results — more may exist</div>
                 <button onClick={() => fetchPage(page + 1)} disabled={loadingMore}
                   style={{ background: T.primaryLight, border: `1.5px solid ${T.primary}`, color: T.primary, borderRadius: 20, padding: '10px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
                   {loadingMore ? 'Loading…' : 'Load more'}
