@@ -16,12 +16,13 @@ export async function requireAdmin(req) {
   const { data: { user }, error: authErr } = await client.auth.getUser(token)
   if (authErr || !user) return { ok: false, status: 401, error: 'Invalid token' }
 
-  const { data: dbUser } = await client
+  const { data: dbUser, error: dbErr } = await client
     .from('users')
     .select('is_admin')
     .eq('id', user.id)
     .maybeSingle()
 
+  if (dbErr) return { ok: false, status: 500, error: dbErr.message }
   if (!dbUser?.is_admin) return { ok: false, status: 403, error: 'Not an admin' }
 
   return { ok: true, user, client }

@@ -47,8 +47,14 @@ export default function App() {
       setAppLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setAuthUser(session?.user ?? null)
+      if (session?.user) {
+        const { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
+        setDbUser(data)
+      } else {
+        setDbUser(null)
+      }
     })
     return () => subscription.unsubscribe()
   }, [])

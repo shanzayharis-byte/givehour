@@ -34,6 +34,9 @@ export default function Admin({ authUser }) {
       if (session?.access_token) {
         setToken(session.access_token)
         loadUsers(session.access_token)
+      } else {
+        setLoadError('No active session — please sign in again.')
+        setLoading(false)
       }
     })
   }, [])
