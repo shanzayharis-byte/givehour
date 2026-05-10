@@ -6,16 +6,24 @@ import PostListingForm from './PostListingForm'
 export default function OrgDashboard({ user }) {
   const [listings, setListings] = useState([])
   const [loading, setLoading]   = useState(true)
+  const [error, setError]       = useState('')
   const [showForm, setShowForm] = useState(false)
 
   async function fetchListings() {
-    const { data } = await supabase
-      .from('org_listings')
-      .select('*')
-      .eq('org_id', user.id)
-      .order('created_at', { ascending: false })
-    setListings(data || [])
-    setLoading(false)
+    try {
+      const { data, error: err } = await supabase
+        .from('org_listings')
+        .select('*')
+        .eq('org_id', user.id)
+        .order('created_at', { ascending: false })
+      if (err) throw err
+      setListings(data || [])
+    } catch (e) {
+      console.error(e)
+      setError('Failed to load listings')
+    } finally {
+      setLoading(false)
+    }
   }
 
   useEffect(() => { fetchListings() }, [user.id])
@@ -41,6 +49,8 @@ export default function OrgDashboard({ user }) {
 
       {loading && <div style={{ color: T.textMuted, textAlign: 'center', padding: 40 }}>Loading...</div>}
 
+      {error && <div style={{ color: T.danger, textAlign: 'center', padding: 20, fontSize: 14 }}>{error}</div>}
+
       {!loading && listings.length === 0 && (
         <div style={{ textAlign: 'center', padding: 40, color: T.textMuted }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
@@ -58,7 +68,7 @@ export default function OrgDashboard({ user }) {
               <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap', marginLeft: 8 }}>{l.cause}</span>
             </div>
             <div style={{ fontSize: 13, color: T.textMuted, marginTop: 6 }}>
-              {l.remote ? 'Remote' : l.location} · {l.date || 'No date'} · {l.hours ? `${l.hours}h` : ''}
+              {l.remote ? 'Remote' : l.location} · {l.date || 'No date'}{l.hours ? ` · ${l.hours}h` : ''}
             </div>
           </div>
         )
