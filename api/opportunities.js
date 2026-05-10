@@ -2,7 +2,7 @@
 // Runs as a Vercel serverless function so the browser never hits CORS issues.
 export default async function handler(req, res) {
   const { page = 1, q = '' } = req.query
-  const params = new URLSearchParams({ format: 'json', page })
+  const params = new URLSearchParams({ format: 'json', page, country: 'United States' })
   if (q) params.set('q', q)
 
   try {
