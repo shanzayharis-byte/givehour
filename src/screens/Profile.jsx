@@ -60,6 +60,9 @@ export default function Profile({ user, onSignOut }) {
   const [showAvail, setShowAvail]       = useState(false)
   const [showNotif, setShowNotif]       = useState(false)
 
+  // applications
+  const [applications, setApplications] = useState([])
+
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
     window.addEventListener('resize', handle)
@@ -91,6 +94,13 @@ export default function Profile({ user, onSignOut }) {
           setTotalHours(hours.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0))
           setOrgCount(new Set(hours.map(r => r.org)).size)
         }
+
+        const { data: apps } = await supabase
+          .from('applications')
+          .select('*, org_listings(title)')
+          .eq('teen_id', user?.id)
+          .order('submitted_at', { ascending: false })
+        setApplications(apps || [])
       } catch (e) { console.error(e) }
       setLoading(false)
     }
@@ -251,6 +261,25 @@ export default function Profile({ user, onSignOut }) {
           </div>
         ) : (
           <>{profileCard}{interestsCard}{settingsCard}</>
+        )}
+
+        {/* My Applications */}
+        {applications.length > 0 && (
+          <div style={{ marginTop: 24, paddingBottom: 20 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 12 }}>My Applications</div>
+            {applications.map(a => {
+              const statusColor = a.status === 'accepted' ? T.primary : a.status === 'declined' ? T.danger : T.textMuted
+              return (
+                <div key={a.id} style={{ background: T.card, borderRadius: 12, padding: 14, marginBottom: 10, border: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{a.org_listings?.title}</div>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginTop: 3 }}>
+                    {new Date(a.submitted_at).toLocaleDateString()}
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: statusColor, marginTop: 4, textTransform: 'capitalize' }}>{a.status}</div>
+                </div>
+              )
+            })}
+          </div>
         )}
       </div>
 
