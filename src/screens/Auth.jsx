@@ -77,23 +77,28 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     setLoading(true)
     setError('')
     try {
-      const { error: signUpError } = await supabase.auth.signUp({ email, password })
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { ...fields, email } },
+      })
       if (signUpError) throw signUpError
-      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password })
-      if (loginError) throw loginError
-      const user = loginData.user
-      const { error: updateError } = await supabase.from('users').upsert({ id: user.id, email, ...fields })
-      if (updateError) throw updateError
-      onLoggedIn(user, { id: user.id, email, ...fields })
+
+      if (signUpData.session) {
+        // Email confirmation disabled — user is immediately logged in
+        const user = signUpData.user
+        const { error: updateError } = await supabase.from('users').upsert({ id: user.id, email, ...fields })
+        if (updateError) throw updateError
+        onLoggedIn(user, { id: user.id, email, ...fields })
+      } else {
+        // Email confirmation required — direct to check-email screen
+        setScreen('confirmEmail')
+      }
     } catch (e) {
       const msg = (e.message || '').toLowerCase()
       if (msg.includes('already registered') || msg.includes('already exists')) {
         setScreen('step1')
         setError('An account with this email already exists. Try logging in instead.')
-      } else if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
-        setError('Almost there! Check your email and click the confirmation link, then sign in.')
-      } else if (msg.includes('security purposes') || msg.includes('after') || msg.includes('rate limit')) {
-        setError('Please wait a moment and try again.')
       } else {
         setError(e.message)
       }
@@ -122,8 +127,15 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     try {
       const { data, error: loginError } = await supabase.auth.signInWithPassword({ email, password })
       if (loginError) throw loginError
-      const { data: dbData } = await supabase.from('users').select('*').eq('id', data.user.id).single()
-      onLoggedIn(data.user, dbData)
+      const user = data.user
+      let { data: dbData } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle()
+      if (!dbData && user.user_metadata && Object.keys(user.user_metadata).length > 0) {
+        // First login after email confirmation — create profile from signup metadata
+        const meta = user.user_metadata
+        await supabase.from('users').upsert({ id: user.id, ...meta })
+        dbData = { id: user.id, ...meta }
+      }
+      onLoggedIn(user, dbData)
     } catch (e) {
       setError(e.message)
     }
@@ -420,6 +432,26 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         </div>
       )
     }
+  }
+
+  // ── Confirm email ─────────────────────────────────────────────────────────
+
+  if (screen === 'confirmEmail') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
+        {topBar('Check your email', null, null)}
+        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: 44, marginBottom: 16 }}>📬</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 10 }}>Almost there!</div>
+          <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, maxWidth: 300, margin: '0 auto 28px' }}>
+            We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account, then come back here to log in.
+          </div>
+          <button onClick={() => setScreen('login')} style={{ background: T.primary, color: '#fff', padding: '12px 28px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            Go to log in
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // ── Forgot password ───────────────────────────────────────────────────────
