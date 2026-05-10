@@ -124,6 +124,9 @@ export default function App() {
               </button>
             ))}
           </nav>
+          <div style={{ padding: '14px 20px', borderTop: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
+            Built and maintained by<br /><span style={{ fontWeight: 600, color: T.text }}>Shanzay Haris</span>
+          </div>
         </div>
         {/* main */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -153,6 +156,9 @@ export default function App() {
           })}
         </nav>
       )}
+      <div style={{ background: T.card, borderTop: `1px solid ${T.border}`, padding: '8px 16px', textAlign: 'center', fontSize: 10, color: T.textMuted, flexShrink: 0 }}>
+        Built and maintained by <span style={{ fontWeight: 600, color: T.text }}>Shanzay Haris</span>
+      </div>
     </div>
     </div>
   )
