@@ -40,7 +40,7 @@ function deriveAgeGroup(description = '', title = '', extra = '') {
   // 14–16 minimums are still teen-accessible, so group with teens
   if (/must be 1[4-6]|1[4-6]\s*[\+&]|minimum.*1[4-6]|at least 1[4-6]|1[4-6] years or older|1[4-6] and over|1[4-6] years of age|over 1[4-6]|aged 1[4-6]/.test(text)) return 'Teens (13-17)'
   if (/\bteen\b|teenager|high school|high-school|grades?\s+[6-9]|grades?\s+1[012]|middle school|secondary school|ages?\s+1[3-7]|youth.*1[3-7]|1[3-7].*youth|student volunteer|youth volunteer|for youth|youth program|for students/.test(text)) return 'Teens (13-17)'
-  if (/all ages|family.{0,20}friendly|open to all|no age|any age|everyone welcome|all welcome|no minimum|no age requirement|any background|of any age/.test(text)) return 'All Ages'
+  if (/all ages|family.{0,20}friendly|open to all|no age restrict|any age|everyone welcome|all welcome|no minimum age|no age requirement|of any age|open to everyone|open to anyone|all are welcome|all volunteers welcome|volunteers of all|all community|anyone can volunteer|welcome to join|no experience required|community members|open to the public|suitable for all|all backgrounds|everyone is welcome/.test(text)) return 'All Ages'
   return 'Open'
 }
 
