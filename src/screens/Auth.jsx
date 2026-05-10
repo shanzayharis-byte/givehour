@@ -90,8 +90,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       if (signUpData.session) {
         // Email confirmation disabled — user is immediately logged in
         const user = signUpData.user
-        const { error: updateError } = await supabase.from('users').upsert({ id: user.id, email, ...fields })
-        if (updateError) throw updateError
+        await fetch('/api/save-profile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${signUpData.session.access_token}`,
+          },
+          body: JSON.stringify({ ...fields, email }),
+        })
         localStorage.removeItem('givehour_pending_profile')
         onLoggedIn(user, { id: user.id, email, ...fields })
       } else {
@@ -137,9 +143,18 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         const stored = localStorage.getItem('givehour_pending_profile')
         if (stored) {
           const profile = JSON.parse(stored)
-          await supabase.from('users').upsert({ id: user.id, ...profile })
-          localStorage.removeItem('givehour_pending_profile')
-          dbData = { ...(dbData || {}), id: user.id, ...profile }
+          const resp = await fetch('/api/save-profile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${data.session.access_token}`,
+            },
+            body: JSON.stringify(profile),
+          })
+          if (resp.ok) {
+            localStorage.removeItem('givehour_pending_profile')
+            dbData = { ...(dbData || {}), id: user.id, ...profile }
+          }
         }
       }
       onLoggedIn(user, dbData)
