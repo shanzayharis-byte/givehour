@@ -52,7 +52,7 @@ const AGE_STYLE = {
   '14+':          { bg: '#FFFDE0', text: '#6B5800', label: '14+' },
   'Teens (13-17)':{ bg: '#E6F7EE', text: '#0A6830', label: '🧑 Teens' },
   'All Ages':     { bg: '#E8F0FF', text: '#1A4DA0', label: '✓ All Ages' },
-  'Open':         { bg: '#F2F4F6', text: '#60666D', label: 'Open' },
+  'Open':         { bg: '#F2F4F6', text: '#60666D', label: 'No Age Listed' },
 }
 
 function deriveLocation(item) {
