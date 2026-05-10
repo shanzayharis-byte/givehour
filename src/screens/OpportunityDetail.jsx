@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
-export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp }) {
+export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp, onSelectOrg }) {
   const [saved, setSaved]       = useState(false)
   const [loading, setLoading]   = useState(false)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const [shared, setShared]     = useState(false)
+  const [applyStep, setApplyStep]   = useState('idle') // 'idle' | 'form' | 'sending' | 'done'
+  const [appMessage, setAppMessage] = useState('')
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -56,6 +58,29 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
     if (url) window.open(url, '_blank', 'noopener')
   }
 
+  const handleApplyLocal = async () => {
+    if (!user?.id) return
+    setApplyStep('sending')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch('/api/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          org_listing_id: opp.id,
+          org_id:         opp.org_id,
+          message:        appMessage,
+          teen_name:      user.name,
+        }),
+      })
+      if (!res.ok) throw new Error('failed')
+      setApplyStep('done')
+    } catch (_) {
+      setApplyStep('form')
+    }
+  }
+
   const cause       = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
   const matchScore  = opp.score ?? null
   const externalUrl = opp.externalUrl || opp.external_url
@@ -99,26 +124,41 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
   )
 
   const applyButton = isGuest ? (
-    <div style={{ background: T.primaryLight, border: `1.5px solid rgba(24,160,80,0.3)`, borderRadius: 12, padding: 16, textAlign: 'center' }}>
+    <div style={{ background: T.primaryLight, borderRadius: 14, padding: 16, textAlign: 'center' }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>Sign up to apply</div>
-      <div style={{ fontSize: 12, color: T.textSub, marginBottom: 12 }}>Create a free account to track your applications.</div>
-      <button onClick={onSignUp} style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Create free account</button>
+      <button onClick={onSignUp} style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Create account</button>
     </div>
-  ) : (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <button onClick={handleApply} disabled={!externalUrl} style={{ width: '100%', padding: 16, borderRadius: 12, border: 'none', background: externalUrl ? T.primary : '#B8D8C8', color: '#fff', fontSize: 15, fontWeight: 700, cursor: externalUrl ? 'pointer' : 'default' }}>
-        Apply on {opp.org ? `${opp.org}'s website` : 'website'} →
-      </button>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <button onClick={handleSave} disabled={loading} style={{ flex: 1, padding: 13, borderRadius: 12, border: `2px solid ${saved ? T.primary : T.border}`, background: saved ? T.primaryLight : '#fff', color: saved ? T.primary : T.textSub, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-          {saved ? '✓ Saved' : '🔖 Save'}
-        </button>
-        <button onClick={handleShare} style={{ flex: 1, padding: 13, borderRadius: 12, border: `2px solid ${T.border}`, background: '#fff', color: T.textSub, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-          {shared ? '✓ Copied!' : '↗ Share'}
+  ) : externalUrl ? (
+    <button onClick={handleApply}
+      style={{ width: '100%', padding: 16, borderRadius: 12, border: 'none', background: T.primary, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+      Apply on {opp.org ? `${opp.org}'s website` : 'website'} →
+    </button>
+  ) : opp.org_id ? (
+    applyStep === 'done' ? (
+      <div style={{ background: T.primaryLight, borderRadius: 14, padding: 16, textAlign: 'center' }}>
+        <div style={{ fontSize: 20, marginBottom: 6 }}>✅</div>
+        <div style={{ fontWeight: 700, color: T.text }}>Application sent!</div>
+        <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>The org will be in touch. Check "My Applications" in your Profile.</div>
+      </div>
+    ) : applyStep === 'form' || applyStep === 'sending' ? (
+      <div style={{ background: T.card, borderRadius: 14, padding: 16, border: `1px solid ${T.border}` }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Why do you want to help? (optional)</div>
+        <textarea value={appMessage} onChange={e => setAppMessage(e.target.value)}
+          placeholder="Tell them a bit about yourself..."
+          rows={3}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', background: T.bg, resize: 'none', marginBottom: 12 }} />
+        <button onClick={handleApplyLocal} disabled={applyStep === 'sending'}
+          style={{ width: '100%', padding: 14, background: applyStep === 'sending' ? '#B8D8C8' : T.primary, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: applyStep === 'sending' ? 'default' : 'pointer' }}>
+          {applyStep === 'sending' ? 'Sending...' : 'Send Application'}
         </button>
       </div>
-    </div>
-  )
+    ) : (
+      <button onClick={() => setApplyStep('form')}
+        style={{ width: '100%', padding: 16, borderRadius: 12, border: 'none', background: T.primary, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+        Apply on Give Hour
+      </button>
+    )
+  ) : null
 
   const sidePanel = (
     <div style={{ position: 'sticky', top: 24, background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 24, alignSelf: 'start' }}>
@@ -128,7 +168,17 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
         </span>
       )}
       <div style={{ fontSize: 17, fontWeight: 700, color: T.text, margin: '10px 0 4px' }}>{opp.title}</div>
-      <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 20 }}>{opp.org}{opp.date ? ` · ${opp.date}` : ''}</div>
+      <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 20 }}>
+        {opp.org && (
+          opp.org_id && onSelectOrg
+            ? <button onClick={() => onSelectOrg(opp.org_id)}
+                style={{ background: 'none', border: 'none', padding: 0, color: T.primary, fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>
+                {opp.org}
+              </button>
+            : <span>{opp.org}</span>
+        )}
+        {opp.date ? ` · ${opp.date}` : ''}
+      </div>
       {applyButton}
     </div>
   )
@@ -136,7 +186,16 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
   const header = (
     <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '14px 40px' : '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
       <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '5px 11px', fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer' }}>←</button>
-      <div style={{ fontSize: 17, fontWeight: 600, color: T.text, flex: 1 }}>{opp.org}</div>
+      <div style={{ fontSize: 17, fontWeight: 600, color: T.text, flex: 1 }}>
+        {opp.org && (
+          opp.org_id && onSelectOrg
+            ? <button onClick={() => onSelectOrg(opp.org_id)}
+                style={{ background: 'none', border: 'none', padding: 0, color: T.primary, fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>
+                {opp.org}
+              </button>
+            : <span>{opp.org}</span>
+        )}
+      </div>
       {!isGuest && (
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={handleSave} disabled={loading} style={{ background: saved ? T.primaryLight : T.bg, border: `1px solid ${saved ? T.primary : T.border}`, color: saved ? T.primary : T.textSub, borderRadius: 8, padding: '5px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
