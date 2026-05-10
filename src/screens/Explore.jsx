@@ -9,6 +9,18 @@ const AGE_GROUPS = [
   { key: 'Open',          label: 'No Age Listed' },
 ]
 
+const CAUSES = [
+  { key: 'All',          label: 'All' },
+  { key: 'Education',    label: '📚 Education' },
+  { key: 'Environment',  label: '🌿 Environment' },
+  { key: 'Animals',      label: '🐾 Animals' },
+  { key: 'Food Security',label: '🍎 Food Security' },
+  { key: 'Health',       label: '❤️ Health' },
+  { key: 'Housing',      label: '🏠 Housing' },
+  { key: 'Arts',         label: '🎨 Arts' },
+  { key: 'Seniors',      label: '🤝 Seniors' },
+]
+
 // Ordered sections shown when "All" is active
 const SECTIONS = [
   { key: 'All Ages',      label: '✓ All Ages',       desc: 'Everyone is welcome' },
@@ -107,6 +119,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError]             = useState(null)
   const [activeGroup, setActiveGroup] = useState('All Ages')
+  const [activeCause, setActiveCause] = useState('All')
   const [search, setSearch]           = useState('')
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
 
@@ -136,12 +149,12 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
 
   useEffect(() => { fetchPage(1, true) }, [fetchPage])
 
-  // Filter by search first
-  const searched = opps.filter(o =>
-    !search
-    || o.title.toLowerCase().includes(search.toLowerCase())
-    || o.org.toLowerCase().includes(search.toLowerCase())
-  )
+  // Filter by search + cause
+  const searched = opps.filter(o => {
+    const matchSearch = !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.org.toLowerCase().includes(search.toLowerCase())
+    const matchCause  = activeCause === 'All' || o.cause === activeCause
+    return matchSearch && matchCause
+  })
 
   // Then by active group
   const isAll     = activeGroup === 'All Ages'
@@ -200,6 +213,25 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
                 color: active ? '#fff' : is18 ? '#A0206A' : T.textSub,
               }}>
                 {g.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* cause pills */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+          {CAUSES.map(c => {
+            const active = activeCause === c.key
+            const style  = active && c.key !== 'All' ? CAUSE[c.key] : null
+            return (
+              <button key={c.key} onClick={() => setActiveCause(c.key)} style={{
+                borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 600,
+                whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0,
+                border: `1.5px solid ${active ? (style?.text || T.primary) : T.border}`,
+                background: active ? (style?.bg || T.primaryLight) : '#fff',
+                color: active ? (style?.text || T.primary) : T.textSub,
+              }}>
+                {c.label}
               </button>
             )
           })}
