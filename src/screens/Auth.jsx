@@ -84,11 +84,15 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       })
       if (signUpError) throw signUpError
 
+      // Save profile to localStorage so we can upsert after email confirmation
+      localStorage.setItem('givehour_pending_profile', JSON.stringify({ ...fields, email }))
+
       if (signUpData.session) {
         // Email confirmation disabled — user is immediately logged in
         const user = signUpData.user
         const { error: updateError } = await supabase.from('users').upsert({ id: user.id, email, ...fields })
         if (updateError) throw updateError
+        localStorage.removeItem('givehour_pending_profile')
         onLoggedIn(user, { id: user.id, email, ...fields })
       } else {
         // Email confirmation required — direct to check-email screen
@@ -129,12 +133,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       if (loginError) throw loginError
       const user = data.user
       let { data: dbData } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle()
-      if ((!dbData || !dbData.name) && user.user_metadata?.name) {
-        // Row missing or incomplete (e.g. auto-created by trigger without profile fields)
-        // Fill it in from the metadata we stored during signUp
-        const meta = user.user_metadata
-        await supabase.from('users').upsert({ id: user.id, ...meta })
-        dbData = { ...(dbData || {}), id: user.id, ...meta }
+      if (!dbData?.name) {
+        const stored = localStorage.getItem('givehour_pending_profile')
+        if (stored) {
+          const profile = JSON.parse(stored)
+          await supabase.from('users').upsert({ id: user.id, ...profile })
+          localStorage.removeItem('givehour_pending_profile')
+          dbData = { ...(dbData || {}), id: user.id, ...profile }
+        }
       }
       onLoggedIn(user, dbData)
     } catch (e) {
