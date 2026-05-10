@@ -90,6 +90,10 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       if (msg.includes('already registered') || msg.includes('already exists')) {
         setScreen('step1')
         setError('An account with this email already exists. Try logging in instead.')
+      } else if (msg.includes('email not confirmed') || msg.includes('not confirmed')) {
+        setError('Almost there! Check your email and click the confirmation link, then sign in.')
+      } else if (msg.includes('security purposes') || msg.includes('after') || msg.includes('rate limit')) {
+        setError('Please wait a moment and try again.')
       } else {
         setError(e.message)
       }
