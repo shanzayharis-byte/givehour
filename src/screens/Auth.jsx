@@ -82,7 +82,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password })
       if (loginError) throw loginError
       const user = loginData.user
-      const { error: updateError } = await supabase.from('users').update(fields).eq('id', user.id)
+      const { error: updateError } = await supabase.from('users').upsert({ id: user.id, email, ...fields })
       if (updateError) throw updateError
       onLoggedIn(user, { id: user.id, email, ...fields })
     } catch (e) {
