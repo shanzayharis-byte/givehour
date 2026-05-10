@@ -40,12 +40,14 @@ export default function App() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         setAuthUser(session.user)
-        const { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
-        setDbUser(data)
+        try {
+          const { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
+          setDbUser(data)
+        } catch (_) {}
         setActiveScreen('feed')
       }
       setAppLoading(false)
-    })
+    }).catch(() => setAppLoading(false))
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setAuthUser(session?.user ?? null)
