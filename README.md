@@ -3,6 +3,7 @@
 A volunteer matching platform built for Bay Area teens. Find personalized opportunities, log hours, track your impact, and generate community service letters for college applications.
 
 **Live:** [givehour.vercel.app](https://givehour.vercel.app)
+**GitHub:** [github.com/shanzayharis-byte/givehour](https://github.com/shanzayharis-byte/givehour)
 
 ---
 
@@ -26,7 +27,8 @@ A volunteer matching platform built for Bay Area teens. Find personalized opport
 | Frontend | React 19 + Vite 8 |
 | Backend / Auth | Supabase (Postgres + Auth + Storage) |
 | Hosting | Vercel |
-| Data pipeline | Azure Databricks + Azure Data Lake Storage Gen2 |
+| Data pipeline | Azure Databricks + Azure Data Lake Storage Gen2 + Azure Data Factory (ADF) |
+| Orchestration | Azure Data Factory — daily scheduled pipeline at 2 AM Pacific |
 | Listings source | VolunteerConnector API (VolunteerMatch coming soon) |
 
 ---
@@ -61,7 +63,18 @@ givehour/
 
 ## Data Pipeline
 
-The Databricks pipeline runs automatically every night at 2 AM via a scheduled job (`givehour-daily-pipeline`). It runs 4 notebooks in order:
+The pipeline is orchestrated by **Azure Data Factory (ADF)** and runs every night at 2 AM Pacific. ADF triggers the Databricks job (`givehour-daily-pipeline`), which runs 4 notebooks in order:
+
+### Azure Infrastructure
+
+```
+givehour-rg/ (West US 2)
+├── givehourdata/         ← Azure Data Lake Storage Gen2
+│   ├── raw/              ← raw API dumps from ingest
+│   └── processed/        ← cleaned listings
+├── givehour-adf/         ← Azure Data Factory (orchestration)
+└── givehour-databricks/  ← Databricks workspace (ETL + matching)
+```
 
 1. **01_ingest** — fetches all US listings from VolunteerConnector, saves JSON to Azure Data Lake `raw/`
 2. **02_clean** — filters to US-only, detects age group and cause category, writes to `processed/` and Supabase `clean_listings`
