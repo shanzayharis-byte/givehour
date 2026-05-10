@@ -8,6 +8,7 @@ import OpportunityDetail from './screens/OpportunityDetail'
 import LogHours from './screens/LogHours'
 import Impact from './screens/Impact'
 import Profile from './screens/Profile'
+import Admin from './screens/Admin'
 import './App.css'
 
 const NAV = [
@@ -18,7 +19,7 @@ const NAV = [
   { id: 'profile',  icon: '👤', label: 'Profile' },
 ]
 
-const PROTECTED = ['feed', 'loghours', 'impact', 'profile']
+const PROTECTED = ['feed', 'loghours', 'impact', 'profile', 'admin']
 
 export default function App() {
   const [authUser, setAuthUser]       = useState(null)
@@ -80,11 +81,14 @@ export default function App() {
     setActiveScreen('explore')
   }
 
+  const adminNavItem = { id: 'admin', icon: '⚙️', label: 'Admin' }
+  const visibleNav = dbUser?.is_admin ? [...NAV, adminNavItem] : NAV
+
   if (appLoading) {
     return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: 16, color: T.textMuted }}>Loading Give Hour...</div>
   }
 
-  const showNav = authUser && !selectedOpp && NAV.some(n => n.id === activeScreen)
+  const showNav = authUser && !selectedOpp && visibleNav.some(n => n.id === activeScreen)
 
   const mainContent = () => {
     if (selectedOpp) {
@@ -99,6 +103,7 @@ export default function App() {
       case 'loghours': return <LogHours user={dbUser} />
       case 'impact':   return <Impact user={dbUser} />
       case 'profile':  return <Profile user={dbUser} onSignOut={handleSignOut} />
+      case 'admin':    return <Admin authUser={authUser} />
       default:         return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
   }
@@ -117,7 +122,7 @@ export default function App() {
             </div>
           </button>
           <nav style={{ padding: '14px 12px', flex: 1 }}>
-            {NAV.map(({ id, icon, label }) => (
+            {visibleNav.map(({ id, icon, label }) => (
               <button key={id} onClick={() => navigate(id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D', fontWeight: activeScreen === id ? 600 : 400, fontSize: 14, fontFamily: 'inherit', marginBottom: 4 }}>
                 <span style={{ fontSize: 16 }}>{icon}</span>
                 {label}
@@ -150,7 +155,7 @@ export default function App() {
       </div>
       {showNav && (
         <nav style={{ background: T.card, borderTop: `1px solid ${T.border}`, paddingBottom: 8, display: 'flex', flexShrink: 0 }}>
-          {NAV.map(({ id, icon, label }) => {
+          {visibleNav.map(({ id, icon, label }) => {
             const active = activeScreen === id
             return (
               <button key={id} onClick={() => navigate(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px 0', background: 'none', border: 'none', cursor: 'pointer', gap: 3 }}>
