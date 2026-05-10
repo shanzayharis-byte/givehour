@@ -129,11 +129,12 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       if (loginError) throw loginError
       const user = data.user
       let { data: dbData } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle()
-      if (!dbData && user.user_metadata && Object.keys(user.user_metadata).length > 0) {
-        // First login after email confirmation — create profile from signup metadata
+      if ((!dbData || !dbData.name) && user.user_metadata?.name) {
+        // Row missing or incomplete (e.g. auto-created by trigger without profile fields)
+        // Fill it in from the metadata we stored during signUp
         const meta = user.user_metadata
         await supabase.from('users').upsert({ id: user.id, ...meta })
-        dbData = { id: user.id, ...meta }
+        dbData = { ...(dbData || {}), id: user.id, ...meta }
       }
       onLoggedIn(user, dbData)
     } catch (e) {
