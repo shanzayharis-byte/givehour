@@ -124,8 +124,13 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <div style={{ padding: '14px 20px', borderTop: `1px solid ${T.border}`, fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
-            Built and maintained by<br /><span style={{ fontWeight: 600, color: T.text }}>Shanzay Haris</span>
+          <div style={{ padding: '12px', borderTop: `1px solid ${T.border}` }}>
+            <button onClick={handleSignOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: '#E05252', fontWeight: 500, fontSize: 14, fontFamily: 'inherit' }}>
+              <span style={{ fontSize: 16 }}>🚪</span>Sign out
+            </button>
+            <div style={{ padding: '8px 12px 0', fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
+              Built by <span style={{ fontWeight: 600, color: T.text }}>Shanzay Haris</span>
+            </div>
           </div>
         </div>
         {/* main */}

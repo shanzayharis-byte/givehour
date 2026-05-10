@@ -5,7 +5,6 @@ import { T, CAUSE } from '../lib/theme'
 const AGE_GROUPS = [
   { key: 'All Ages',      label: 'All Ages' },
   { key: 'Teens (13-17)', label: '🧑 Teens (13–17)' },
-  { key: '18+ Only',      label: '18+ Only' },
   { key: 'Open',          label: 'No Age Listed' },
 ]
 
@@ -25,7 +24,6 @@ const CAUSES = [
 const SECTIONS = [
   { key: 'All Ages',      label: '✓ All Ages',       desc: 'Everyone is welcome' },
   { key: 'Teens (13-17)', label: '🧑 Teens (13–17)', desc: 'Open to teen volunteers' },
-  { key: '18+ Only',      label: '18+ Only',         desc: 'Adults only' },
   { key: 'Open',          label: 'No Age Listed',    desc: 'Age not stated — check the details' },
 ]
 
@@ -111,10 +109,9 @@ function OppCard({ opp, onSelect }) {
 
 // ---------- section header ----------
 function SectionHeader({ section, count, hasMore }) {
-  const is18 = section.key === '18+ Only'
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12, marginTop: 8 }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: is18 ? T.textSub : T.text }}>{section.label}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{section.label}</div>
       <div style={{ fontSize: 12, color: T.textMuted }}>{section.desc}</div>
       <div style={{ marginLeft: 'auto', fontSize: 12, color: T.textMuted, fontWeight: 600 }}>{count}{hasMore ? '+' : ''}</div>
     </div>
@@ -147,7 +144,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
       const r = await fetch(`/api/opportunities?page=${pageNum}`)
       if (!r.ok) throw new Error('Failed to load opportunities')
       const data = await r.json()
-      const mapped = (data.results || []).filter(isUS).map(mapOpp)
+      const mapped = (data.results || []).filter(isUS).map(mapOpp).filter(o => o.ageGroup !== '18+ Only')
       setOpps(prev => replace ? mapped : [...prev, ...mapped])
       setHasMore(!!data.next)
       setPage(pageNum)
@@ -214,14 +211,13 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
         <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
           {AGE_GROUPS.map(g => {
             const active = activeGroup === g.key
-            const is18   = g.key === '18+ Only'
             return (
               <button key={g.key} onClick={() => setActiveGroup(g.key)} style={{
                 borderRadius: 20, padding: '7px 16px', fontSize: 12, fontWeight: 600,
                 whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0,
-                border: `1.5px solid ${active ? T.primary : is18 ? '#E8AABB' : T.border}`,
-                background: active ? T.primary : is18 ? '#FEF0F4' : '#fff',
-                color: active ? '#fff' : is18 ? '#A0206A' : T.textSub,
+                border: `1.5px solid ${active ? T.primary : T.border}`,
+                background: active ? T.primary : '#fff',
+                color: active ? '#fff' : T.textSub,
               }}>
                 {g.label}
               </button>
@@ -259,7 +255,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
           <>
             {grouped.map(({ section, items }) => (
               <div key={section.key} style={{ marginBottom: 32 }}>
-                <div style={{ borderBottom: `2px solid ${section.key === '18+ Only' ? '#F0C8D0' : T.border}`, paddingBottom: 10, marginBottom: 14 }}>
+                <div style={{ borderBottom: `2px solid ${T.border}`, paddingBottom: 10, marginBottom: 14 }}>
                   <SectionHeader section={section} count={items.length} hasMore={hasMore} />
                 </div>
                 <div style={gridStyle}>

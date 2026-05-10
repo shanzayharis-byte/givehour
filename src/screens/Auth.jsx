@@ -2,13 +2,16 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
-const CAUSES = ['Housing', 'Food Security', 'Education', 'Environment', 'Animals', 'Health', 'Arts', 'Seniors']
-const GRADES = ['8th', '9th', '10th', '11th', '12th', 'College']
+const CAUSES     = ['Housing', 'Food Security', 'Education', 'Environment', 'Animals', 'Health', 'Arts', 'Seniors']
+const GRADES     = ['8th', '9th', '10th', '11th', '12th', 'College']
+const AGES       = [13, 14, 15, 16, 17, 18, 19]
+const US_REGIONS = ['Bay Area, CA', 'Los Angeles, CA', 'San Diego, CA', 'New York, NY', 'Chicago, IL', 'Houston, TX', 'Seattle, WA', 'Austin, TX', 'Boston, MA', 'Remote / Online']
+const ORG_TYPES  = ['Nonprofit', 'School / University', 'Government', 'Faith-based', 'Community group', 'Other']
 
 const inputStyle = {
   background: T.bg, border: `1.5px solid ${T.border}`, borderRadius: 10,
   padding: '11px 14px', fontSize: 14, color: T.text, outline: 'none',
-  width: '100%', fontFamily: 'inherit',
+  width: '100%', fontFamily: 'inherit', boxSizing: 'border-box',
 }
 const labelStyle = {
   fontSize: 11, fontWeight: 600, color: T.textSub, letterSpacing: '0.04em',
@@ -33,14 +36,32 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // step fields
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
+  // shared
+  const [role, setRole]         = useState('')   // 'teen' | 'org' | 'parent'
+  const [name, setName]         = useState('')
+  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [grade, setGrade] = useState('')
-  const [zip, setZip] = useState('')
-  const [school, setSchool] = useState('')
+
+  // teen fields
+  const [grade, setGrade]     = useState('')
+  const [age, setAge]         = useState(null)
+  const [zip, setZip]         = useState('')
+  const [school, setSchool]   = useState('')
+  const [region, setRegion]   = useState('')
   const [interests, setInterests] = useState([])
+
+  // org fields
+  const [orgName, setOrgName]   = useState('')
+  const [orgType, setOrgType]   = useState('')
+  const [orgCity, setOrgCity]   = useState('')
+  const [orgWebsite, setOrgWebsite] = useState('')
+  const [orgCauses, setOrgCauses]   = useState([])
+
+  // parent fields
+  const [childGrade, setChildGrade] = useState('')
+  const [childSchool, setChildSchool] = useState('')
+  const [parentZip, setParentZip]   = useState('')
+  const [parentInterests, setParentInterests] = useState([])
 
   const wrapCard = (children) => isDesktop ? (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100%', background: T.bg }}>
@@ -50,7 +71,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     </div>
   ) : children
 
-  const handleSignUp = async () => {
+  // ── sign-up handlers ──────────────────────────────────────────────────────
+
+  const handleSignUp = async (fields) => {
     setLoading(true)
     setError('')
     try {
@@ -59,18 +82,29 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password })
       if (loginError) throw loginError
       const user = loginData.user
-      // Trigger already created the row — just update it with profile details
-      const { error: updateError } = await supabase.from('users')
-        .update({ name, grade, zip, school, role: 'teen', interests })
-        .eq('id', user.id)
+      const { error: updateError } = await supabase.from('users').update(fields).eq('id', user.id)
       if (updateError) throw updateError
-      const dbUser = { id: user.id, name, email, grade, zip, school, role: 'teen', interests }
-      onLoggedIn(user, dbUser)
+      onLoggedIn(user, { id: user.id, email, ...fields })
     } catch (e) {
       setError(e.message)
     }
     setLoading(false)
   }
+
+  const finishTeen = () => {
+    const preferred_cause = interests[0] || null
+    handleSignUp({ name, role: 'teen', grade, age, zip, school_name: school, region, interests, preferred_cause })
+  }
+
+  const finishOrg = () => {
+    handleSignUp({ name: orgName, role: 'org', school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
+  }
+
+  const finishParent = () => {
+    handleSignUp({ name, role: 'parent', grade: childGrade, zip: parentZip, school_name: childSchool, interests: parentInterests, preferred_cause: parentInterests[0] || null })
+  }
+
+  // ── login ─────────────────────────────────────────────────────────────────
 
   const handleLogin = async () => {
     setLoading(true)
@@ -85,6 +119,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     }
     setLoading(false)
   }
+
+  // ── screens ───────────────────────────────────────────────────────────────
 
   if (screen === 'landing') {
     return wrapCard(
@@ -113,9 +149,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
   if (screen === 'userType') {
     const cards = [
-      { emoji: '🎒', title: "I'm a teen", sub: 'Find opportunities and track hours' },
-      { emoji: '🏢', title: "I'm an organization", sub: 'Post listings and manage volunteers' },
-      { emoji: '🏡', title: "I'm a parent", sub: "Support your teen's volunteering" },
+      { emoji: '🎒', title: "I'm a teen",         sub: 'Find opportunities and track hours',       r: 'teen'   },
+      { emoji: '🏢', title: "I'm an organization", sub: 'Post listings and manage volunteers',       r: 'org'    },
+      { emoji: '🏡', title: "I'm a parent",        sub: "Help your teen discover volunteering",      r: 'parent' },
     ]
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
@@ -124,8 +160,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           <div style={{ fontSize: 20, fontWeight: 700, color: T.text, marginBottom: 6 }}>Who are you?</div>
           <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>Choose your account type to get started.</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {cards.map(({ emoji, title, sub }) => (
-              <button key={title} onClick={() => setScreen('step1')} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'row', gap: 14, cursor: 'pointer', textAlign: 'left', alignItems: 'center' }}>
+            {cards.map(({ emoji, title, sub, r }) => (
+              <button key={r} onClick={() => { setRole(r); setScreen('step1') }} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 18, display: 'flex', flexDirection: 'row', gap: 14, cursor: 'pointer', textAlign: 'left', alignItems: 'center' }}>
                 <div style={{ width: 48, height: 48, borderRadius: 14, background: T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{title}</div>
@@ -140,14 +176,19 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     )
   }
 
+  // ── Step 1 — shared: name / email / password ───────────────────────────────
+
   if (screen === 'step1') {
     const ready = name.trim() && email.trim() && password.trim()
+    const nameLbl = role === 'org' ? 'Your name (contact person)' : 'First name'
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
         {topBar('Create account', 'Step 1 of 3 — Basic info', () => setScreen('userType'))}
         <div style={{ padding: '24px 20px' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>Tell us about you</div>
-          {[['First name', name, setName, 'text'], ['Email', email, setEmail, 'email'], ['Password', password, setPassword, 'password']].map(([lbl, val, set, type]) => (
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 20 }}>
+            {role === 'org' ? 'Your contact details' : role === 'parent' ? 'Create your account' : 'Tell us about you'}
+          </div>
+          {[[nameLbl, name, setName, 'text'], ['Email', email, setEmail, 'email'], ['Password', password, setPassword, 'password']].map(([lbl, val, set, type]) => (
             <div key={lbl} style={{ marginBottom: 16 }}>
               <label style={labelStyle}>{lbl}</label>
               <input type={type} value={val} onChange={e => set(e.target.value)} style={inputStyle} />
@@ -161,62 +202,217 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     )
   }
 
+  // ── Step 2 — role-specific details ────────────────────────────────────────
+
   if (screen === 'step2') {
-    const ready = grade && zip.trim()
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
-        {topBar('Create account', 'Step 2 of 3 — School info', () => setScreen('step1'))}
-        <div style={{ padding: '24px 20px' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 6 }}>School info</div>
-          <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>Help us personalize your experience.</div>
-          <label style={labelStyle}>Grade</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-            {GRADES.map(g => (
-              <button key={g} onClick={() => setGrade(g)} style={{ padding: '8px 16px', borderRadius: 20, border: `1.5px solid ${grade === g ? T.primary : T.border}`, background: grade === g ? T.primary : '#fff', color: grade === g ? '#fff' : T.textSub, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>{g}</button>
-            ))}
+
+    // TEEN step 2
+    if (role === 'teen') {
+      const ready = grade && age
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card, overflowY: 'auto' }}>
+          {topBar('Create account', 'Step 2 of 3 — About you', () => setScreen('step1'))}
+          <div style={{ padding: '24px 20px' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 6 }}>About you</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>This helps us find age-appropriate opportunities near you.</div>
+
+            <label style={labelStyle}>Grade</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              {GRADES.map(g => (
+                <button key={g} onClick={() => setGrade(g)} style={{ padding: '8px 16px', borderRadius: 20, border: `1.5px solid ${grade === g ? T.primary : T.border}`, background: grade === g ? T.primary : '#fff', color: grade === g ? '#fff' : T.textSub, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>{g}</button>
+              ))}
+            </div>
+
+            <label style={labelStyle}>Age</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              {AGES.map(a => (
+                <button key={a} onClick={() => setAge(a)} style={{ padding: '8px 16px', borderRadius: 20, border: `1.5px solid ${age === a ? T.primary : T.border}`, background: age === a ? T.primary : '#fff', color: age === a ? '#fff' : T.textSub, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>{a}</button>
+              ))}
+            </div>
+
+            <label style={labelStyle}>Your region <span style={{ fontWeight: 400, textTransform: 'none' }}>(helps match nearby opps)</span></label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+              {US_REGIONS.map(r => (
+                <button key={r} onClick={() => setRegion(prev => prev === r ? '' : r)} style={{ padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${region === r ? T.primary : T.border}`, background: region === r ? T.primaryLight : '#fff', color: region === r ? T.primary : T.text, fontSize: 13, fontWeight: region === r ? 600 : 400, cursor: 'pointer', textAlign: 'left' }}>{region === r ? '✓ ' : ''}{r}</button>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Zip code <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <input value={zip} onChange={e => setZip(e.target.value)} style={inputStyle} placeholder="e.g. 94102" />
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={labelStyle}>School name <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <input value={school} onChange={e => setSchool(e.target.value)} style={inputStyle} placeholder="e.g. Lincoln High School" />
+            </div>
+            <button onClick={() => setScreen('step3')} disabled={!ready} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : '#B8D8C8', color: '#fff' }}>Continue</button>
           </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={labelStyle}>Zip code</label>
-            <input value={zip} onChange={e => setZip(e.target.value)} style={inputStyle} placeholder="e.g. 94102" />
-          </div>
-          <div style={{ marginBottom: 24 }}>
-            <label style={labelStyle}>School name <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
-            <input value={school} onChange={e => setSchool(e.target.value)} style={inputStyle} placeholder="e.g. Lincoln High School" />
-          </div>
-          <button onClick={() => setScreen('step3')} disabled={!ready} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : '#B8D8C8', color: '#fff' }}>Continue</button>
         </div>
-      </div>
-    )
+      )
+    }
+
+    // ORG step 2
+    if (role === 'org') {
+      const ready = orgName.trim() && orgType && orgCity.trim()
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card, overflowY: 'auto' }}>
+          {topBar('Create account', 'Step 2 of 3 — Your organization', () => setScreen('step1'))}
+          <div style={{ padding: '24px 20px' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 6 }}>Your organization</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>Tell teens who you are and where you operate.</div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Organization name</label>
+              <input value={orgName} onChange={e => setOrgName(e.target.value)} style={inputStyle} placeholder="e.g. Bay Area Food Bank" />
+            </div>
+
+            <label style={labelStyle}>Organization type</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              {ORG_TYPES.map(t => (
+                <button key={t} onClick={() => setOrgType(t)} style={{ padding: '8px 14px', borderRadius: 20, border: `1.5px solid ${orgType === t ? T.primary : T.border}`, background: orgType === t ? T.primary : '#fff', color: orgType === t ? '#fff' : T.textSub, fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>{t}</button>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>City / Location</label>
+              <input value={orgCity} onChange={e => setOrgCity(e.target.value)} style={inputStyle} placeholder="e.g. San Francisco, CA" />
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={labelStyle}>Website <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <input value={orgWebsite} onChange={e => setOrgWebsite(e.target.value)} style={inputStyle} placeholder="e.g. https://yourorg.org" />
+            </div>
+            <button onClick={() => setScreen('step3')} disabled={!ready} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : '#B8D8C8', color: '#fff' }}>Continue</button>
+          </div>
+        </div>
+      )
+    }
+
+    // PARENT step 2
+    if (role === 'parent') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card, overflowY: 'auto' }}>
+          {topBar('Create account', "Step 2 of 3 — Your child's info", () => setScreen('step1'))}
+          <div style={{ padding: '24px 20px' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 6 }}>About your teen</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>We'll use this to find age-appropriate opportunities. All optional.</div>
+
+            <label style={labelStyle}>Child's grade</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+              {GRADES.map(g => (
+                <button key={g} onClick={() => setChildGrade(prev => prev === g ? '' : g)} style={{ padding: '8px 16px', borderRadius: 20, border: `1.5px solid ${childGrade === g ? T.primary : T.border}`, background: childGrade === g ? T.primary : '#fff', color: childGrade === g ? '#fff' : T.textSub, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>{g}</button>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={labelStyle}>Child's school <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <input value={childSchool} onChange={e => setChildSchool(e.target.value)} style={inputStyle} placeholder="e.g. Lincoln High School" />
+            </div>
+            <div style={{ marginBottom: 24 }}>
+              <label style={labelStyle}>Zip code <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <input value={parentZip} onChange={e => setParentZip(e.target.value)} style={inputStyle} placeholder="e.g. 94102" />
+            </div>
+            <button onClick={() => setScreen('step3')} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer', background: T.primary, color: '#fff' }}>Continue</button>
+          </div>
+        </div>
+      )
+    }
   }
 
+  // ── Step 3 — causes / interests ────────────────────────────────────────────
+
   if (screen === 'step3') {
-    const toggle = (c) => setInterests(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
-    const ready = interests.length >= 2
-    const needed = 2 - interests.length
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
-        {topBar('Create account', 'Step 3 of 3 — Your interests', () => setScreen('step2'))}
-        <div style={{ padding: '24px 20px' }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 4 }}>What causes do you care about?</div>
-          <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>Pick at least 2. We'll use this to personalize your feed.</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
-            {CAUSES.map(c => {
-              const sel = interests.includes(c)
-              return (
-                <button key={c} onClick={() => toggle(c)} style={{ padding: '10px 16px', borderRadius: 24, border: sel ? `2px solid ${CAUSE[c].text}` : `1.5px solid ${T.border}`, background: sel ? CAUSE[c].bg : '#fff', color: sel ? CAUSE[c].text : T.textSub, fontSize: 13, cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
-                  {sel ? '✓ ' : ''}{c}
-                </button>
-              )
-            })}
+
+    // TEEN step 3
+    if (role === 'teen') {
+      const toggle = (c) => setInterests(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
+      const ready = interests.length >= 2
+      const needed = 2 - interests.length
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
+          {topBar('Create account', 'Step 3 of 3 — Your interests', () => setScreen('step2'))}
+          <div style={{ padding: '24px 20px' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 4 }}>What causes do you care about?</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 4 }}>Pick at least 2. We'll use this to personalize your feed.</div>
+            {interests.length > 0 && <div style={{ fontSize: 12, color: T.primary, fontWeight: 600, marginBottom: 16 }}>⭐ {interests[0]} is your top cause</div>}
+            {interests.length === 0 && <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>Your first pick becomes your top cause.</div>}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
+              {CAUSES.map(c => {
+                const sel = interests.includes(c)
+                return (
+                  <button key={c} onClick={() => toggle(c)} style={{ padding: '10px 16px', borderRadius: 24, border: sel ? `2px solid ${CAUSE[c].text}` : `1.5px solid ${T.border}`, background: sel ? CAUSE[c].bg : '#fff', color: sel ? CAUSE[c].text : T.textSub, fontSize: 13, cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
+                    {sel ? '✓ ' : ''}{c}
+                  </button>
+                )
+              })}
+            </div>
+            {error && <p style={{ fontSize: 13, color: T.danger, marginBottom: 12 }}>{error}</p>}
+            <button onClick={finishTeen} disabled={!ready || loading} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: ready && !loading ? 'pointer' : 'default', background: ready ? T.primary : '#B8D8C8', color: '#fff' }}>
+              {loading ? 'Creating account...' : ready ? 'Finish setup →' : `Pick ${needed} more`}
+            </button>
           </div>
-          {error && <p style={{ fontSize: 13, color: T.danger, marginBottom: 12 }}>{error}</p>}
-          <button onClick={handleSignUp} disabled={!ready || loading} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: ready && !loading ? 'pointer' : 'default', background: ready ? T.primary : '#B8D8C8', color: '#fff' }}>
-            {loading ? 'Creating account...' : ready ? 'Finish setup →' : `Pick ${needed} more`}
-          </button>
         </div>
-      </div>
-    )
+      )
+    }
+
+    // ORG step 3
+    if (role === 'org') {
+      const toggle = (c) => setOrgCauses(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
+      const ready = orgCauses.length >= 1
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
+          {topBar('Create account', 'Step 3 of 3 — Causes you support', () => setScreen('step2'))}
+          <div style={{ padding: '24px 20px' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 4 }}>What causes does your org support?</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>Pick at least 1. This helps teens find you.</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
+              {CAUSES.map(c => {
+                const sel = orgCauses.includes(c)
+                return (
+                  <button key={c} onClick={() => toggle(c)} style={{ padding: '10px 16px', borderRadius: 24, border: sel ? `2px solid ${CAUSE[c].text}` : `1.5px solid ${T.border}`, background: sel ? CAUSE[c].bg : '#fff', color: sel ? CAUSE[c].text : T.textSub, fontSize: 13, cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
+                    {sel ? '✓ ' : ''}{c}
+                  </button>
+                )
+              })}
+            </div>
+            {error && <p style={{ fontSize: 13, color: T.danger, marginBottom: 12 }}>{error}</p>}
+            <button onClick={finishOrg} disabled={!ready || loading} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: ready && !loading ? 'pointer' : 'default', background: ready ? T.primary : '#B8D8C8', color: '#fff' }}>
+              {loading ? 'Creating account...' : 'Finish setup →'}
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    // PARENT step 3
+    if (role === 'parent') {
+      const toggle = (c) => setParentInterests(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
+          {topBar('Create account', 'Step 3 of 3 — Interests', () => setScreen('step2'))}
+          <div style={{ padding: '24px 20px' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 4 }}>What causes does your family care about?</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>Optional — helps us suggest better opportunities for your teen.</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
+              {CAUSES.map(c => {
+                const sel = parentInterests.includes(c)
+                return (
+                  <button key={c} onClick={() => toggle(c)} style={{ padding: '10px 16px', borderRadius: 24, border: sel ? `2px solid ${CAUSE[c].text}` : `1.5px solid ${T.border}`, background: sel ? CAUSE[c].bg : '#fff', color: sel ? CAUSE[c].text : T.textSub, fontSize: 13, cursor: 'pointer', fontWeight: sel ? 600 : 400 }}>
+                    {sel ? '✓ ' : ''}{c}
+                  </button>
+                )
+              })}
+            </div>
+            {error && <p style={{ fontSize: 13, color: T.danger, marginBottom: 12 }}>{error}</p>}
+            <button onClick={finishParent} disabled={loading} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: loading ? 'default' : 'pointer', background: T.primary, color: '#fff' }}>
+              {loading ? 'Creating account...' : 'Finish setup →'}
+            </button>
+          </div>
+        </div>
+      )
+    }
   }
+
+  // ── Login ─────────────────────────────────────────────────────────────────
 
   if (screen === 'login') {
     const ready = email.trim() && password.trim()
