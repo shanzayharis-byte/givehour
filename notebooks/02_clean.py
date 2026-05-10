@@ -70,13 +70,14 @@ def derive_cause(activities):
     names = " ".join(a.get("name", "").lower() for a in activities)
     cats  = " ".join(a.get("category", "").lower() for a in activities)
     text  = names + " " + cats
-    if re.search(r"animal|wildlife|pet|spca|humane", text):                          return "Animals"
-    if re.search(r"food|hunger|meal|nutrition|pantry|harvest|farm", text):            return "Food Security"
-    if re.search(r"hous|shelter|homeless|habitat", text):                             return "Housing"
-    if re.search(r"senior|elder|aged|retirement", text):                              return "Seniors"
-    if re.search(r"environ|nature|trail|plant|garden|ecology|conserv|climate", text): return "Environment"
-    if re.search(r"health|medical|cancer|mental|hospital|clinic|nurse", text):        return "Health"
-    if re.search(r"art|music|theatre|theater|craft|creative|writing|design", text):   return "Arts"
+    if re.search(r"animal|wildlife|pet|spca|humane|rescue|shelter.*animal|dog|cat|bird|zoo|aquarium", text):                                             return "Animals"
+    if re.search(r"food|hunger|meal|nutrition|pantry|harvest|farm|feeding|grocery|kitchen|lunch|dinner|breakfast|food bank|soup", text):                  return "Food Security"
+    if re.search(r"hous|shelter|homeless|habitat|affordable housing|transitional|domestic violence|refugee.*hous", text):                                  return "Housing"
+    if re.search(r"senior|elder|aged|retirement|nursing home|assisted living|older adult|grandparent|aging", text):                                        return "Seniors"
+    if re.search(r"environ|nature|trail|plant|garden|ecology|conserv|climate|recycl|clean up|cleanup|ocean|beach|park|forest|tree|green|sustainab|carbon|pollution", text): return "Environment"
+    if re.search(r"health|medical|cancer|mental|hospital|clinic|nurse|wellness|covid|vaccine|disability|blood|hospice|vision|hearing|therapy|rehab", text): return "Health"
+    if re.search(r"art|music|theatre|theater|craft|creative|writing|design|dance|film|photo|gallery|mural|perform|drama|choir|band|culture|heritage|museum", text): return "Arts"
+    if re.search(r"teach|tutor|coach|mentor|literacy|school|education|youth|kid|child|student|learn|read|math|stem|college|library|homework|afterschool|curriculum", text): return "Education"
     return "Education"
 
 def derive_location(item):

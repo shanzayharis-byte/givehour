@@ -37,6 +37,8 @@ export default function Feed({ user, onSelectOpp }) {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const [totalHours, setTotalHours] = useState(0)
   const [orgCount, setOrgCount] = useState(0)
+  const [streak, setStreak] = useState(0)
+  const [isPersonalized, setIsPersonalized] = useState(false)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -48,7 +50,20 @@ export default function Feed({ user, onSelectOpp }) {
     async function load() {
       try {
         if (user?.id) {
-          // load personalized feed from clean_listings
+          // load impact stats (hours, orgs, streak)
+          const [{ data: stats }, { data: hours }] = await Promise.all([
+            supabase.from('impact_stats').select('total_hours, streak_days').eq('user_id', user.id).maybeSingle(),
+            supabase.from('hours_log').select('hours, org').eq('user_id', user.id),
+          ])
+          if (stats) {
+            setTotalHours(parseFloat(stats.total_hours) || 0)
+            setStreak(stats.streak_days || 0)
+          } else if (hours) {
+            setTotalHours(hours.reduce((s, r) => s + (r.hours || 0), 0))
+          }
+          if (hours) setOrgCount(new Set(hours.map(r => r.org).filter(Boolean)).size)
+
+          // load personalized feed
           const { data: feed } = await supabase
             .from('personalized_feed')
             .select('score, rank, clean_listings!inner(*)')
@@ -58,14 +73,9 @@ export default function Feed({ user, onSelectOpp }) {
             .limit(10)
           if (feed && feed.length > 0) {
             setOpps(feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) })))
+            setIsPersonalized(true)
             setLoading(false)
             return
-          }
-          // fallback: load hours stats
-          const { data: hours } = await supabase.from('hours_log').select('hours, org').eq('user_id', user.id)
-          if (hours) {
-            setTotalHours(hours.reduce((s, r) => s + (r.hours || 0), 0))
-            setOrgCount(new Set(hours.map(r => r.org)).size)
           }
         }
         const { data } = await supabase.from('clean_listings').select('*').neq('age_group', '18+ Only').order('fetched_at', { ascending: false }).limit(10)
@@ -95,7 +105,7 @@ export default function Feed({ user, onSelectOpp }) {
           </div>
           {isDesktop ? (
             <div style={{ display: 'flex', gap: 12 }}>
-              {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [0, 'streak', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
+              {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [streak, 'streak', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
                 <div key={lbl} style={{ minWidth: 80, textAlign: 'center', background: bg, borderRadius: 10, padding: '12px 16px' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color }}>{val}</div>
                   <div style={{ fontSize: 12, color, opacity: 0.75 }}>{lbl}</div>
@@ -108,7 +118,7 @@ export default function Feed({ user, onSelectOpp }) {
         </div>
         {!isDesktop && (
           <div style={{ display: 'flex', gap: 8 }}>
-            {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [0, 'streak', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
+            {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [streak, 'streak', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
               <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}>
                 <div style={{ fontSize: 18, fontWeight: 700, color }}>{val}</div>
                 <div style={{ fontSize: 10, color, opacity: 0.75 }}>{lbl}</div>
@@ -120,10 +130,23 @@ export default function Feed({ user, onSelectOpp }) {
 
       {/* cards */}
       <div style={{ padding: isDesktop ? '32px 40px' : '16px 20px' }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: T.textSub, letterSpacing: '0.02em', textTransform: 'uppercase', marginBottom: 12 }}>YOUR TOP MATCHES TODAY</div>
-        <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 } : { display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {opps.map((opp, i) => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} isFirst={i === 0} />)}
+        <div style={{ fontSize: 13, fontWeight: 600, color: T.textSub, letterSpacing: '0.02em', textTransform: 'uppercase', marginBottom: 12 }}>
+          {isPersonalized ? 'YOUR TOP MATCHES TODAY' : 'RECENTLY ADDED'}
         </div>
+        {opps.length === 0 ? (
+          <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 16, padding: 32, textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🌱</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 6 }}>Your feed is getting ready</div>
+            <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6, maxWidth: 260, margin: '0 auto 20px' }}>Complete your profile — add your region and top cause — so we can find the best matches for you.</div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <a href="#" style={{ background: T.primary, color: '#fff', padding: '10px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Go to Profile →</a>
+            </div>
+          </div>
+        ) : (
+          <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 } : { display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {opps.map((opp, i) => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} isFirst={i === 0} />)}
+          </div>
+        )}
       </div>
     </div>
   )
