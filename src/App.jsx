@@ -9,6 +9,9 @@ import LogHours from './screens/LogHours'
 import Impact from './screens/Impact'
 import Profile from './screens/Profile'
 import Admin from './screens/Admin'
+import OrgDashboard from './screens/OrgDashboard'
+import OrgProfile from './screens/OrgProfile'
+import ApplicantsInbox from './screens/ApplicantsInbox'
 import './App.css'
 
 const NAV = [
@@ -19,13 +22,20 @@ const NAV = [
   { id: 'profile',  icon: '👤', label: 'Profile' },
 ]
 
-const PROTECTED = ['feed', 'loghours', 'impact', 'profile', 'admin']
+const ORG_NAV = [
+  { id: 'orgDashboard',   icon: '📋', label: 'Listings' },
+  { id: 'orgApplicants',  icon: '📬', label: 'Applicants' },
+  { id: 'profile',        icon: '👤', label: 'Profile' },
+]
+
+const PROTECTED = ['feed', 'loghours', 'impact', 'profile', 'admin', 'orgDashboard', 'orgApplicants']
 
 export default function App() {
   const [authUser, setAuthUser]       = useState(null)
   const [dbUser, setDbUser]           = useState(null)
   const [activeScreen, setActiveScreen] = useState('landing')
   const [selectedOpp, setSelectedOpp] = useState(null)
+  const [selectedOrg, setSelectedOrg]   = useState(null)
   const [isGuest, setIsGuest]         = useState(false)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [appLoading, setAppLoading]   = useState(true)
@@ -80,6 +90,7 @@ export default function App() {
       return
     }
     setSelectedOpp(null)
+    setSelectedOrg(null)
     setActiveScreen(screen)
   }
 
@@ -87,7 +98,7 @@ export default function App() {
     setAuthUser(user)
     setDbUser(db)
     setIsGuest(false)
-    setActiveScreen('feed')
+    setActiveScreen(db?.role === 'org' ? 'orgDashboard' : 'feed')
   }
 
   const handleSignOut = () => {
@@ -102,30 +113,38 @@ export default function App() {
     setActiveScreen('explore')
   }
 
+  const isOrg = dbUser?.role === 'org'
   const adminNavItem = { id: 'admin', icon: '⚙️', label: 'Admin' }
-  const visibleNav = dbUser?.is_admin ? [...NAV, adminNavItem] : NAV
+  const visibleNav = isOrg ? ORG_NAV : (dbUser?.is_admin ? [...NAV, adminNavItem] : NAV)
 
   if (appLoading) {
     return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: 16, color: T.textMuted }}>Loading Give Hour...</div>
   }
 
-  const showNav = authUser && !selectedOpp && visibleNav.some(n => n.id === activeScreen)
+  const showNav = authUser && !selectedOpp && !selectedOrg && visibleNav.some(n => n.id === activeScreen)
 
   const mainContent = () => {
     if (selectedOpp) {
-      return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest} onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('landing') }} />
+      return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest}
+        onSelectOrg={(orgId) => { setSelectedOpp(null); setSelectedOrg(orgId) }}
+        onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('landing') }} />
+    }
+    if (selectedOrg) {
+      return <OrgProfile orgId={selectedOrg} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} />
     }
     if (!authUser && !isGuest) {
       return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
     switch (activeScreen) {
-      case 'feed':     return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
-      case 'explore':  return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
-      case 'loghours': return <LogHours user={dbUser} />
-      case 'impact':   return <Impact user={dbUser} />
-      case 'profile':  return <Profile user={dbUser} onSignOut={handleSignOut} />
-      case 'admin':    return <Admin authUser={authUser} />
-      default:         return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
+      case 'feed':          return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
+      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
+      case 'loghours':      return <LogHours user={dbUser} />
+      case 'impact':        return <Impact user={dbUser} />
+      case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} />
+      case 'admin':         return <Admin authUser={authUser} />
+      case 'orgDashboard':  return <OrgDashboard user={dbUser} />
+      case 'orgApplicants': return <ApplicantsInbox user={dbUser} />
+      default:              return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
   }
 
