@@ -40,6 +40,10 @@ export default function Profile({ user, onSignOut }) {
   const [editingName, setEditingName] = useState(false)
   const [nameVal, setNameVal]         = useState(user?.name || '')
 
+  // avatar
+  const [avatarUrl, setAvatarUrl]     = useState(user?.avatar_url || '')
+  const [avatarLoading, setAvatarLoading] = useState(false)
+
   // availability
   const [availDays, setAvailDays]     = useState(user?.availability_days || [])
   const [hoursPerWeek, setHoursPerWeek] = useState(user?.hours_per_week || '')
@@ -111,6 +115,21 @@ export default function Profile({ user, onSignOut }) {
     setShowEditProfile(false)
   }
 
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarLoading(true)
+    const ext  = file.name.split('.').pop()
+    const path = `${user.id}.${ext}`
+    const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
+    if (!error) {
+      const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+      await save({ avatar_url: data.publicUrl })
+      setAvatarUrl(data.publicUrl)
+    }
+    setAvatarLoading(false)
+  }
+
   const toggleDay = (day) => {
     setAvailDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
   }
@@ -135,7 +154,15 @@ export default function Profile({ user, onSignOut }) {
   const profileCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 14 }}>
-        <div style={{ width: 60, height: 60, borderRadius: '50%', background: T.primaryLight, color: T.primary, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(24,160,80,0.3)', flexShrink: 0 }}>{(nameVal || user?.name || 'U')[0].toUpperCase()}</div>
+        <label style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }}>
+          <input type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
+          <div style={{ width: 60, height: 60, borderRadius: '50%', background: T.primaryLight, color: T.primary, fontSize: 24, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(24,160,80,0.3)', overflow: 'hidden' }}>
+            {avatarLoading ? <span style={{ fontSize: 12 }}>...</span>
+              : avatarUrl ? <img src={avatarUrl} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : (nameVal || user?.name || 'U')[0].toUpperCase()}
+          </div>
+          <div style={{ position: 'absolute', bottom: 0, right: 0, width: 18, height: 18, borderRadius: '50%', background: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: '#fff', border: '1.5px solid #fff' }}>✎</div>
+        </label>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{nameVal || user?.name || 'Teen'}</div>
           <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>
