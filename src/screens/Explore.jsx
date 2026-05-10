@@ -3,8 +3,7 @@ import { T, CAUSE } from '../lib/theme'
 
 // ---------- constants ----------
 const AGE_GROUPS = [
-  { key: 'All',           label: 'All' },
-  { key: 'All Ages',      label: '✓ All Ages' },
+  { key: 'All Ages',      label: 'All Ages' },
   { key: 'Teens (13-17)', label: '🧑 Teens (13–17)' },
   { key: '18+ Only',      label: '18+ Only' },
   { key: 'Open',          label: 'No Age Listed' },
@@ -107,7 +106,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
   const [loading, setLoading]         = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError]             = useState(null)
-  const [activeGroup, setActiveGroup] = useState('All')
+  const [activeGroup, setActiveGroup] = useState('All Ages')
   const [search, setSearch]           = useState('')
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
 
@@ -145,10 +144,10 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
   )
 
   // Then by active group
-  const isAll     = activeGroup === 'All'
+  const isAll     = activeGroup === 'All Ages'
   const filtered  = isAll ? searched : searched.filter(o => o.ageGroup === activeGroup)
 
-  // Build grouped sections for "All" view
+  // Build grouped sections for "All Ages" view
   const grouped = isAll
     ? SECTIONS.map(s => ({ section: s, items: searched.filter(o => o.ageGroup === s.key) })).filter(g => g.items.length > 0)
     : null
