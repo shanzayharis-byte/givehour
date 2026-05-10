@@ -1,8 +1,48 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState, useEffect, useCallback } from 'react'
 import { T, CAUSE } from '../lib/theme'
 
-const CAUSES = ['All', 'Housing', 'Food Security', 'Education', 'Environment', 'Animals', 'Health', 'Arts', 'Seniors']
+const CAUSES = ['All', 'Remote', 'Education', 'Environment', 'Health', 'Animals', 'Food Security', 'Housing', 'Arts', 'Seniors']
+
+// Map VolunteerConnector activity names + categories → app cause labels
+function deriveCause(activities = []) {
+  const names = activities.map(a => (a.name || '').toLowerCase()).join(' ')
+  const cats  = activities.map(a => (a.category || '').toLowerCase()).join(' ')
+  const all   = names + ' ' + cats
+
+  if (/animal|wildlife|pet|spca|humane/.test(all))                         return 'Animals'
+  if (/food|hunger|meal|nutrition|pantry|harvest|farm/.test(all))           return 'Food Security'
+  if (/hous|shelter|homeless|habitat/.test(all))                            return 'Housing'
+  if (/senior|elder|aged|retirement/.test(all))                             return 'Seniors'
+  if (/environ|nature|trail|plant|garden|ecology|conserv|climate/.test(all)) return 'Environment'
+  if (/health|medical|cancer|mental|hospital|clinic|nurse/.test(all))       return 'Health'
+  if (/art|music|theatre|theater|craft|creative|writing|journalism|design/.test(all)) return 'Arts'
+  if (/teach|tutor|coach|mentor|literacy|school|education|youth|kid|child|student|learn/.test(all)) return 'Education'
+  return 'Education' // sensible default
+}
+
+function deriveLocation(item) {
+  if (item.remote_or_online) return 'Remote / Online'
+  const { audience } = item
+  if (audience?.regions?.length) return audience.regions[0]
+  return 'In-Person'
+}
+
+function mapOpp(item) {
+  return {
+    id:          item.id,
+    title:       item.title,
+    org:         item.organization?.name || '',
+    orgLogo:     item.organization?.logo || '',
+    cause:       deriveCause(item.activities),
+    hours:       item.duration || '',
+    location:    deriveLocation(item),
+    date:        item.dates || '',
+    description: item.description || '',
+    externalUrl: item.url || '',
+    remote:      !!item.remote_or_online,
+    activities:  item.activities || [],
+  }
+}
 
 function OppCard({ opp, onSelect }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
@@ -12,21 +52,24 @@ function OppCard({ opp, onSelect }) {
       <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
       <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
         <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500 }}>{opp.cause}</span>
-        <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
-        <span style={{ fontSize: 12, color: T.textMuted }}>{opp.hours}</span>
-        <span style={{ fontSize: 12, color: T.textMuted }}>·</span>
-        <span style={{ fontSize: 12, color: T.textMuted }}>{opp.location}</span>
+        {opp.remote && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 500 }}>Remote</span>}
+        {opp.hours && <><span style={{ fontSize: 12, color: T.textMuted }}>·</span><span style={{ fontSize: 12, color: T.textMuted }}>{opp.hours}</span></>}
+        {opp.location && !opp.remote && <><span style={{ fontSize: 12, color: T.textMuted }}>·</span><span style={{ fontSize: 12, color: T.textMuted }}>{opp.location}</span></>}
       </div>
-      <div style={{ fontSize: 12, color: T.textMuted }}>{opp.date}</div>
+      {opp.date && <div style={{ fontSize: 12, color: T.textMuted }}>{opp.date}</div>}
     </div>
   )
 }
 
 export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin, onHome }) {
-  const [opps, setOpps] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [opps, setOpps]           = useState([])
+  const [page, setPage]           = useState(1)
+  const [hasMore, setHasMore]     = useState(false)
+  const [loading, setLoading]     = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError]         = useState(null)
   const [activeCause, setActiveCause] = useState('All')
-  const [search, setSearch] = useState('')
+  const [search, setSearch]       = useState('')
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
 
   useEffect(() => {
@@ -35,26 +78,35 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
     return () => window.removeEventListener('resize', handle)
   }, [])
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const { data } = await supabase.from('opportunities').select('*').order('created_at', { ascending: false })
-        setOpps(data || [])
-      } catch (e) {
-        console.error(e)
-      }
-      setLoading(false)
+  const fetchPage = useCallback(async (pageNum, replace = false) => {
+    replace ? setLoading(true) : setLoadingMore(true)
+    setError(null)
+    try {
+      const r = await fetch(`/api/opportunities?page=${pageNum}`)
+      if (!r.ok) throw new Error('Failed to load opportunities')
+      const data = await r.json()
+      const mapped = (data.results || []).map(mapOpp)
+      setOpps(prev => replace ? mapped : [...prev, ...mapped])
+      setHasMore(!!data.next)
+      setPage(pageNum)
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      replace ? setLoading(false) : setLoadingMore(false)
     }
-    load()
   }, [])
 
+  useEffect(() => { fetchPage(1, true) }, [fetchPage])
+
   const filtered = opps.filter(o => {
-    const matchCause = activeCause === 'All' || o.cause === activeCause
-    const matchSearch = !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.org.toLowerCase().includes(search.toLowerCase())
+    const matchCause  = activeCause === 'All' ? true
+                      : activeCause === 'Remote' ? o.remote
+                      : o.cause === activeCause
+    const matchSearch = !search
+      || o.title.toLowerCase().includes(search.toLowerCase())
+      || o.org.toLowerCase().includes(search.toLowerCase())
     return matchCause && matchSearch
   })
-
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 16, color: T.textMuted }}>Loading...</div>
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg, display: 'flex', flexDirection: 'column' }}>
@@ -75,12 +127,14 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
           <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Browse all opportunities</div>
         </div>
       )}
+
       <div style={{ padding: isDesktop ? '32px 40px' : '14px 20px', flex: 1 }}>
         {/* search */}
         <div style={{ display: 'flex', flexDirection: 'row', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', gap: 8, marginBottom: 14, alignItems: 'center' }}>
           <span style={{ fontSize: 16, color: T.textMuted }}>🔍</span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search opportunities..." style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
         </div>
+
         {/* cause pills */}
         <div style={{ display: 'flex', flexDirection: 'row', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
           {CAUSES.map(c => (
@@ -89,13 +143,34 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
             </button>
           ))}
         </div>
+
         {/* cards */}
-        {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>No opportunities match this filter. Try a different cause.</div>
-        ) : (
-          <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 } : { display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {filtered.map(opp => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} />)}
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading opportunities…</div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>
+            {error} — <button onClick={() => fetchPage(1, true)} style={{ color: T.primary, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>retry</button>
           </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>No opportunities match this filter.</div>
+        ) : (
+          <>
+            <div style={isDesktop ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 } : { display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {filtered.map(opp => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} />)}
+            </div>
+
+            {hasMore && (
+              <div style={{ textAlign: 'center', marginTop: 24 }}>
+                <button
+                  onClick={() => fetchPage(page + 1)}
+                  disabled={loadingMore}
+                  style={{ background: T.primaryLight, border: `1.5px solid ${T.primary}`, color: T.primary, borderRadius: 20, padding: '10px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
+                >
+                  {loadingMore ? 'Loading…' : 'Load more'}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
