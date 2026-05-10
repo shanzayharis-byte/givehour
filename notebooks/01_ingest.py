@@ -1,21 +1,23 @@
 # Notebook 1 — Ingest
-# Fetches all US volunteer listings from VolunteerConnector and saves them
-# as a JSON file in Azure Data Lake (raw/ container).
-# Run this on a schedule (e.g. every night at midnight).
+# Fetches all US volunteer listings from the VolunteerConnector API
+# and saves them as a JSON file in Azure Data Lake (raw/ container).
 #
-# Credentials set in Databricks cluster Spark config (Advanced → Spark):
-#   spark.hadoop.AZURE_STORAGE_KEY  — Access key for givehourdata
+# Setup: set the following environment variables in your Databricks cluster
+# (Compute → your cluster → Edit → Advanced → Environment variables):
+#
+#   AZURE_STORAGE_KEY   — Access key for the givehourdata storage account
 
-%pip install azure-storage-blob supabase
+%pip install azure-storage-blob
 
+import os
 import requests
 import json
 from datetime import datetime, timezone
 from azure.storage.blob import BlobServiceClient
 
-# ── credentials (from Spark config) ──────────────────────────────────────────
+# ── credentials ───────────────────────────────────────────────────────────────
 STORAGE_ACCOUNT   = "givehourdata"
-STORAGE_KEY       = sc._jsc.hadoopConfiguration().get("AZURE_STORAGE_KEY")
+STORAGE_KEY       = os.environ["AZURE_STORAGE_KEY"]
 CONTAINER_RAW     = "raw"
 CONNECTION_STRING = (
     f"DefaultEndpointsProtocol=https;"
@@ -24,41 +26,32 @@ CONNECTION_STRING = (
     f"EndpointSuffix=core.windows.net"
 )
 
-# ── fetch all pages from VolunteerConnector ───────────────────────────────────
-API_BASE = "https://www.volunteerconnector.org/api/search/"
+# ── fetch all listings from VolunteerConnector ────────────────────────────────
+BASE_URL = "https://www.volunteerconnector.org/api/search/"
+params   = {"format": "json", "country": "United States", "page_size": 100}
 
-def fetch_all_listings():
-    listings = []
-    page = 1
-    while True:
-        print(f"  Fetching page {page}...")
-        r = requests.get(API_BASE, params={"format": "json", "page": page, "country": "United States"})
-        if not r.ok:
-            print(f"  Error on page {page}: {r.status_code}")
-            break
-        data = r.json()
-        results = data.get("results", [])
-        listings.extend(results)
-        print(f"  Got {len(results)} listings (total so far: {len(listings)})")
-        if not data.get("next"):
-            break
-        page += 1
-    return listings
+all_results = []
+url  = BASE_URL
+page = 1
+
+print("Fetching listings...")
+while url:
+    r = requests.get(url, params=params if page == 1 else None)
+    r.raise_for_status()
+    data = r.json()
+    all_results.extend(data.get("results", []))
+    url = data.get("next")
+    print(f"  Page {page}: {len(data.get('results', []))} results (total: {len(all_results)})")
+    page += 1
+
+print(f"Fetched {len(all_results)} total listings")
 
 # ── save to Azure Data Lake raw/ container ────────────────────────────────────
-def save_to_raw(listings):
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
-    blob_name = f"volunteerconnector/{timestamp}.json"
-    payload   = json.dumps(listings, indent=2)
-    client    = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-    blob      = client.get_blob_client(container=CONTAINER_RAW, blob=blob_name)
-    blob.upload_blob(payload, overwrite=True)
-    print(f"Saved {len(listings)} listings → raw/{blob_name}")
-    return blob_name
+timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+blob_name = f"volunteerconnector/{timestamp}.json"
 
-# ── run ───────────────────────────────────────────────────────────────────────
-print("Starting ingestion...")
-listings  = fetch_all_listings()
-print(f"Total listings fetched: {len(listings)}")
-blob_name = save_to_raw(listings)
-print(f"Done. File saved: {blob_name}")
+client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+blob   = client.get_blob_client(container=CONTAINER_RAW, blob=blob_name)
+blob.upload_blob(json.dumps(all_results, indent=2), overwrite=True)
+
+print(f"Saved {len(all_results)} listings → raw/{blob_name}")

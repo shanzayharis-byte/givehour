@@ -1,34 +1,37 @@
 # Notebook 2 — Clean
-# Reads the latest raw file from Data Lake, removes non-US listings,
-# detects age group + cause, and writes clean records to:
+# Reads the latest raw JSON from Azure Data Lake, filters to US-only listings,
+# detects age group and cause category, and writes clean records to:
 #   - Azure Data Lake processed/ container (as JSON)
 #   - Supabase clean_listings table
 #
-# Credentials set in Databricks cluster Spark config (Advanced → Spark):
-#   spark.hadoop.AZURE_STORAGE_KEY
-#   spark.hadoop.SUPABASE_URL
-#   spark.hadoop.SUPABASE_KEY
+# Setup: set the following environment variables in your Databricks cluster
+# (Compute → your cluster → Edit → Advanced → Environment variables):
+#
+#   AZURE_STORAGE_KEY   — Access key for the givehourdata storage account
+#   SUPABASE_URL        — https://your-project.supabase.co
+#   SUPABASE_KEY        — service_role key from Supabase → Settings → API
 
 %pip install azure-storage-blob supabase
 
+import os
 import json
 import re
 from datetime import datetime, timezone
 from azure.storage.blob import BlobServiceClient
 from supabase import create_client
 
-# ── credentials (from Spark config) ──────────────────────────────────────────
-STORAGE_KEY       = sc._jsc.hadoopConfiguration().get("AZURE_STORAGE_KEY")
+# ── credentials ───────────────────────────────────────────────────────────────
+STORAGE_KEY       = os.environ["AZURE_STORAGE_KEY"]
+SUPABASE_URL      = os.environ["SUPABASE_URL"]
+SUPABASE_KEY      = os.environ["SUPABASE_KEY"]
 CONNECTION_STRING = (
-    "DefaultEndpointsProtocol=https;"
-    "AccountName=givehourdata;"
+    f"DefaultEndpointsProtocol=https;"
+    f"AccountName=givehourdata;"
     f"AccountKey={STORAGE_KEY};"
-    "EndpointSuffix=core.windows.net"
+    f"EndpointSuffix=core.windows.net"
 )
 CONTAINER_RAW       = "raw"
 CONTAINER_PROCESSED = "processed"
-SUPABASE_URL        = sc._jsc.hadoopConfiguration().get("SUPABASE_URL")
-SUPABASE_KEY        = sc._jsc.hadoopConfiguration().get("SUPABASE_KEY")
 
 # ── US filter ─────────────────────────────────────────────────────────────────
 CA_PROVINCES = {
@@ -67,23 +70,21 @@ def derive_cause(activities):
     names = " ".join(a.get("name", "").lower() for a in activities)
     cats  = " ".join(a.get("category", "").lower() for a in activities)
     text  = names + " " + cats
-    if re.search(r"animal|wildlife|pet|spca|humane", text):                return "Animals"
-    if re.search(r"food|hunger|meal|nutrition|pantry|harvest|farm", text):  return "Food Security"
-    if re.search(r"hous|shelter|homeless|habitat", text):                   return "Housing"
-    if re.search(r"senior|elder|aged|retirement", text):                    return "Seniors"
+    if re.search(r"animal|wildlife|pet|spca|humane", text):                          return "Animals"
+    if re.search(r"food|hunger|meal|nutrition|pantry|harvest|farm", text):            return "Food Security"
+    if re.search(r"hous|shelter|homeless|habitat", text):                             return "Housing"
+    if re.search(r"senior|elder|aged|retirement", text):                              return "Seniors"
     if re.search(r"environ|nature|trail|plant|garden|ecology|conserv|climate", text): return "Environment"
-    if re.search(r"health|medical|cancer|mental|hospital|clinic|nurse", text): return "Health"
-    if re.search(r"art|music|theatre|theater|craft|creative|writing|design", text): return "Arts"
+    if re.search(r"health|medical|cancer|mental|hospital|clinic|nurse", text):        return "Health"
+    if re.search(r"art|music|theatre|theater|craft|creative|writing|design", text):   return "Arts"
     return "Education"
 
-# ── location ──────────────────────────────────────────────────────────────────
 def derive_location(item):
     if item.get("remote_or_online"):
         return "Remote / Online"
     regions = item.get("audience", {}).get("regions", [])
     return regions[0] if regions else "In-Person"
 
-# ── map one raw item → clean record ──────────────────────────────────────────
 def clean_item(item):
     activities = item.get("activities", [])
     extra      = " ".join(a.get("name", "") for a in activities)
@@ -102,42 +103,32 @@ def clean_item(item):
         "fetched_at":   datetime.now(timezone.utc).isoformat(),
     }
 
-# ── get latest raw file ───────────────────────────────────────────────────────
-def get_latest_raw():
-    client    = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-    container = client.get_container_client(CONTAINER_RAW)
-    blobs     = sorted(container.list_blobs(name_starts_with="volunteerconnector/"), key=lambda b: b.name, reverse=True)
-    if not blobs:
-        raise Exception("No raw files found — run 01_ingest first")
-    latest = blobs[0].name
-    print(f"Reading: raw/{latest}")
-    blob = client.get_blob_client(container=CONTAINER_RAW, blob=latest)
-    return json.loads(blob.download_blob().readall())
+# ── load latest raw file ──────────────────────────────────────────────────────
+client    = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+container = client.get_container_client(CONTAINER_RAW)
+blobs     = sorted(container.list_blobs(name_starts_with="volunteerconnector/"), key=lambda b: b.name, reverse=True)
+if not blobs:
+    raise Exception("No raw files found — run notebook 01_ingest first")
 
-# ── save processed file ───────────────────────────────────────────────────────
-def save_processed(records):
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
-    blob_name = f"listings/{timestamp}.json"
-    client    = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-    blob      = client.get_blob_client(container=CONTAINER_PROCESSED, blob=blob_name)
-    blob.upload_blob(json.dumps(records, indent=2), overwrite=True)
-    print(f"Saved {len(records)} clean records → processed/{blob_name}")
+latest = blobs[0].name
+print(f"Reading: raw/{latest}")
+blob    = client.get_blob_client(container=CONTAINER_RAW, blob=latest)
+raw     = json.loads(blob.download_blob().readall())
 
-# ── write to Supabase ─────────────────────────────────────────────────────────
-def write_to_supabase(records):
-    db = create_client(SUPABASE_URL, SUPABASE_KEY)
-    for i in range(0, len(records), 100):
-        batch = records[i:i+100]
-        db.table("clean_listings").upsert(batch).execute()
-        print(f"  Upserted rows {i}–{i+len(batch)}")
-    print(f"Supabase updated — {len(records)} total records")
-
-# ── run ───────────────────────────────────────────────────────────────────────
-print("Starting clean...")
-raw     = get_latest_raw()
+# ── clean and filter ──────────────────────────────────────────────────────────
 us_only = [item for item in raw if is_us(item)]
 print(f"US listings: {len(us_only)} / {len(raw)} total")
 records = [clean_item(item) for item in us_only]
-save_processed(records)
-write_to_supabase(records)
-print("Done.")
+
+# ── save to Data Lake processed/ ─────────────────────────────────────────────
+timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+blob_name = f"listings/{timestamp}.json"
+blob      = client.get_blob_client(container=CONTAINER_PROCESSED, blob=blob_name)
+blob.upload_blob(json.dumps(records, indent=2), overwrite=True)
+print(f"Saved {len(records)} clean records → processed/{blob_name}")
+
+# ── upsert to Supabase clean_listings ────────────────────────────────────────
+db = create_client(SUPABASE_URL, SUPABASE_KEY)
+for i in range(0, len(records), 100):
+    db.table("clean_listings").upsert(records[i:i+100]).execute()
+print(f"Supabase updated — {len(records)} records in clean_listings")
