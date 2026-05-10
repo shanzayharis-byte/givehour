@@ -15,6 +15,7 @@ A volunteer matching platform built for Bay Area teens. Find personalized opport
 - **Save & share** — bookmark opportunities and share them with friends
 - **Profile** — cause interests, region, school info, availability, and notification settings
 - **Teen-only** — 18+ listings are filtered out throughout the entire app
+- **Auth** — differentiated signup flows (teen / org / parent), forgot password, duplicate email detection, Gmail SMTP for transactional emails
 
 ---
 
@@ -109,6 +110,15 @@ Three distinct signup flows based on account type:
 - **Teen** — grade, age, region, school, cause interests (min 2) — first cause = preferred cause for matching
 - **Organization** — org name, type, city, website, causes supported
 - **Parent** — child's grade, school, zip, family cause interests (optional)
+
+All fields are saved via `upsert` on the Supabase `users` table at signup completion.
+
+## Auth Features
+
+- Duplicate email: friendly error on step 1 ("An account with this email already exists")
+- Forgot password: sends reset link via Gmail SMTP → branded confirmation screen
+- Confirmation emails sent from `shanzay.haris@gmail.com` using Gmail App Password + Supabase SMTP
+- Supabase Site URL set to `https://givehour.vercel.app` so reset/confirm links go to the live app
 
 ---
 
