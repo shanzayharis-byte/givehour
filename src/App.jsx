@@ -41,7 +41,25 @@ export default function App() {
       if (session) {
         setAuthUser(session.user)
         try {
-          const { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
+          let { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
+          if (!data?.name) {
+            const stored = localStorage.getItem('givehour_pending_profile')
+            if (stored) {
+              const profile = JSON.parse(stored)
+              const resp = await fetch('/api/save-profile', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify(profile),
+              })
+              if (resp.ok) {
+                localStorage.removeItem('givehour_pending_profile')
+                data = { ...(data || {}), id: session.user.id, ...profile }
+              }
+            }
+          }
           setDbUser(data)
         } catch (_) {}
         setActiveScreen('feed')
