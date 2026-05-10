@@ -86,7 +86,13 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       if (updateError) throw updateError
       onLoggedIn(user, { id: user.id, email, ...fields })
     } catch (e) {
-      setError(e.message)
+      const msg = (e.message || '').toLowerCase()
+      if (msg.includes('already registered') || msg.includes('already exists')) {
+        setScreen('step1')
+        setError('An account with this email already exists. Try logging in instead.')
+      } else {
+        setError(e.message)
+      }
     }
     setLoading(false)
   }
