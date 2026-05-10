@@ -3,18 +3,19 @@
 # as a JSON file in Azure Data Lake (raw/ container).
 # Run this on a schedule (e.g. every night at midnight).
 #
-# Required environment variables (set in Databricks cluster config):
-#   AZURE_STORAGE_KEY  — Access key for givehourdata storage account
+# Credentials set in Databricks cluster Spark config (Advanced → Spark):
+#   spark.hadoop.AZURE_STORAGE_KEY  — Access key for givehourdata
 
-import os
+%pip install azure-storage-blob supabase
+
 import requests
 import json
 from datetime import datetime, timezone
 from azure.storage.blob import BlobServiceClient
 
-# ── credentials (from Databricks environment) ─────────────────────────────────
+# ── credentials (from Spark config) ──────────────────────────────────────────
 STORAGE_ACCOUNT   = "givehourdata"
-STORAGE_KEY       = os.environ["AZURE_STORAGE_KEY"]
+STORAGE_KEY       = sc._jsc.hadoopConfiguration().get("AZURE_STORAGE_KEY")
 CONTAINER_RAW     = "raw"
 CONNECTION_STRING = (
     f"DefaultEndpointsProtocol=https;"
@@ -49,16 +50,15 @@ def save_to_raw(listings):
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     blob_name = f"volunteerconnector/{timestamp}.json"
     payload   = json.dumps(listings, indent=2)
-
-    client = BlobServiceClient.from_connection_string(CONNECTION_STRING)
-    blob   = client.get_blob_client(container=CONTAINER_RAW, blob=blob_name)
+    client    = BlobServiceClient.from_connection_string(CONNECTION_STRING)
+    blob      = client.get_blob_client(container=CONTAINER_RAW, blob=blob_name)
     blob.upload_blob(payload, overwrite=True)
     print(f"Saved {len(listings)} listings → raw/{blob_name}")
     return blob_name
 
 # ── run ───────────────────────────────────────────────────────────────────────
 print("Starting ingestion...")
-listings = fetch_all_listings()
+listings  = fetch_all_listings()
 print(f"Total listings fetched: {len(listings)}")
 blob_name = save_to_raw(listings)
 print(f"Done. File saved: {blob_name}")

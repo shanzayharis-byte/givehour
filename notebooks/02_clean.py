@@ -4,20 +4,21 @@
 #   - Azure Data Lake processed/ container (as JSON)
 #   - Supabase clean_listings table
 #
-# Required environment variables (set in Databricks cluster config):
-#   AZURE_STORAGE_KEY  — Access key for givehourdata storage account
-#   SUPABASE_URL       — https://cmiwwlfazbnrfsvakvhh.supabase.co
-#   SUPABASE_KEY       — Service role key
+# Credentials set in Databricks cluster Spark config (Advanced → Spark):
+#   spark.hadoop.AZURE_STORAGE_KEY
+#   spark.hadoop.SUPABASE_URL
+#   spark.hadoop.SUPABASE_KEY
 
-import os
+%pip install azure-storage-blob supabase
+
 import json
 import re
 from datetime import datetime, timezone
 from azure.storage.blob import BlobServiceClient
 from supabase import create_client
 
-# ── credentials ──────────────────────────────────────────────────────────────
-STORAGE_KEY       = os.environ["AZURE_STORAGE_KEY"]
+# ── credentials (from Spark config) ──────────────────────────────────────────
+STORAGE_KEY       = sc._jsc.hadoopConfiguration().get("AZURE_STORAGE_KEY")
 CONNECTION_STRING = (
     "DefaultEndpointsProtocol=https;"
     "AccountName=givehourdata;"
@@ -26,8 +27,8 @@ CONNECTION_STRING = (
 )
 CONTAINER_RAW       = "raw"
 CONTAINER_PROCESSED = "processed"
-SUPABASE_URL        = os.environ["SUPABASE_URL"]
-SUPABASE_KEY        = os.environ["SUPABASE_KEY"]
+SUPABASE_URL        = sc._jsc.hadoopConfiguration().get("SUPABASE_URL")
+SUPABASE_KEY        = sc._jsc.hadoopConfiguration().get("SUPABASE_KEY")
 
 # ── US filter ─────────────────────────────────────────────────────────────────
 CA_PROVINCES = {
@@ -107,7 +108,7 @@ def get_latest_raw():
     container = client.get_container_client(CONTAINER_RAW)
     blobs     = sorted(container.list_blobs(name_starts_with="volunteerconnector/"), key=lambda b: b.name, reverse=True)
     if not blobs:
-        raise Exception("No raw files found — run 01_ingest.py first")
+        raise Exception("No raw files found — run 01_ingest first")
     latest = blobs[0].name
     print(f"Reading: raw/{latest}")
     blob = client.get_blob_client(container=CONTAINER_RAW, blob=latest)
@@ -133,10 +134,10 @@ def write_to_supabase(records):
 
 # ── run ───────────────────────────────────────────────────────────────────────
 print("Starting clean...")
-raw      = get_latest_raw()
-us_only  = [item for item in raw if is_us(item)]
+raw     = get_latest_raw()
+us_only = [item for item in raw if is_us(item)]
 print(f"US listings: {len(us_only)} / {len(raw)} total")
-records  = [clean_item(item) for item in us_only]
+records = [clean_item(item) for item in us_only]
 save_processed(records)
 write_to_supabase(records)
 print("Done.")
