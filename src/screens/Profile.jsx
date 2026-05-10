@@ -69,10 +69,27 @@ export default function Profile({ user, onSignOut }) {
   useEffect(() => {
     async function load() {
       try {
-        const { data } = await supabase.from('hours_log').select('hours, org').eq('user_id', user?.id)
-        if (data) {
-          setTotalHours(data.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0))
-          setOrgCount(new Set(data.map(r => r.org)).size)
+        // always fetch fresh profile data from Supabase
+        const { data: profile } = await supabase.from('users').select('*').eq('id', user?.id).maybeSingle()
+        if (profile) {
+          setNameVal(profile.name || '')
+          setInterests(profile.interests || [])
+          setPrefCause(profile.preferred_cause || '')
+          setRegion(profile.region || '')
+          setSchoolName(profile.school_name || '')
+          setGrade(profile.grade || '')
+          setAge(profile.age || '')
+          setAvailDays(profile.availability_days || [])
+          setHoursPerWeek(profile.hours_per_week || '')
+          setNotifMatches(profile.notif_new_matches ?? true)
+          setNotifReminders(profile.notif_reminders ?? true)
+          setAvatarUrl(profile.avatar_url || '')
+        }
+
+        const { data: hours } = await supabase.from('hours_log').select('hours, org').eq('user_id', user?.id)
+        if (hours) {
+          setTotalHours(hours.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0))
+          setOrgCount(new Set(hours.map(r => r.org)).size)
         }
       } catch (e) { console.error(e) }
       setLoading(false)
