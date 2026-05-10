@@ -418,6 +418,41 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     }
   }
 
+  // ── Forgot password ───────────────────────────────────────────────────────
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) { setError('Enter your email address above first.'); return }
+    setLoading(true); setError('')
+    try {
+      const { error: e } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: 'https://givehour.vercel.app',
+      })
+      if (e) throw e
+      setScreen('forgotSent')
+    } catch (e) {
+      setError(e.message)
+    }
+    setLoading(false)
+  }
+
+  if (screen === 'forgotSent') {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: isDesktop ? T.bg : T.card }}>
+        {topBar('Check your email', null, () => setScreen('login'))}
+        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>📬</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.text, marginBottom: 8 }}>Reset link sent!</div>
+          <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.6, maxWidth: 280, margin: '0 auto 28px' }}>
+            We sent a password reset link to <strong>{email}</strong>. Check your inbox and follow the link to set a new password.
+          </div>
+          <button onClick={() => setScreen('login')} style={{ background: T.primary, color: '#fff', padding: '12px 28px', borderRadius: 10, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            Back to log in
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   // ── Login ─────────────────────────────────────────────────────────────────
 
   if (screen === 'login') {
@@ -437,7 +472,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} />
           </div>
           <div style={{ textAlign: 'right', marginBottom: 24 }}>
-            <button style={{ background: 'none', border: 'none', fontSize: 13, color: T.primary, cursor: 'pointer' }}>Forgot password?</button>
+            <button onClick={handleForgotPassword} style={{ background: 'none', border: 'none', fontSize: 13, color: T.primary, cursor: 'pointer' }}>{loading ? 'Sending...' : 'Forgot password?'}</button>
           </div>
           {error && <p style={{ fontSize: 13, color: T.danger, marginBottom: 12 }}>{error}</p>}
           <button onClick={handleLogin} disabled={!ready || loading} style={{ width: '100%', padding: 15, borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 600, cursor: ready && !loading ? 'pointer' : 'default', background: ready ? T.primary : '#B8D8C8', color: '#fff' }}>
