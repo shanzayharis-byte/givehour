@@ -71,8 +71,10 @@ export default function App() {
             }
           }
           setDbUser(data)
-        } catch (_) {}
-        setActiveScreen(data?.role === 'org' ? 'orgDashboard' : 'feed')
+          setActiveScreen(data?.role === 'org' ? 'orgDashboard' : 'feed')
+        } catch (_) {
+          setActiveScreen('feed')
+        }
       }
       setAppLoading(false)
     }).catch(() => setAppLoading(false))
