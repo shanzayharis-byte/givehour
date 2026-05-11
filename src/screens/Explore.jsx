@@ -151,7 +151,7 @@ function OppCard({ opp, onSelect }) {
 }
 
 // ---------- main ----------
-export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSignUp, onLogin, onHome }) {
+export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSignUp, onLogin, onHome, onSignOut }) {
   const [tab, setTab]                 = useState('opportunities')
   const [opps, setOpps]               = useState([])
   const [page, setPage]               = useState(1)
@@ -324,8 +324,11 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
           </div>
         </div>
       ) : (
-        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0 }}>
+        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Explore</div>
+          {onSignOut && (
+            <button onClick={onSignOut} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 20, padding: '6px 14px', fontSize: 13, fontWeight: 600, color: T.textSub, cursor: 'pointer' }}>Sign out</button>
+          )}
         </div>
       )}
 
