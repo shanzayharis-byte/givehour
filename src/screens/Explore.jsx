@@ -104,17 +104,16 @@ function FilterModal({ filters, onChange, onClose }) {
   )
 }
 
-// ---------- org card ----------
-function OrgCard({ org, onSelect }) {
-  const firstCause = org.interests?.[0]
-  const cs = firstCause && CAUSE[firstCause] ? CAUSE[firstCause] : { bg: T.accentLight, text: T.accent }
+// ---------- org directory card ----------
+function OrgDirCard({ org, onSelect }) {
   return (
-    <div onClick={() => onSelect(org.id)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🏢</div>
-      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, lineHeight: 1.3 }}>{org.name}</div>
-      {org.org_type && <div style={{ fontSize: 11, color: T.textMuted }}>{org.org_type}</div>}
-      {org.region && <div style={{ fontSize: 11, color: T.textMuted }}>📍 {org.region}</div>}
-      {firstCause && <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: cs.bg, color: cs.text, fontWeight: 600, alignSelf: 'flex-start' }}>{CAUSE_EMOJI[firstCause]} {firstCause}</span>}
+    <div onClick={() => onSelect(org)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏢</div>
+        {org.isGiveHour && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>On Give Hour</span>}
+      </div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1.3 }}>{org.org}</div>
+      <div style={{ fontSize: 11, color: T.textMuted }}>{org.count} listing{org.count !== 1 ? 's' : ''}</div>
     </div>
   )
 }
@@ -153,9 +152,13 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [showFilter, setShowFilter]   = useState(false)
   const [filters, setFilters]         = useState({ cause: '', region: '', ageGroup: '' })
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
-  const [orgs, setOrgs]               = useState([])
-  const [orgsLoading, setOrgsLoading] = useState(true)
-  const [orgListings, setOrgListings] = useState([])
+  const [orgDir, setOrgDir]               = useState([])
+  const [orgDirLoading, setOrgDirLoading] = useState(true)
+  const [activeOrgLetter, setActiveOrgLetter] = useState('')
+  const [orgView, setOrgView]             = useState(null)
+  const [orgViewListings, setOrgViewListings] = useState([])
+  const [orgViewLoading, setOrgViewLoading]   = useState(false)
+  const [orgListings, setOrgListings]     = useState([])
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -164,11 +167,21 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   }, [])
 
   useEffect(() => {
-    fetch('/api/orgs')
+    fetch('/api/org-directory')
       .then(r => r.json())
-      .then(data => { setOrgs(Array.isArray(data) ? data : []); setOrgsLoading(false) })
-      .catch(() => setOrgsLoading(false))
+      .then(data => { setOrgDir(Array.isArray(data) ? data : []); setOrgDirLoading(false) })
+      .catch(() => setOrgDirLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!orgView) return
+    setOrgViewLoading(true)
+    setOrgViewListings([])
+    fetch(`/api/org-directory?org=${encodeURIComponent(orgView.org)}`)
+      .then(r => r.json())
+      .then(data => { setOrgViewListings(Array.isArray(data) ? data : []); setOrgViewLoading(false) })
+      .catch(() => setOrgViewLoading(false))
+  }, [orgView])
 
   useEffect(() => {
     fetch('/api/org-listings')
@@ -225,9 +238,13 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const filteredVolunteer   = opps.filter(applyFilters)
   const filteredOpps        = [...filteredOrgListings, ...filteredVolunteer]
 
-  const filteredOrgs = orgs.filter(o => {
-    if (!search) return true
-    return (o.name||'').toLowerCase().includes(search.toLowerCase()) || (o.region||'').toLowerCase().includes(search.toLowerCase()) || (o.org_type||'').toLowerCase().includes(search.toLowerCase())
+  const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+  const availableLetters = new Set(orgDir.map(o => o.org[0]?.toUpperCase()).filter(Boolean))
+
+  const filteredOrgDir = orgDir.filter(o => {
+    if (activeOrgLetter && o.org[0]?.toUpperCase() !== activeOrgLetter) return false
+    if (search && !o.org.toLowerCase().includes(search.toLowerCase())) return false
+    return true
   })
 
   const gridStyle = isDesktop
@@ -264,7 +281,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
         {[['opportunities','Opportunities'],['organizations','Organizations']].map(([key, label]) => (
           <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '12px 0', fontSize: 13, fontWeight: tab === key ? 700 : 500, color: tab === key ? T.primary : T.textMuted, background: 'none', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${tab === key ? T.primary : 'transparent'}`, transition: 'all 0.15s' }}>
             {label}
-            {key === 'organizations' && orgs.length > 0 && <span style={{ marginLeft: 6, fontSize: 11, background: T.accentLight, color: T.accent, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>{orgs.length}</span>}
+            {key === 'organizations' && orgDir.length > 0 && <span style={{ marginLeft: 6, fontSize: 11, background: T.accentLight, color: T.accent, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>{orgDir.length}</span>}
           </button>
         ))}
       </div>
@@ -315,19 +332,55 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
         {/* organizations tab */}
         {tab === 'organizations' && (
-          orgsLoading ? (
+          orgView ? (
+            /* ── org drill-down ── */
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                <button onClick={() => setOrgView(null)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '6px 14px', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>← Back</button>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{orgView.org}</div>
+                  {orgView.isGiveHour && orgView.org_id && (
+                    <button onClick={() => onSelectOrg(orgView.org_id)} style={{ fontSize: 11, color: T.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}>View Give Hour profile →</button>
+                  )}
+                </div>
+              </div>
+              {orgViewLoading ? (
+                <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 14 }}>Loading…</div>
+              ) : orgViewListings.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 14 }}>No listings found for this organization.</div>
+              ) : (
+                <>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{orgViewListings.length} listing{orgViewListings.length !== 1 ? 's' : ''}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {orgViewListings.map(item => (
+                      <OppCard key={item.id} opp={{ id: item.id, title: item.title, org: item.org, cause: item.cause, ageGroup: item.age_group, hours: item.hours, location: item.location, date: item.date, description: item.description, externalUrl: item.external_url, remote: !!item.remote, source: item.source }} onSelect={onSelectOpp} />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          ) : orgDirLoading ? (
             <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading…</div>
-          ) : filteredOrgs.length === 0 ? (
+          ) : orgDir.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60 }}>
               <div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div>
               <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 6 }}>No organizations yet</div>
-              <div style={{ fontSize: 13, color: T.textMuted }}>Organizations that sign up on Give Hour will appear here.</div>
+              <div style={{ fontSize: 13, color: T.textMuted }}>Organizations will appear here once listings are available.</div>
             </div>
           ) : (
             <>
-              <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOrgs.length} organization{filteredOrgs.length !== 1 ? 's' : ''}</div>
+              {/* A–Z strip */}
+              <div style={{ display: 'flex', overflowX: 'auto', gap: 4, marginBottom: 16, paddingBottom: 4 }}>
+                <button onClick={() => setActiveOrgLetter('')} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${!activeOrgLetter ? T.primary : T.border}`, background: !activeOrgLetter ? T.primaryLight : '#fff', color: !activeOrgLetter ? T.primary : T.textMuted }}>All</button>
+                {LETTERS.map(l => (
+                  <button key={l} onClick={() => setActiveOrgLetter(activeOrgLetter === l ? '' : l)} disabled={!availableLetters.has(l)} style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: availableLetters.has(l) ? 'pointer' : 'default', border: `1.5px solid ${activeOrgLetter === l ? T.primary : T.border}`, background: activeOrgLetter === l ? T.primaryLight : '#fff', color: activeOrgLetter === l ? T.primary : availableLetters.has(l) ? T.textSub : T.border }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOrgDir.length} organization{filteredOrgDir.length !== 1 ? 's' : ''}</div>
               <div style={orgGridStyle}>
-                {filteredOrgs.map(org => <OrgCard key={org.id} org={org} onSelect={onSelectOrg} />)}
+                {filteredOrgDir.map(org => <OrgDirCard key={org.org} org={org} onSelect={setOrgView} />)}
               </div>
             </>
           )
