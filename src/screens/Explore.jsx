@@ -120,9 +120,12 @@ function OrgDirCard({ org, onSelect }) {
   )
 }
 
+const AGE_LABEL = { 'All Ages': 'All Ages', 'Teens (13-17)': 'Teenager', 'Open': 'No age specific' }
+
 // ---------- opp card ----------
 function OppCard({ opp, onSelect }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
+  const ageLabel = AGE_LABEL[opp.ageGroup]
   return (
     <div onClick={() => onSelect(opp)} style={{ background: T.card, border: `1px solid ${opp.source === 'org' ? T.primary : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
@@ -132,6 +135,7 @@ function OppCard({ opp, onSelect }) {
       <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500 }}>{opp.cause}</span>
+        {ageLabel && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: '#F0F4FF', color: '#4A6FA5', fontWeight: 500 }}>{ageLabel}</span>}
         {opp.remote && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 500 }}>Remote</span>}
         {opp.hours && <span style={{ fontSize: 12, color: T.textMuted }}>· {opp.hours}</span>}
         {opp.location && !opp.remote && <span style={{ fontSize: 12, color: T.textMuted }}>· {opp.location}</span>}
