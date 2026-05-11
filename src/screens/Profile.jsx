@@ -9,6 +9,9 @@ const HOURS_OPTS   = ['1–3 hrs/week', '3–5 hrs/week', '5–10 hrs/week', '10
 const GRADES       = ['8th', '9th', '10th', '11th', '12th']
 const AGES         = [13, 14, 15, 16, 17, 18, 19]
 
+const inp = { width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }
+const lbl = { fontSize: 12, color: T.textMuted, marginBottom: 6, display: 'block' }
+
 function Modal({ title, subtitle, onClose, children }) {
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}>
@@ -22,7 +25,161 @@ function Modal({ title, subtitle, onClose, children }) {
   )
 }
 
+// ── Org Profile ───────────────────────────────────────────────────────────────
+
+function OrgProfile({ user, onSignOut }) {
+  const [loading, setLoading]         = useState(true)
+  const [listingCount, setListingCount] = useState(0)
+  const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
+
+  const [nameVal, setNameVal]         = useState(user?.name || '')
+  const [city, setCity]               = useState(user?.region || '')
+  const [causes, setCauses]           = useState(user?.interests || [])
+
+  const [showEditOrg, setShowEditOrg] = useState(false)
+  const [showCauses, setShowCauses]   = useState(false)
+  const [editName, setEditName]       = useState(nameVal)
+  const [editCity, setEditCity]       = useState(city)
+
+  useEffect(() => {
+    const handle = () => setIsDesktop(window.innerWidth >= 1024)
+    window.addEventListener('resize', handle)
+    return () => window.removeEventListener('resize', handle)
+  }, [])
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const { data: profile } = await supabase.from('users').select('*').eq('id', user?.id).maybeSingle()
+        if (profile) {
+          setNameVal(profile.name || '')
+          setEditName(profile.name || '')
+          setCity(profile.region || '')
+          setEditCity(profile.region || '')
+          setCauses(profile.interests || [])
+        }
+        const { count } = await supabase.from('org_listings').select('id', { count: 'exact', head: true }).eq('org_id', user?.id)
+        setListingCount(count || 0)
+      } catch (e) { console.error(e) }
+      setLoading(false)
+    }
+    load()
+  }, [user])
+
+  const save = (fields) => supabase.from('users').update(fields).eq('id', user.id)
+
+  const saveOrgInfo = async () => {
+    await save({ name: editName.trim(), region: editCity.trim() })
+    setNameVal(editName.trim())
+    setCity(editCity.trim())
+    setShowEditOrg(false)
+  }
+
+  const toggleCause = async (c) => {
+    const next = causes.includes(c) ? causes.filter(x => x !== c) : [...causes, c]
+    await save({ interests: next, preferred_cause: next[0] || null })
+    setCauses(next)
+  }
+
+  const handleSignOut = async () => { await supabase.auth.signOut(); onSignOut() }
+
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 16, color: T.textMuted }}>Loading...</div>
+
+  const profileCard = (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
+        <div style={{ width: 60, height: 60, borderRadius: 14, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🏢</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{nameVal || 'Your Organization'}</div>
+          <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>{city || 'Location not set'}</div>
+          <div style={{ fontSize: 12, color: T.accent, fontWeight: 700, marginTop: 2 }}>{listingCount} listing{listingCount !== 1 ? 's' : ''} posted</div>
+        </div>
+        <button onClick={() => { setEditName(nameVal); setEditCity(city); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
+      </div>
+    </div>
+  )
+
+  const causesCard = (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Causes you support</div>
+        <button onClick={() => setShowCauses(true)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.accentLight, color: T.accent, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Edit</button>
+      </div>
+      {causes.length === 0 ? (
+        <div style={{ fontSize: 13, color: T.textMuted }}>No causes added yet — helps teens find you.</div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {causes.map(c => {
+            const style = CAUSE[c] || { bg: T.primaryLight, text: T.primary }
+            return <span key={c} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: style.bg, color: style.text, fontWeight: 500 }}>{c}</span>
+          })}
+        </div>
+      )}
+    </div>
+  )
+
+  const settingsCard = (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, overflow: 'hidden' }}>
+      <button onClick={handleSignOut} style={{ width: '100%', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: '#fff', border: 'none', textAlign: 'left' }}>
+        <span style={{ fontSize: 14, color: T.danger, fontWeight: 500 }}>Sign out</span>
+      </button>
+    </div>
+  )
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px' }}>
+        <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Organization Profile</div>
+      </div>
+      <div style={{ padding: isDesktop ? '32px 40px' : '20px' }}>
+        {isDesktop ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            <div>{profileCard}{causesCard}</div>
+            <div>{settingsCard}</div>
+          </div>
+        ) : (
+          <>{profileCard}{causesCard}{settingsCard}</>
+        )}
+      </div>
+
+      {showEditOrg && (
+        <Modal title="Edit organization info" onClose={() => setShowEditOrg(false)}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>Organization name</label>
+            <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Bay Area Food Bank" style={inp} />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={lbl}>City / Location</label>
+            <input value={editCity} onChange={e => setEditCity(e.target.value)} placeholder="San Francisco, CA" style={inp} />
+          </div>
+          <button onClick={saveOrgInfo} disabled={!editName.trim()} style={{ width: '100%', padding: 12, background: editName.trim() ? T.primary : T.border, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: editName.trim() ? '#fff' : T.textMuted, cursor: editName.trim() ? 'pointer' : 'default' }}>Save</button>
+        </Modal>
+      )}
+
+      {showCauses && (
+        <Modal title="Causes you support" subtitle="Pick all that apply — helps teens find you" onClose={() => setShowCauses(false)}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 4 }}>
+            {CAUSES.map(c => {
+              const sel = causes.includes(c)
+              const style = CAUSE[c] || { bg: T.primaryLight, text: T.primary }
+              return (
+                <button key={c} onClick={() => toggleCause(c)} style={{ padding: '12px 10px', borderRadius: 12, border: `2px solid ${sel ? style.text : T.border}`, background: sel ? style.bg : '#fff', color: sel ? style.text : T.textSub, fontSize: 13, fontWeight: sel ? 700 : 400, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {sel && '✓ '}{c}
+                </button>
+              )
+            })}
+          </div>
+        </Modal>
+      )}
+    </div>
+  )
+}
+
+// ── Teen Profile ──────────────────────────────────────────────────────────────
+
 export default function Profile({ user, onSignOut }) {
+  if (user?.role === 'org') return <OrgProfile user={user} onSignOut={onSignOut} />
+
   const [totalHours, setTotalHours]   = useState(0)
   const [orgCount, setOrgCount]       = useState(0)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
@@ -31,36 +188,29 @@ export default function Profile({ user, onSignOut }) {
   const [prefCause, setPrefCause]     = useState(user?.preferred_cause || '')
   const [region, setRegion]           = useState(user?.region || '')
 
-  // school info
   const [schoolName, setSchoolName]   = useState(user?.school_name || '')
   const [grade, setGrade]             = useState(user?.grade || '')
   const [age, setAge]                 = useState(user?.age || '')
 
-  // name editing
   const [editingName, setEditingName] = useState(false)
   const [nameVal, setNameVal]         = useState(user?.name || '')
 
-  // avatar
   const [avatarUrl, setAvatarUrl]     = useState(user?.avatar_url || '')
   const [avatarLoading, setAvatarLoading] = useState(false)
 
-  // availability
   const [availDays, setAvailDays]     = useState(user?.availability_days || [])
   const [hoursPerWeek, setHoursPerWeek] = useState(user?.hours_per_week || '')
 
-  // notifications
   const [notifMatches, setNotifMatches]     = useState(user?.notif_new_matches ?? true)
   const [notifReminders, setNotifReminders] = useState(user?.notif_reminders ?? true)
 
-  // modals
-  const [showCause, setShowCause]       = useState(false)
+  const [showCause, setShowCause]           = useState(false)
   const [showEditProfile, setShowEditProfile] = useState(false)
-  const [showRegion, setShowRegion]     = useState(false)
-  const [showSchool, setShowSchool]     = useState(false)
-  const [showAvail, setShowAvail]       = useState(false)
-  const [showNotif, setShowNotif]       = useState(false)
+  const [showRegion, setShowRegion]         = useState(false)
+  const [showSchool, setShowSchool]         = useState(false)
+  const [showAvail, setShowAvail]           = useState(false)
+  const [showNotif, setShowNotif]           = useState(false)
 
-  // applications
   const [applications, setApplications] = useState([])
 
   useEffect(() => {
@@ -72,7 +222,6 @@ export default function Profile({ user, onSignOut }) {
   useEffect(() => {
     async function load() {
       try {
-        // always fetch fresh profile data from Supabase
         const { data: profile } = await supabase.from('users').select('*').eq('id', user?.id).maybeSingle()
         if (profile) {
           setNameVal(profile.name || '')
@@ -176,8 +325,6 @@ export default function Profile({ user, onSignOut }) {
     onSignOut()
   }
 
-  const initial = (user?.name || 'U')[0].toUpperCase()
-
   const profileCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 14 }}>
@@ -263,7 +410,6 @@ export default function Profile({ user, onSignOut }) {
           <>{profileCard}{interestsCard}{settingsCard}</>
         )}
 
-        {/* My Applications */}
         {applications.length > 0 && (
           <div style={{ marginTop: 24, paddingBottom: 20 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 12 }}>My Applications</div>
@@ -283,7 +429,6 @@ export default function Profile({ user, onSignOut }) {
         )}
       </div>
 
-      {/* cause picker */}
       {showCause && (
         <Modal title="Pick a cause" subtitle="Your top pick boosts those listings in your feed" onClose={() => setShowCause(false)}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 4 }}>
@@ -299,7 +444,6 @@ export default function Profile({ user, onSignOut }) {
         </Modal>
       )}
 
-      {/* region picker */}
       {showRegion && (
         <Modal title="Your region" subtitle="Used to surface nearby opportunities in your feed" onClose={() => setShowRegion(false)}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 4 }}>
@@ -312,7 +456,6 @@ export default function Profile({ user, onSignOut }) {
         </Modal>
       )}
 
-      {/* edit profile */}
       {showEditProfile && (
         <Modal title="Edit profile" onClose={() => setShowEditProfile(false)}>
           <div style={{ marginBottom: 16 }}>
@@ -323,7 +466,6 @@ export default function Profile({ user, onSignOut }) {
         </Modal>
       )}
 
-      {/* school info */}
       {showSchool && (
         <Modal title="School information" onClose={() => setShowSchool(false)}>
           <div style={{ marginBottom: 12 }}>
@@ -350,7 +492,6 @@ export default function Profile({ user, onSignOut }) {
         </Modal>
       )}
 
-      {/* availability */}
       {showAvail && (
         <Modal title="Your availability" subtitle="Helps us recommend opportunities that fit your schedule" onClose={() => setShowAvail(false)}>
           <div style={{ marginBottom: 14 }}>
@@ -376,7 +517,6 @@ export default function Profile({ user, onSignOut }) {
         </Modal>
       )}
 
-      {/* notifications */}
       {showNotif && (
         <Modal title="Notification settings" onClose={() => setShowNotif(false)}>
           {[

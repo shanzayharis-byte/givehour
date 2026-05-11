@@ -39,6 +39,7 @@ export default function App() {
   const [isGuest, setIsGuest]         = useState(false)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [appLoading, setAppLoading]   = useState(true)
+  const [accountError, setAccountError] = useState(false)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -68,14 +69,14 @@ export default function App() {
                 localStorage.removeItem('givehour_pending_profile')
                 data = { ...(data || {}), id: session.user.id, ...profile }
               } else {
-                const errBody = await resp.json().catch(() => ({}))
-                console.error('[givehour] save-profile failed (session restore):', resp.status, errBody)
+                setAccountError(true)
               }
             }
           }
-          console.log('[givehour] dbUser after restore:', data)
-          setDbUser(data)
-          setActiveScreen(data?.role === 'org' ? 'orgDashboard' : 'feed')
+          if (!accountError) {
+            setDbUser(data)
+            setActiveScreen(data?.role === 'org' ? 'orgDashboard' : 'feed')
+          }
         } catch (e) {
           console.error('[givehour] session restore error:', e)
           setActiveScreen('feed')
@@ -126,6 +127,23 @@ export default function App() {
 
   if (appLoading) {
     return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: 16, color: T.textMuted }}>Loading Give Hour...</div>
+  }
+
+  if (accountError) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: T.bg }}>
+        <div style={{ background: T.card, borderRadius: 20, padding: '40px 32px', maxWidth: 360, width: '90%', textAlign: 'center', border: `1px solid ${T.border}` }}>
+          <div style={{ fontSize: 44, marginBottom: 16 }}>⚠️</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 10 }}>Account setup incomplete</div>
+          <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, marginBottom: 28 }}>
+            We couldn't finish setting up your account. This can happen if the confirmation link was opened in a different browser. Please sign out and try logging in again.
+          </div>
+          <button onClick={handleSignOut} style={{ width: '100%', padding: '14px', borderRadius: 12, background: T.primary, color: '#fff', border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+            Sign out and try again
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const showNav = authUser && !selectedOpp && !selectedOrg && visibleNav.some(n => n.id === activeScreen)
