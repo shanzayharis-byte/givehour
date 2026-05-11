@@ -60,7 +60,7 @@ function mapOpp(item) {
 function FilterModal({ filters, onChange, onClose, isDesktop, causeCounts }) {
   const [local, setLocal] = useState(filters)
   const set = (key, val) => setLocal(p => ({ ...p, [key]: val }))
-  const activeCount = [local.cause, local.ageGroup].filter(Boolean).length
+  const activeCount = [local.cause, local.ageGroup, local.remote].filter(Boolean).length
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: isDesktop ? 'center' : 'flex-end', justifyContent: 'center' }}>
@@ -68,7 +68,7 @@ function FilterModal({ filters, onChange, onClose, isDesktop, causeCounts }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Filter opportunities</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => { setLocal({ cause: '', ageGroup: '' }) }} style={{ fontSize: 12, color: T.textMuted, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
+            <button onClick={() => { setLocal({ cause: '', ageGroup: '', remote: false }) }} style={{ fontSize: 12, color: T.textMuted, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
             <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: T.bg, border: 'none', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted }}>×</button>
           </div>
         </div>
@@ -88,6 +88,11 @@ function FilterModal({ filters, onChange, onClose, isDesktop, causeCounts }) {
               </button>
             )
           })}
+        </div>
+
+        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Location</div>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          <button onClick={() => set('remote', !local.remote)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.remote ? T.primary : T.border}`, background: local.remote ? T.primaryLight : '#fff', color: local.remote ? T.primary : T.textSub }}>🌐 Remote only</button>
         </div>
 
         <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Age group</div>
@@ -156,7 +161,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [error, setError]             = useState(null)
   const [search, setSearch]           = useState('')
   const [showFilter, setShowFilter]   = useState(false)
-  const [filters, setFilters]         = useState({ cause: '', ageGroup: '' })
+  const [filters, setFilters]         = useState({ cause: '', ageGroup: '', remote: false })
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [orgDir, setOrgDir]               = useState([])
   const [orgDirLoading, setOrgDirLoading] = useState(true)
@@ -260,12 +265,13 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
     return () => { cancelled = true }
   }, [])
 
-  const activeFilterCount = [filters.cause, filters.ageGroup].filter(Boolean).length
+  const activeFilterCount = [filters.cause, filters.ageGroup, filters.remote].filter(Boolean).length
 
   const applyFilters = (o) => {
     if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) return false
     if (filters.cause    && o.cause !== filters.cause) return false
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) return false
+    if (filters.remote   && !o.remote) return false
     return true
   }
 
@@ -278,6 +284,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   for (const o of [...orgListings, ...opps]) {
     if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) continue
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) continue
+    if (filters.remote   && !o.remote) continue
     causeCounts[o.cause] = (causeCounts[o.cause] || 0) + 1
   }
 
