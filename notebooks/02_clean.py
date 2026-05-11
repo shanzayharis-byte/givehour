@@ -132,4 +132,53 @@ print(f"Saved {len(records)} clean records → processed/{blob_name}")
 db = create_client(SUPABASE_URL, SUPABASE_KEY)
 for i in range(0, len(records), 100):
     db.table("clean_listings").upsert(records[i:i+100]).execute()
-print(f"Supabase updated — {len(records)} records in clean_listings")
+print(f"Supabase updated — {len(records)} VolunteerConnector records in clean_listings")
+
+# ── process org listings ──────────────────────────────────────────────────────
+AGE_GROUP_MAP = {
+    "all":   "All Ages",
+    "teens": "Teens (13-17)",
+    "open":  "Open",
+}
+
+org_blobs = sorted(
+    container.list_blobs(name_starts_with="org_listings/"),
+    key=lambda b: b.name, reverse=True
+)
+
+if not org_blobs:
+    print("No org_listings raw file found — skipping org listings")
+else:
+    print(f"Reading: raw/{org_blobs[0].name}")
+    raw_orgs = json.loads(
+        client.get_blob_client(container=CONTAINER_RAW, blob=org_blobs[0].name)
+              .download_blob().readall()
+    )
+
+    # batch-fetch org names from Supabase users table
+    org_ids      = list({r["org_id"] for r in raw_orgs if r.get("org_id")})
+    org_users    = db.table("users").select("id, name").in_("id", org_ids).execute().data
+    org_name_map = {u["id"]: u["name"] for u in org_users}
+
+    org_records = []
+    for item in raw_orgs:
+        org_records.append({
+            "id":           f"org_{item['id']}",
+            "title":        item.get("title", ""),
+            "org":          org_name_map.get(item.get("org_id", ""), ""),
+            "org_id":       item.get("org_id"),
+            "cause":        item.get("cause", "Education"),
+            "age_group":    AGE_GROUP_MAP.get(item.get("age_group", "open"), "Open"),
+            "location":     "Remote / Online" if item.get("remote") else (item.get("location") or "In-Person"),
+            "remote":       bool(item.get("remote")),
+            "description":  item.get("description", ""),
+            "hours":        str(item.get("hours", "")),
+            "date":         str(item.get("date", "")),
+            "external_url": item.get("external_url", "") or "",
+            "source":       "org",
+            "fetched_at":   datetime.now(timezone.utc).isoformat(),
+        })
+
+    for i in range(0, len(org_records), 100):
+        db.table("clean_listings").upsert(org_records[i:i+100]).execute()
+    print(f"Supabase updated — {len(org_records)} org listing records in clean_listings")
