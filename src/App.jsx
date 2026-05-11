@@ -25,6 +25,7 @@ const NAV = [
 const ORG_NAV = [
   { id: 'orgDashboard',   icon: '📋', label: 'Listings' },
   { id: 'orgApplicants',  icon: '📬', label: 'Applicants' },
+  { id: 'explore',        icon: '🔍', label: 'Explore' },
   { id: 'profile',        icon: '👤', label: 'Profile' },
 ]
 
