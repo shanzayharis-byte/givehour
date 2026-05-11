@@ -114,7 +114,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   }
 
   const finishTeen   = () => handleSignUp({ name, role: 'teen', grade, age, zip, school_name: school, region, interests, preferred_cause: interests[0] || null })
-  const finishOrg    = () => handleSignUp({ name: orgName, role: 'org', school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
+  const finishOrg    = () => handleSignUp({ name: orgName, role: 'org', org_type: orgType, website: orgWebsite || null, school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
   const finishParent = () => handleSignUp({ name, role: 'parent', grade: childGrade, zip: parentZip, school_name: childSchool, interests: parentInterests, preferred_cause: parentInterests[0] || null })
 
   const handleLogin = async () => {

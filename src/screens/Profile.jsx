@@ -34,12 +34,16 @@ function OrgProfile({ user, onSignOut }) {
 
   const [nameVal, setNameVal]         = useState(user?.name || '')
   const [city, setCity]               = useState(user?.region || '')
+  const [orgType, setOrgType]         = useState(user?.org_type || '')
+  const [website, setWebsite]         = useState(user?.website || '')
   const [causes, setCauses]           = useState(user?.interests || [])
 
   const [showEditOrg, setShowEditOrg] = useState(false)
   const [showCauses, setShowCauses]   = useState(false)
   const [editName, setEditName]       = useState(nameVal)
   const [editCity, setEditCity]       = useState(city)
+  const [editOrgType, setEditOrgType] = useState(orgType)
+  const [editWebsite, setEditWebsite] = useState(website)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -56,6 +60,10 @@ function OrgProfile({ user, onSignOut }) {
           setEditName(profile.name || '')
           setCity(profile.region || '')
           setEditCity(profile.region || '')
+          setOrgType(profile.org_type || '')
+          setEditOrgType(profile.org_type || '')
+          setWebsite(profile.website || '')
+          setEditWebsite(profile.website || '')
           setCauses(profile.interests || [])
         }
         const { count } = await supabase.from('org_listings').select('id', { count: 'exact', head: true }).eq('org_id', user?.id)
@@ -69,9 +77,11 @@ function OrgProfile({ user, onSignOut }) {
   const save = (fields) => supabase.from('users').update(fields).eq('id', user.id)
 
   const saveOrgInfo = async () => {
-    await save({ name: editName.trim(), region: editCity.trim() })
+    await save({ name: editName.trim(), region: editCity.trim(), org_type: editOrgType || null, website: editWebsite.trim() || null })
     setNameVal(editName.trim())
     setCity(editCity.trim())
+    setOrgType(editOrgType)
+    setWebsite(editWebsite.trim())
     setShowEditOrg(false)
   }
 
@@ -85,17 +95,26 @@ function OrgProfile({ user, onSignOut }) {
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 16, color: T.textMuted }}>Loading...</div>
 
+  const ORG_TYPES = ['Nonprofit', 'School / University', 'Government', 'Faith-based', 'Community group', 'Other']
+
   const profileCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
         <div style={{ width: 60, height: 60, borderRadius: 14, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🏢</div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{nameVal || 'Your Organization'}</div>
-          <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>{city || 'Location not set'}</div>
+          <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>
+            {orgType || ''}{orgType && city ? ' · ' : ''}{city || (!orgType ? 'Location not set' : '')}
+          </div>
           <div style={{ fontSize: 12, color: T.accent, fontWeight: 700, marginTop: 2 }}>{listingCount} listing{listingCount !== 1 ? 's' : ''} posted</div>
         </div>
-        <button onClick={() => { setEditName(nameVal); setEditCity(city); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
+        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
       </div>
+      {website && (
+        <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.primary }}>
+          🔗 <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noreferrer" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>{website.replace(/^https?:\/\//, '')}</a>
+        </div>
+      )}
     </div>
   )
 
@@ -148,9 +167,21 @@ function OrgProfile({ user, onSignOut }) {
             <label style={lbl}>Organization name</label>
             <input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Bay Area Food Bank" style={inp} />
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>Organization type</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {ORG_TYPES.map(t => (
+                <button key={t} onClick={() => setEditOrgType(prev => prev === t ? '' : t)} style={{ padding: '7px 14px', borderRadius: 20, border: `1.5px solid ${editOrgType === t ? T.accent : T.border}`, background: editOrgType === t ? T.accentLight : '#fff', color: editOrgType === t ? T.accent : T.textSub, fontSize: 12, fontWeight: editOrgType === t ? 700 : 400, cursor: 'pointer' }}>{t}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
             <label style={lbl}>City / Location</label>
             <input value={editCity} onChange={e => setEditCity(e.target.value)} placeholder="San Francisco, CA" style={inp} />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={lbl}>Website <span style={{ fontWeight: 400 }}>(optional)</span></label>
+            <input value={editWebsite} onChange={e => setEditWebsite(e.target.value)} placeholder="yourorg.org" style={inp} />
           </div>
           <button onClick={saveOrgInfo} disabled={!editName.trim()} style={{ width: '100%', padding: 12, background: editName.trim() ? T.primary : T.border, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: editName.trim() ? '#fff' : T.textMuted, cursor: editName.trim() ? 'pointer' : 'default' }}>Save</button>
         </Modal>
