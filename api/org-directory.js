@@ -45,6 +45,14 @@ export default async function handler(req, res) {
       }
     }
 
+    // Always include Give Hour registered orgs even if they have no clean_listings yet
+    const { data: giveHourOrgs } = await db.from('users').select('id, name').eq('role', 'org')
+    for (const org of giveHourOrgs || []) {
+      if (!org.name) continue
+      if (!map[org.name]) map[org.name] = { org: org.name, count: 0, org_id: org.id, isGiveHour: true }
+      else { map[org.name].isGiveHour = true; map[org.name].org_id = org.id }
+    }
+
     res.status(200).json(Object.values(map).sort((a, b) => a.org.localeCompare(b.org)))
   } catch (e) {
     res.status(500).json({ error: e.message })

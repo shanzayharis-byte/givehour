@@ -110,7 +110,7 @@ function OrgDirCard({ org, onSelect }) {
     <div onClick={() => onSelect(org)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <div style={{ width: 40, height: 40, borderRadius: 10, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏢</div>
-        {org.isGiveHour && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>On Give Hour</span>}
+        {org.isGiveHour && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
       </div>
       <div style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1.3 }}>{org.org}</div>
       <div style={{ fontSize: 11, color: T.textMuted }}>{org.count} listing{org.count !== 1 ? 's' : ''}</div>
@@ -340,7 +340,10 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{orgView.org}</div>
                   {orgView.isGiveHour && orgView.org_id && (
-                    <button onClick={() => onSelectOrg(orgView.org_id)} style={{ fontSize: 11, color: T.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}>View Give Hour profile →</button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+                      <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700 }}>✓ Give Hour Partner</span>
+                      <button onClick={() => onSelectOrg(orgView.org_id)} style={{ fontSize: 11, color: T.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}>View profile →</button>
+                    </div>
                   )}
                 </div>
               </div>
