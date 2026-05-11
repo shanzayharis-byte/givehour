@@ -208,9 +208,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     ]
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
-        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <button onClick={() => setScreen('landing')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-          <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Join Give Hour</div>
+        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ padding: '12px 20px 8px', display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => setScreen('landing')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Join Give Hour</div>
+          </div>
         </div>
         <div style={{ padding: '28px 20px' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>Who are you?</div>
@@ -476,6 +481,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     const isOrgSignup = role === 'org'
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card, alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
+        <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', marginBottom: 16 }} />
         <div style={{ width: 80, height: 80, borderRadius: '50%', background: isOrgSignup ? T.accentLight : T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, marginBottom: 20 }}>📬</div>
         <div style={{ fontSize: 24, fontWeight: 800, color: T.text, marginBottom: 10, letterSpacing: '-0.02em' }}>
           {isOrgSignup ? 'One last step!' : 'Check your inbox!'}
@@ -500,9 +506,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   if (screen === 'forgotSent') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
-        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <button onClick={() => setScreen('login')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-          <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Check your email</div>
+        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ padding: '12px 20px 8px', display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => setScreen('login')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Check your email</div>
+          </div>
         </div>
         <div style={{ padding: '48px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: 44, marginBottom: 16 }}>📬</div>
@@ -524,9 +535,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     const ready = email.trim() && password.trim()
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
-        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <button onClick={() => setScreen('landing')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
-          <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Welcome back</div>
+        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
+          <div style={{ padding: '12px 20px 8px', display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => setScreen('landing')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Welcome back</div>
+          </div>
         </div>
         <div style={{ padding: '28px 20px' }}>
           <div style={{ fontSize: 22, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>Log in</div>
