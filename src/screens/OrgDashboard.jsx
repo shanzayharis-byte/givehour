@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 import PostListingForm from './PostListingForm'
 
-export default function OrgDashboard({ user }) {
+export default function OrgDashboard({ user, onSignOut }) {
   const [listings, setListings]       = useState([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState('')
@@ -62,10 +62,15 @@ export default function OrgDashboard({ user }) {
             {user.region} · {listings.length} listing{listings.length !== 1 ? 's' : ''}
           </div>
         </div>
-        <button onClick={() => setShowForm(true)}
-          style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
-          + Post
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          {onSignOut && (
+            <button onClick={onSignOut} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, color: T.textSub, cursor: 'pointer' }}>Sign out</button>
+          )}
+          <button onClick={() => setShowForm(true)}
+            style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            + Post
+          </button>
+        </div>
       </div>
 
       {loading && <div style={{ color: T.textMuted, textAlign: 'center', padding: 40 }}>Loading...</div>}

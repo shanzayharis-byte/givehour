@@ -168,7 +168,7 @@ export default function App() {
       case 'impact':        return <Impact user={dbUser} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} />
       case 'admin':         return <Admin authUser={authUser} />
-      case 'orgDashboard':  return <OrgDashboard user={dbUser} />
+      case 'orgDashboard':  return <OrgDashboard user={dbUser} onSignOut={!isDesktop ? handleSignOut : undefined} />
       case 'orgApplicants': return <ApplicantsInbox user={dbUser} />
       default:              return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
@@ -214,17 +214,17 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: T.bg, justifyContent: 'center' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: isDesktop ? 1100 : 480, height: '100vh', overflow: 'hidden', boxShadow: '0 0 40px rgba(0,0,0,0.08)' }}>
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', background: T.bg, justifyContent: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: isDesktop ? 1100 : 480, height: '100dvh', overflow: 'hidden', boxShadow: '0 0 40px rgba(0,0,0,0.08)' }}>
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {mainContent()}
       </div>
       {showNav && (
-        <nav style={{ background: T.card, borderTop: `1px solid ${T.border}`, paddingBottom: 8, display: 'flex', flexShrink: 0 }}>
+        <nav style={{ background: T.card, borderTop: `1px solid ${T.border}`, paddingBottom: 'env(safe-area-inset-bottom, 8px)', display: 'flex', flexShrink: 0 }}>
           {visibleNav.map(({ id, icon, label }) => {
             const active = activeScreen === id
             return (
-              <button key={id} onClick={() => navigate(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px 0', background: 'none', border: 'none', cursor: 'pointer', gap: 3 }}>
+              <button key={id} onClick={() => navigate(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px 4px', background: 'none', border: 'none', cursor: 'pointer', gap: 3 }}>
                 <div style={{ width: 32, height: 32, borderRadius: 10, background: active ? T.primaryLight : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</div>
                 <span style={{ fontSize: 9, fontWeight: active ? 600 : 400, color: active ? T.primary : T.textMuted }}>{label}</span>
               </button>
@@ -232,9 +232,6 @@ export default function App() {
           })}
         </nav>
       )}
-      <div style={{ background: T.card, borderTop: `1px solid ${T.border}`, padding: '8px 16px', textAlign: 'center', fontSize: 10, color: T.textMuted, flexShrink: 0 }}>
-        Built and maintained by <span style={{ fontWeight: 600, color: T.text }}>Shanzay Haris</span>
-      </div>
     </div>
     </div>
   )
