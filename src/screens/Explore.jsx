@@ -3,43 +3,10 @@ import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
 // ---------- constants ----------
-const AGE_GROUPS = [
-  { key: 'All Ages',      label: 'All Ages' },
-  { key: 'Teens (13-17)', label: '🧑 Teens (13–17)' },
-  { key: 'Open',          label: 'No Age Listed' },
-]
+const CAUSES = ['Education','Environment','Animals','Food Security','Health','Housing','Arts','Seniors']
+const CAUSE_EMOJI = { Education:'📚', Environment:'🌿', Animals:'🐾', 'Food Security':'🍎', Health:'❤️', Housing:'🏠', Arts:'🎨', Seniors:'🤝' }
 
-const CAUSES = [
-  { key: 'All',          label: 'All' },
-  { key: 'Education',    label: '📚 Education' },
-  { key: 'Environment',  label: '🌿 Environment' },
-  { key: 'Animals',      label: '🐾 Animals' },
-  { key: 'Food Security',label: '🍎 Food Security' },
-  { key: 'Health',       label: '❤️ Health' },
-  { key: 'Housing',      label: '🏠 Housing' },
-  { key: 'Arts',         label: '🎨 Arts' },
-  { key: 'Seniors',      label: '🤝 Seniors' },
-]
-
-const REGIONS = [
-  { key: '',                 label: 'All Locations' },
-  { key: 'Remote / Online',  label: '🌐 Remote' },
-  { key: 'Bay Area, CA',     label: '📍 Bay Area' },
-  { key: 'Los Angeles, CA',  label: '📍 Los Angeles' },
-  { key: 'San Diego, CA',    label: '📍 San Diego' },
-  { key: 'New York, NY',     label: '📍 New York' },
-  { key: 'Chicago, IL',      label: '📍 Chicago' },
-  { key: 'Houston, TX',      label: '📍 Houston' },
-  { key: 'Seattle, WA',      label: '📍 Seattle' },
-  { key: 'Austin, TX',       label: '📍 Austin' },
-  { key: 'Boston, MA',       label: '📍 Boston' },
-]
-
-const SECTIONS = [
-  { key: 'All Ages',      label: '✓ All Ages',       desc: 'Everyone is welcome' },
-  { key: 'Teens (13-17)', label: '🧑 Teens (13–17)', desc: 'Open to teen volunteers' },
-  { key: 'Open',          label: 'No Age Listed',    desc: 'Age not stated — check the details' },
-]
+const REGIONS = ['Bay Area, CA','Los Angeles, CA','San Diego, CA','New York, NY','Chicago, IL','Houston, TX','Seattle, WA','Austin, TX','Boston, MA','Remote / Online']
 
 const CA_PROVINCES = new Set(['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon','BC','AB','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'])
 
@@ -52,70 +19,87 @@ function isUS(item) {
   return true
 }
 
-// ---------- helpers ----------
 function deriveCause(activities = []) {
-  const names = activities.map(a => (a.name || '').toLowerCase()).join(' ')
-  const cats  = activities.map(a => (a.category || '').toLowerCase()).join(' ')
-  const all   = names + ' ' + cats
+  const all = activities.map(a => (a.name||'').toLowerCase() + ' ' + (a.category||'').toLowerCase()).join(' ')
   if (/animal|wildlife|pet|spca|humane/.test(all))                          return 'Animals'
   if (/food|hunger|meal|nutrition|pantry|harvest|farm/.test(all))            return 'Food Security'
   if (/hous|shelter|homeless|habitat/.test(all))                             return 'Housing'
   if (/senior|elder|aged|retirement/.test(all))                              return 'Seniors'
   if (/environ|nature|trail|plant|garden|ecology|conserv|climate/.test(all)) return 'Environment'
   if (/health|medical|cancer|mental|hospital|clinic|nurse/.test(all))        return 'Health'
-  if (/art|music|theatre|theater|craft|creative|writing|journalism|design/.test(all)) return 'Arts'
-  if (/teach|tutor|coach|mentor|literacy|school|education|youth|kid|child|student|learn/.test(all)) return 'Education'
+  if (/art|music|theatre|theater|craft|creative|writing|design/.test(all))   return 'Arts'
   return 'Education'
 }
 
-function deriveAgeGroup(description = '', title = '', extra = '') {
+function deriveAgeGroup(description='', title='', extra='') {
   const text = (description + ' ' + title + ' ' + extra).toLowerCase()
-  if (/must be 18|18\s*[\+&]|18 years or older|18 and over|18 or older|minimum age.*18|age.*18.*require|adults only|adult volunteer|at least 18|18 years of age|age 18|over 18|aged 18/.test(text)) return '18+ Only'
-  if (/must be 1[4-6]|1[4-6]\s*[\+&]|minimum.*1[4-6]|at least 1[4-6]|1[4-6] years or older|1[4-6] and over|1[4-6] years of age|over 1[4-6]|aged 1[4-6]/.test(text)) return 'Teens (13-17)'
-  if (/\bteen\b|teenager|high school|high-school|grades?\s+[6-9]|grades?\s+1[012]|middle school|secondary school|ages?\s+1[3-7]|youth.*1[3-7]|1[3-7].*youth|student volunteer|youth volunteer|for youth|youth program|for students/.test(text)) return 'Teens (13-17)'
-  if (/all ages|family.{0,20}friendly|open to all|no age restrict|any age|everyone welcome|all welcome|no minimum age|no age requirement|of any age|open to everyone|open to anyone|all are welcome|all volunteers welcome|volunteers of all|all community|anyone can volunteer|welcome to join|no experience required|community members|open to the public|suitable for all|all backgrounds|everyone is welcome/.test(text)) return 'All Ages'
+  if (/must be 18|18\s*\+|adults only|at least 18|over 18|18 years or older/.test(text)) return '18+ Only'
+  if (/must be 1[4-6]|1[4-6]\s*\+|at least 1[4-6]|over 1[4-6]/.test(text)) return 'Teens (13-17)'
+  if (/\bteen\b|teenager|high school|middle school|ages?\s+1[3-7]|youth.*1[3-7]|student volunteer|for youth/.test(text)) return 'Teens (13-17)'
+  if (/all ages|family.{0,20}friendly|open to all|any age|everyone welcome|no minimum age|open to everyone|anyone can volunteer/.test(text)) return 'All Ages'
   return 'Open'
 }
 
 function deriveLocation(item) {
   if (item.remote_or_online) return 'Remote / Online'
-  const { audience } = item
-  if (audience?.regions?.length) return audience.regions[0]
-  return 'In-Person'
+  return item.audience?.regions?.[0] || 'In-Person'
 }
 
 function mapOpp(item) {
+  const acts = item.activities || []
   return {
-    id:          item.id,
-    title:       item.title,
-    org:         item.organization?.name || '',
-    orgLogo:     item.organization?.logo || '',
-    cause:       deriveCause(item.activities),
-    ageGroup:    deriveAgeGroup(item.description, item.title, [item.requirements, item.age_restriction, (item.activities || []).map(a => a.name).join(' ')].filter(Boolean).join(' ')),
-    hours:       item.duration || '',
-    location:    deriveLocation(item),
-    date:        item.dates || '',
-    description: item.description || '',
-    externalUrl: item.url || '',
-    remote:      !!item.remote_or_online,
-    activities:  item.activities || [],
+    id: item.id, title: item.title,
+    org: item.organization?.name || '',
+    cause: deriveCause(acts),
+    ageGroup: deriveAgeGroup(item.description, item.title, acts.map(a=>a.name).join(' ')),
+    hours: item.duration || '', location: deriveLocation(item),
+    date: item.dates || '', description: item.description || '',
+    externalUrl: item.url || '', remote: !!item.remote_or_online,
   }
 }
 
-// ---------- opportunity card ----------
-function OppCard({ opp, onSelect }) {
-  const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
+// ---------- filter modal ----------
+function FilterModal({ filters, onChange, onClose }) {
+  const [local, setLocal] = useState(filters)
+  const set = (key, val) => setLocal(p => ({ ...p, [key]: val }))
+  const activeCount = [local.cause, local.region, local.ageGroup].filter(Boolean).length
+
   return (
-    <div onClick={() => onSelect(opp)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
-      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 3 }}>{opp.org}</div>
-      <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
-      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500 }}>{opp.cause}</span>
-        {opp.remote && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 500 }}>Remote</span>}
-        {opp.hours && <><span style={{ fontSize: 12, color: T.textMuted }}>·</span><span style={{ fontSize: 12, color: T.textMuted }}>{opp.hours}</span></>}
-        {opp.location && !opp.remote && <><span style={{ fontSize: 12, color: T.textMuted }}>·</span><span style={{ fontSize: 12, color: T.textMuted }}>{opp.location}</span></>}
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, maxHeight: '85vh', overflowY: 'auto', padding: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Filter opportunities</div>
+          <button onClick={() => { setLocal({ cause: '', region: '', ageGroup: '' }) }} style={{ fontSize: 12, color: T.textMuted, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
+        </div>
+
+        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Location</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+          {REGIONS.map(r => (
+            <button key={r} onClick={() => set('region', local.region === r ? '' : r)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.region === r ? T.accent : T.border}`, background: local.region === r ? T.accentLight : '#fff', color: local.region === r ? T.accent : T.textSub }}>{r}</button>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Cause</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+          {CAUSES.map(c => {
+            const cs = CAUSE[c] || { bg: T.primaryLight, text: T.primary }
+            const active = local.cause === c
+            return <button key={c} onClick={() => set('cause', active ? '' : c)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${active ? cs.text : T.border}`, background: active ? cs.bg : '#fff', color: active ? cs.text : T.textSub }}>{CAUSE_EMOJI[c]} {c}</button>
+          })}
+        </div>
+
+        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Age group</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
+          {[['All Ages','All ages welcome'],['Teens (13-17)','Teen-specific'],['Open','No age listed']].map(([key, lbl]) => (
+            <button key={key} onClick={() => set('ageGroup', local.ageGroup === key ? '' : key)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.ageGroup === key ? T.primary : T.border}`, background: local.ageGroup === key ? T.primaryLight : '#fff', color: local.ageGroup === key ? T.primary : T.textSub }}>{lbl}</button>
+          ))}
+        </div>
+
+        <button onClick={() => { onChange(local); onClose() }} style={{ width: '100%', padding: 14, background: T.primary, border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+          {activeCount > 0 ? `Apply ${activeCount} filter${activeCount > 1 ? 's' : ''}` : 'Apply'}
+        </button>
+        <button onClick={onClose} style={{ width: '100%', padding: 12, background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', marginTop: 8 }}>Cancel</button>
       </div>
-      {opp.date && <div style={{ fontSize: 12, color: T.textMuted }}>{opp.date}</div>}
     </div>
   )
 }
@@ -123,44 +107,51 @@ function OppCard({ opp, onSelect }) {
 // ---------- org card ----------
 function OrgCard({ org, onSelect }) {
   const firstCause = org.interests?.[0]
-  const causeStyle = firstCause && CAUSE[firstCause] ? CAUSE[firstCause] : { bg: T.primaryLight, text: T.primary }
+  const cs = firstCause && CAUSE[firstCause] ? CAUSE[firstCause] : { bg: T.accentLight, text: T.accent }
   return (
-    <div onClick={() => onSelect(org.id)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 14, cursor: 'pointer', flexShrink: 0, width: 160 }}>
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 10 }}>🏢</div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 3, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{org.name}</div>
-      {org.region && <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>📍 {org.region}</div>}
-      {firstCause && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: causeStyle.bg, color: causeStyle.text, fontWeight: 600 }}>{firstCause}</span>}
+    <div onClick={() => onSelect(org.id)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ width: 44, height: 44, borderRadius: 12, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>🏢</div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, lineHeight: 1.3 }}>{org.name}</div>
+      {org.org_type && <div style={{ fontSize: 11, color: T.textMuted }}>{org.org_type}</div>}
+      {org.region && <div style={{ fontSize: 11, color: T.textMuted }}>📍 {org.region}</div>}
+      {firstCause && <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 20, background: cs.bg, color: cs.text, fontWeight: 600, alignSelf: 'flex-start' }}>{CAUSE_EMOJI[firstCause]} {firstCause}</span>}
     </div>
   )
 }
 
-// ---------- section header ----------
-function SectionHeader({ section, count, hasMore }) {
+// ---------- opp card ----------
+function OppCard({ opp, onSelect }) {
+  const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 12, marginTop: 8 }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{section.label}</div>
-      <div style={{ fontSize: 12, color: T.textMuted }}>{section.desc}</div>
-      <div style={{ marginLeft: 'auto', fontSize: 12, color: T.textMuted, fontWeight: 600 }}>{count}{hasMore ? '+' : ''}</div>
+    <div onClick={() => onSelect(opp)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer' }}>
+      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 3 }}>{opp.org}</div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500 }}>{opp.cause}</span>
+        {opp.remote && <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 500 }}>Remote</span>}
+        {opp.hours && <span style={{ fontSize: 12, color: T.textMuted }}>· {opp.hours}</span>}
+        {opp.location && !opp.remote && <span style={{ fontSize: 12, color: T.textMuted }}>· {opp.location}</span>}
+      </div>
+      {opp.date && <div style={{ fontSize: 12, color: T.textMuted, marginTop: 8 }}>{opp.date}</div>}
     </div>
   )
 }
 
 // ---------- main ----------
 export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSignUp, onLogin, onHome }) {
+  const [tab, setTab]                 = useState('opportunities')
   const [opps, setOpps]               = useState([])
   const [page, setPage]               = useState(1)
   const [hasMore, setHasMore]         = useState(false)
   const [loading, setLoading]         = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError]             = useState(null)
-  const [activeGroup, setActiveGroup] = useState('All Ages')
-  const [activeCause, setActiveCause] = useState('All')
-  const [activeRegion, setActiveRegion] = useState('')
   const [search, setSearch]           = useState('')
+  const [showFilter, setShowFilter]   = useState(false)
+  const [filters, setFilters]         = useState({ cause: '', region: '', ageGroup: '' })
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
-
   const [orgs, setOrgs]               = useState([])
-  const [showAllOrgs, setShowAllOrgs] = useState(false)
+  const [orgsLoading, setOrgsLoading] = useState(true)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -168,10 +159,9 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
     return () => window.removeEventListener('resize', handle)
   }, [])
 
-  // fetch orgs from Supabase
   useEffect(() => {
     supabase.from('users').select('id, name, org_type, region, interests, website').eq('role', 'org')
-      .then(({ data }) => setOrgs(data || []))
+      .then(({ data }) => { setOrgs(data || []); setOrgsLoading(false) })
   }, [])
 
   const fetchPage = useCallback(async (pageNum, replace = false) => {
@@ -179,39 +169,32 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
     setError(null)
     try {
       const r = await fetch(`/api/opportunities?page=${pageNum}`)
-      if (!r.ok) throw new Error('Failed to load opportunities')
+      if (!r.ok) throw new Error('Failed to load')
       const data = await r.json()
       const mapped = (data.results || []).filter(isUS).map(mapOpp).filter(o => o.ageGroup !== '18+ Only')
       setOpps(prev => replace ? mapped : [...prev, ...mapped])
       setHasMore(!!data.next)
       setPage(pageNum)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      replace ? setLoading(false) : setLoadingMore(false)
-    }
+    } catch (e) { setError(e.message) }
+    finally { replace ? setLoading(false) : setLoadingMore(false) }
   }, [])
 
   useEffect(() => { fetchPage(1, true) }, [fetchPage])
 
-  // filter listings
-  const filtered = opps.filter(o => {
-    const matchSearch  = !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.org.toLowerCase().includes(search.toLowerCase())
-    const matchCause   = activeCause === 'All' || o.cause === activeCause
-    const matchRegion  = !activeRegion || o.location.toLowerCase().includes(activeRegion.toLowerCase())
-    const matchGroup   = activeGroup === 'All Ages' || o.ageGroup === activeGroup
-    return matchSearch && matchCause && matchRegion && matchGroup
+  const activeFilterCount = [filters.cause, filters.region, filters.ageGroup].filter(Boolean).length
+
+  const filteredOpps = opps.filter(o => {
+    if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !o.org.toLowerCase().includes(search.toLowerCase())) return false
+    if (filters.cause  && o.cause !== filters.cause) return false
+    if (filters.region && !o.location.toLowerCase().includes(filters.region.toLowerCase())) return false
+    if (filters.ageGroup && o.ageGroup !== filters.ageGroup) return false
+    return true
   })
 
-  const isAll  = activeGroup === 'All Ages'
-  const grouped = isAll
-    ? SECTIONS.map(s => ({ section: s, items: filtered.filter(o => o.ageGroup === s.key) })).filter(g => g.items.length > 0)
-    : null
-
-  // filter orgs by region
-  const filteredOrgs = activeRegion
-    ? orgs.filter(o => (o.region || '').toLowerCase().includes(activeRegion.toLowerCase()))
-    : orgs
+  const filteredOrgs = orgs.filter(o => {
+    if (!search) return true
+    return (o.name||'').toLowerCase().includes(search.toLowerCase()) || (o.region||'').toLowerCase().includes(search.toLowerCase()) || (o.org_type||'').toLowerCase().includes(search.toLowerCase())
+  })
 
   const gridStyle = isDesktop
     ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }
@@ -219,7 +202,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
   const orgGridStyle = isDesktop
     ? { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }
-    : { display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }
+    : { display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 12 }
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg, display: 'flex', flexDirection: 'column' }}>
@@ -228,10 +211,10 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       {isGuest ? (
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button onClick={onHome} style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
+            <img src="/logo.png" alt="Give Hour" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover' }} />
             <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>Give Hour</div>
           </button>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 10 }}>
             <button onClick={onLogin} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 20, padding: '7px 18px', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Log in</button>
             <button onClick={onSignUp} style={{ background: T.primary, border: 'none', borderRadius: 20, padding: '7px 18px', fontSize: 13, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Sign up free</button>
           </div>
@@ -239,148 +222,85 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       ) : (
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Explore</div>
-          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Browse opportunities and organizations</div>
         </div>
       )}
 
-      <div style={{ padding: isDesktop ? '32px 40px' : '14px 20px', flex: 1 }}>
+      {/* tabs */}
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, display: 'flex', flexShrink: 0 }}>
+        {[['opportunities','Opportunities'],['organizations','Organizations']].map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '12px 0', fontSize: 13, fontWeight: tab === key ? 700 : 500, color: tab === key ? T.primary : T.textMuted, background: 'none', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${tab === key ? T.primary : 'transparent'}`, transition: 'all 0.15s' }}>
+            {label}
+            {key === 'organizations' && orgs.length > 0 && <span style={{ marginLeft: 6, fontSize: 11, background: T.accentLight, color: T.accent, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>{orgs.length}</span>}
+          </button>
+        ))}
+      </div>
 
-        {/* search */}
-        <div style={{ display: 'flex', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', gap: 8, marginBottom: 14, alignItems: 'center' }}>
-          <span style={{ fontSize: 16, color: T.textMuted }}>🔍</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search opportunities or organizations..." style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
+      <div style={{ padding: isDesktop ? '28px 40px' : '16px 20px', flex: 1 }}>
+
+        {/* search + filter row */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
+          <div style={{ flex: 1, display: 'flex', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', gap: 8, alignItems: 'center' }}>
+            <span style={{ fontSize: 16, color: T.textMuted }}>🔍</span>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tab === 'opportunities' ? 'Search opportunities…' : 'Search organizations…'} style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
+            {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textMuted, fontSize: 16, padding: 0 }}>×</button>}
+          </div>
+          {tab === 'opportunities' && (
+            <button onClick={() => setShowFilter(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${activeFilterCount > 0 ? T.primary : T.border}`, background: activeFilterCount > 0 ? T.primaryLight : T.card, color: activeFilterCount > 0 ? T.primary : T.textSub, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+              <span>⚙️</span> Filter
+              {activeFilterCount > 0 && <span style={{ background: T.primary, color: '#fff', borderRadius: '50%', width: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{activeFilterCount}</span>}
+            </button>
+          )}
         </div>
 
-        {/* region filter */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
-          {REGIONS.map(r => {
-            const active = activeRegion === r.key
-            return (
-              <button key={r.key} onClick={() => setActiveRegion(r.key)} style={{
-                borderRadius: 20, padding: '7px 16px', fontSize: 12, fontWeight: 600,
-                whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0,
-                border: `1.5px solid ${active ? T.accent : T.border}`,
-                background: active ? T.accentLight : '#fff',
-                color: active ? T.accent : T.textSub,
-              }}>
-                {r.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* age group filter */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
-          {AGE_GROUPS.map(g => {
-            const active = activeGroup === g.key
-            return (
-              <button key={g.key} onClick={() => setActiveGroup(g.key)} style={{
-                borderRadius: 20, padding: '7px 16px', fontSize: 12, fontWeight: 600,
-                whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0,
-                border: `1.5px solid ${active ? T.primary : T.border}`,
-                background: active ? T.primary : '#fff',
-                color: active ? '#fff' : T.textSub,
-              }}>
-                {g.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* cause pills */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 24, paddingBottom: 4 }}>
-          {CAUSES.map(c => {
-            const active = activeCause === c.key
-            const style  = active && c.key !== 'All' ? CAUSE[c.key] : null
-            return (
-              <button key={c.key} onClick={() => setActiveCause(c.key)} style={{
-                borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 600,
-                whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0,
-                border: `1.5px solid ${active ? (style?.text || T.primary) : T.border}`,
-                background: active ? (style?.bg || T.primaryLight) : '#fff',
-                color: active ? (style?.text || T.primary) : T.textSub,
-              }}>
-                {c.label}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* organizations section */}
-        {filteredOrgs.length > 0 && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Organizations</div>
-                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>{filteredOrgs.length} registered on Give Hour</div>
-              </div>
-              {filteredOrgs.length > 4 && (
-                <button onClick={() => setShowAllOrgs(v => !v)} style={{ fontSize: 12, fontWeight: 600, color: T.accent, background: 'none', border: 'none', cursor: 'pointer' }}>
-                  {showAllOrgs ? 'Show less' : `See all ${filteredOrgs.length} →`}
-                </button>
-              )}
+        {/* opportunities tab */}
+        {tab === 'opportunities' && (
+          loading ? (
+            <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading…</div>
+          ) : error ? (
+            <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>
+              {error} — <button onClick={() => fetchPage(1, true)} style={{ color: T.primary, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>retry</button>
             </div>
+          ) : filteredOpps.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>No opportunities match your filters.</div>
+          ) : (
+            <>
+              <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOpps.length}{hasMore ? '+' : ''} opportunities</div>
+              <div style={gridStyle}>
+                {filteredOpps.map(opp => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} />)}
+              </div>
+              {hasMore && (
+                <div style={{ textAlign: 'center', marginTop: 24 }}>
+                  <button onClick={() => fetchPage(page + 1)} disabled={loadingMore} style={{ background: T.primaryLight, border: `1.5px solid ${T.primary}`, color: T.primary, borderRadius: 20, padding: '10px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {loadingMore ? 'Loading…' : 'Load more'}
+                  </button>
+                </div>
+              )}
+            </>
+          )
+        )}
 
-            {showAllOrgs ? (
+        {/* organizations tab */}
+        {tab === 'organizations' && (
+          orgsLoading ? (
+            <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading…</div>
+          ) : filteredOrgs.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 60 }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>🏢</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 6 }}>No organizations yet</div>
+              <div style={{ fontSize: 13, color: T.textMuted }}>Organizations that sign up on Give Hour will appear here.</div>
+            </div>
+          ) : (
+            <>
+              <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOrgs.length} organization{filteredOrgs.length !== 1 ? 's' : ''}</div>
               <div style={orgGridStyle}>
                 {filteredOrgs.map(org => <OrgCard key={org.id} org={org} onSelect={onSelectOrg} />)}
               </div>
-            ) : (
-              <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
-                {filteredOrgs.slice(0, 8).map(org => <OrgCard key={org.id} org={org} onSelect={onSelectOrg} />)}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* listings */}
-        <div style={{ fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 14 }}>Opportunities</div>
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading opportunities…</div>
-        ) : error ? (
-          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>
-            {error} — <button onClick={() => fetchPage(1, true)} style={{ color: T.primary, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>retry</button>
-          </div>
-        ) : isAll && grouped && !activeRegion ? (
-          <>
-            {grouped.map(({ section, items }) => (
-              <div key={section.key} style={{ marginBottom: 32 }}>
-                <div style={{ borderBottom: `2px solid ${T.border}`, paddingBottom: 10, marginBottom: 14 }}>
-                  <SectionHeader section={section} count={items.length} hasMore={hasMore} />
-                </div>
-                <div style={gridStyle}>
-                  {items.map(opp => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} />)}
-                </div>
-              </div>
-            ))}
-            {hasMore && (
-              <div style={{ textAlign: 'center', marginTop: 8, marginBottom: 16 }}>
-                <button onClick={() => fetchPage(page + 1)} disabled={loadingMore}
-                  style={{ background: T.primaryLight, border: `1.5px solid ${T.primary}`, color: T.primary, borderRadius: 20, padding: '10px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  {loadingMore ? 'Loading…' : 'Load more'}
-                </button>
-              </div>
-            )}
-          </>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>No opportunities match these filters.</div>
-        ) : (
-          <>
-            <div style={gridStyle}>
-              {filtered.map(opp => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} />)}
-            </div>
-            {hasMore && (
-              <div style={{ textAlign: 'center', marginTop: 24 }}>
-                <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10 }}>Showing {filtered.length} from loaded results — more may exist</div>
-                <button onClick={() => fetchPage(page + 1)} disabled={loadingMore}
-                  style={{ background: T.primaryLight, border: `1.5px solid ${T.primary}`, color: T.primary, borderRadius: 20, padding: '10px 28px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
-                  {loadingMore ? 'Loading…' : 'Load more'}
-                </button>
-              </div>
-            )}
-          </>
+            </>
+          )
         )}
       </div>
+
+      {showFilter && <FilterModal filters={filters} onChange={setFilters} onClose={() => setShowFilter(false)} />}
     </div>
   )
 }
