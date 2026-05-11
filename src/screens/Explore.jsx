@@ -188,7 +188,10 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
     if (!orgView) return
     setOrgViewLoading(true)
     setOrgViewListings([])
-    fetch(`/api/org-directory?org=${encodeURIComponent(orgView.org)}`)
+    const qs = orgView.org_id
+      ? `org=${encodeURIComponent(orgView.org)}&org_id=${orgView.org_id}`
+      : `org=${encodeURIComponent(orgView.org)}`
+    fetch(`/api/org-directory?${qs}`)
       .then(r => r.json())
       .then(data => { setOrgViewListings(Array.isArray(data) ? data : []); setOrgViewLoading(false) })
       .catch(() => setOrgViewLoading(false))
@@ -434,7 +437,21 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
               </div>
               <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOrgDir.length} organization{filteredOrgDir.length !== 1 ? 's' : ''}</div>
               <div style={orgGridStyle}>
-                {filteredOrgDir.map(org => <OrgDirCard key={org.org} org={org} onSelect={setOrgView} />)}
+                {filteredOrgDir.map(org => (
+                  <OrgDirCard key={org.org} org={org} onSelect={async (o) => {
+                    // Single-listing Give Hour org: skip drill-down, go straight to the opp
+                    if (o.count === 1 && o.org_id) {
+                      const qs = `org=${encodeURIComponent(o.org)}&org_id=${o.org_id}`
+                      const data = await fetch(`/api/org-directory?${qs}`).then(r => r.json()).catch(() => [])
+                      if (Array.isArray(data) && data.length === 1) {
+                        const item = data[0]
+                        onSelectOpp({ id: item.id, title: item.title, org: item.org, org_id: item.org_id, cause: item.cause, ageGroup: item.age_group, hours: item.hours, location: item.location, date: item.date, description: item.description, externalUrl: item.external_url, remote: !!item.remote, source: 'org' })
+                        return
+                      }
+                    }
+                    setOrgView(o)
+                  }} />
+                ))}
               </div>
             </>
           )
