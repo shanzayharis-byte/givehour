@@ -25,6 +25,7 @@ const StepHeader = ({ step, total, title, onBack }) => (
       {onBack && (
         <button onClick={onBack} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
       )}
+      <img src="/logo.png" alt="Give Hour" style={{ width: 28, height: 28, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }} />
       <div style={{ flex: 1 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>Step {step} of 3</div>
         <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{title}</div>
