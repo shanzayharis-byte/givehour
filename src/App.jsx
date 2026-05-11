@@ -179,11 +179,11 @@ export default function App() {
         <div style={{ display: 'flex', width: '100%', maxWidth: 1100, height: '100vh', overflow: 'hidden', boxShadow: '0 0 40px rgba(0,0,0,0.08)' }}>
         {/* sidebar */}
         <div style={{ width: 220, background: T.card, borderRight: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-          <button onClick={() => navigate(isOrg ? 'orgDashboard' : 'feed')} style={{ padding: '22px 20px 18px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+          <button onClick={() => navigate(isOrg ? 'orgDashboard' : 'feed')} style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', textAlign: 'left', width: '100%' }}>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'cover', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }} />
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Give Hour</div>
-              <div style={{ fontSize: 10, color: T.textMuted }}>{isOrg ? 'Org Portal' : 'Teen Portal'}</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Give Hour</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>{isOrg ? 'Org Portal' : 'Teen Portal'}</div>
             </div>
           </button>
           <nav style={{ padding: '14px 12px', flex: 1 }}>
