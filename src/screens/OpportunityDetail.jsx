@@ -171,7 +171,7 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
       <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 20 }}>
         {opp.org && (
           opp.org_id && onSelectOrg
-            ? <button onClick={() => onSelectOrg(opp.org_id)}
+            ? <button onClick={() => onSelectOrg(opp.org_id, opp.org)}
                 style={{ background: 'none', border: 'none', padding: 0, color: T.primary, fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>
                 {opp.org}
               </button>
@@ -189,7 +189,7 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
       <div style={{ fontSize: 17, fontWeight: 600, color: T.text, flex: 1 }}>
         {opp.org && (
           opp.org_id && onSelectOrg
-            ? <button onClick={() => onSelectOrg(opp.org_id)}
+            ? <button onClick={() => onSelectOrg(opp.org_id, opp.org)}
                 style={{ background: 'none', border: 'none', padding: 0, color: T.primary, fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>
                 {opp.org}
               </button>

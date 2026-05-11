@@ -396,7 +396,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
                   {orgView.isGiveHour && orgView.org_id && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
                       <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700 }}>✓ Give Hour Partner</span>
-                      <button onClick={() => onSelectOrg(orgView.org_id)} style={{ fontSize: 11, color: T.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}>View profile →</button>
+                      <button onClick={() => onSelectOrg(orgView.org_id, orgView.org)} style={{ fontSize: 11, color: T.primary, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontWeight: 600 }}>View profile →</button>
                     </div>
                   )}
                 </div>
@@ -410,7 +410,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
                   <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{orgViewListings.length} listing{orgViewListings.length !== 1 ? 's' : ''}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {orgViewListings.map(item => (
-                      <OppCard key={item.id} opp={{ id: item.id, title: item.title, org: item.org, cause: item.cause, ageGroup: item.age_group, hours: item.hours, location: item.location, date: item.date, description: item.description, externalUrl: item.external_url, remote: !!item.remote, source: item.source }} onSelect={onSelectOpp} />
+                      <OppCard key={item.id} opp={{ id: item.id, title: item.title, org: item.org || orgView.org, org_id: item.org_id || orgView.org_id, cause: item.cause, ageGroup: item.age_group, hours: item.hours, location: item.location, date: item.date, description: item.description, externalUrl: item.external_url, remote: !!item.remote, source: item.source }} onSelect={onSelectOpp} />
                     ))}
                   </div>
                 </>
@@ -438,18 +438,12 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
               <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOrgDir.length} organization{filteredOrgDir.length !== 1 ? 's' : ''}</div>
               <div style={orgGridStyle}>
                 {filteredOrgDir.map(org => (
-                  <OrgDirCard key={org.org} org={org} onSelect={async (o) => {
-                    // Give Hour org: fetch listings and shortcut to opp if there's exactly 1
+                  <OrgDirCard key={org.org} org={org} onSelect={(o) => {
                     if (o.org_id) {
-                      const qs = `org=${encodeURIComponent(o.org)}&org_id=${o.org_id}`
-                      const data = await fetch(`/api/org-directory?${qs}`).then(r => r.json()).catch(() => [])
-                      if (Array.isArray(data) && data.length === 1) {
-                        const item = data[0]
-                        onSelectOpp({ id: item.id, title: item.title, org: item.org || o.org, org_id: o.org_id, cause: item.cause, ageGroup: item.age_group, hours: item.hours, location: item.location, date: item.date, description: item.description, externalUrl: item.external_url, remote: !!item.remote, source: 'org' })
-                        return
-                      }
+                      onSelectOrg(o.org_id, o.org)
+                    } else {
+                      setOrgView(o)
                     }
-                    setOrgView(o)
                   }} />
                 ))}
               </div>

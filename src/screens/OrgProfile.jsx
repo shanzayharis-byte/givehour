@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { T, CAUSE } from '../lib/theme'
 
-export default function OrgProfile({ orgId, onBack, onSelectOpp }) {
+export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
   const [org, setOrg]           = useState(null)
   const [listings, setListings] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -44,7 +44,7 @@ export default function OrgProfile({ orgId, onBack, onSelectOpp }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button onClick={onBack}
           style={{ background: T.primaryLight, color: T.primary, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 600, cursor: 'pointer' }}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{org?.name}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{org?.name || orgName}</div>
       </div>
 
       <div style={{ background: T.card, borderRadius: 14, padding: 16, marginBottom: 20, border: `1px solid ${T.border}` }}>
@@ -70,7 +70,7 @@ export default function OrgProfile({ orgId, onBack, onSelectOpp }) {
         const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
         return (
           <button key={l.id}
-            onClick={() => onSelectOpp({ ...l, org: org?.name, org_id: l.org_id })}
+            onClick={() => onSelectOpp({ ...l, org: org?.name || orgName, org_id: l.org_id || orgId })}
             style={{ width: '100%', textAlign: 'left', background: T.card, borderRadius: 14, padding: 16, marginBottom: 10, border: `1px solid ${T.border}`, cursor: 'pointer' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: T.text, flex: 1 }}>{l.title}</div>

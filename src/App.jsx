@@ -36,7 +36,7 @@ export default function App() {
   const [dbUser, setDbUser]           = useState(null)
   const [activeScreen, setActiveScreen] = useState('landing')
   const [selectedOpp, setSelectedOpp] = useState(null)
-  const [selectedOrg, setSelectedOrg]   = useState(null)
+  const [selectedOrg, setSelectedOrg]   = useState(null) // { id, name }
   const [isGuest, setIsGuest]         = useState(false)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [appLoading, setAppLoading]   = useState(true)
@@ -152,18 +152,18 @@ export default function App() {
   const mainContent = () => {
     if (selectedOpp) {
       return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest}
-        onSelectOrg={(orgId) => { setSelectedOpp(null); setSelectedOrg(orgId) }}
+        onSelectOrg={(orgId, orgName) => { setSelectedOpp(null); setSelectedOrg({ id: orgId, name: orgName }) }}
         onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('landing') }} />
     }
     if (selectedOrg) {
-      return <OrgProfile orgId={selectedOrg} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} />
+      return <OrgProfile orgId={selectedOrg.id} orgName={selectedOrg.name} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} />
     }
     if (!authUser && !isGuest) {
       return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
     switch (activeScreen) {
       case 'feed':          return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
-      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={setSelectedOrg} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
+      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
       case 'loghours':      return <LogHours user={dbUser} />
       case 'impact':        return <Impact user={dbUser} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} />
