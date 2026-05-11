@@ -21,19 +21,22 @@ const lbl = {
 
 const StepHeader = ({ step, total, title, onBack }) => (
   <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px 12px' }}>
-      {onBack && (
-        <button onClick={onBack} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>←</button>
-      )}
-      <img src="/logo.png" alt="Give Hour" style={{ width: 42, height: 42, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }} />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 1 }}>Step {step} of 3</div>
-        <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{title}</div>
-      </div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px 8px' }}>
+      {onBack
+        ? <button onClick={onBack} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
+        : <div style={{ width: 32 }} />
+      }
       <div style={{ display: 'flex', gap: 4 }}>
         {[1, 2, 3].map(n => (
           <div key={n} style={{ width: n === step ? 20 : 8, height: 8, borderRadius: 4, background: n <= step ? T.primary : T.border, transition: 'all 0.3s' }} />
         ))}
+      </div>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 20px 16px', gap: 8 }}>
+      <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+      <div style={{ textAlign: 'center' }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Step {step} of 3</div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{title}</div>
       </div>
     </div>
   </div>
