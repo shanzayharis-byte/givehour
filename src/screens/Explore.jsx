@@ -92,7 +92,7 @@ function FilterModal({ filters, onChange, onClose, isDesktop, causeCounts }) {
 
         <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Age group</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
-          {[['All Ages','All ages welcome'],['Teens (13-17)','Teen-specific'],['Open','No age listed']].map(([key, lbl]) => (
+          {[['All Ages','All Ages'],['Teens (13-17)','Teenager'],['Open','No age specific']].map(([key, lbl]) => (
             <button key={key} onClick={() => set('ageGroup', local.ageGroup === key ? '' : key)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.ageGroup === key ? T.primary : T.border}`, background: local.ageGroup === key ? T.primaryLight : '#fff', color: local.ageGroup === key ? T.primary : T.textSub }}>{lbl}</button>
           ))}
         </div>
@@ -220,11 +220,41 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       setOpps(prev => replace ? mapped : [...prev, ...mapped])
       setHasMore(!!data.next)
       setPage(pageNum)
-    } catch (e) { setError(e.message) }
+      return { items: mapped, hasMore: !!data.next }
+    } catch (e) { setError(e.message); return { items: [], hasMore: false } }
     finally { replace ? setLoading(false) : setLoadingMore(false) }
   }, [])
 
-  useEffect(() => { fetchPage(1, true) }, [fetchPage])
+  // Auto-fetch more pages on initial load until we have at least 9 results
+  useEffect(() => {
+    let cancelled = false
+    async function loadInitial() {
+      setLoading(true)
+      setError(null)
+      let all = []
+      let more = true
+      let pageNum = 1
+      while (all.length < 9 && more && pageNum <= 6) {
+        try {
+          const r = await fetch(`/api/opportunities?page=${pageNum}`)
+          if (!r.ok) throw new Error('Failed to load')
+          const data = await r.json()
+          const mapped = (data.results || []).filter(isUS).map(mapOpp).filter(o => o.ageGroup !== '18+ Only')
+          all = [...all, ...mapped]
+          more = !!data.next
+          pageNum++
+        } catch (e) { if (!cancelled) setError(e.message); break }
+      }
+      if (!cancelled) {
+        setOpps(all)
+        setHasMore(more)
+        setPage(pageNum - 1)
+        setLoading(false)
+      }
+    }
+    loadInitial()
+    return () => { cancelled = true }
+  }, [])
 
   const activeFilterCount = [filters.cause, filters.ageGroup].filter(Boolean).length
 
@@ -291,6 +321,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
           <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '12px 0', fontSize: 13, fontWeight: tab === key ? 700 : 500, color: tab === key ? T.primary : T.textMuted, background: 'none', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${tab === key ? T.primary : 'transparent'}`, transition: 'all 0.15s' }}>
             {label}
             {key === 'organizations' && orgDir.length > 0 && <span style={{ marginLeft: 6, fontSize: 11, background: T.accentLight, color: T.accent, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>{orgDir.length}</span>}
+            {key === 'opportunities' && filteredOpps.length > 0 && <span style={{ marginLeft: 6, fontSize: 11, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>{filteredOpps.length}{hasMore ? '+' : ''}</span>}
           </button>
         ))}
       </div>
