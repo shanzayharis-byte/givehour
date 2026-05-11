@@ -137,9 +137,13 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           if (resp.ok) {
             localStorage.removeItem('givehour_pending_profile')
             dbData = { ...(dbData || {}), id: user.id, ...profile }
+          } else {
+            const errBody = await resp.json().catch(() => ({}))
+            console.error('[givehour] save-profile failed (login):', resp.status, errBody)
           }
         }
       }
+      console.log('[givehour] dbUser after login:', dbData)
       onLoggedIn(user, dbData)
     } catch (e) {
       setError(e.message)

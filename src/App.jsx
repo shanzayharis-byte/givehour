@@ -67,12 +67,17 @@ export default function App() {
               if (resp.ok) {
                 localStorage.removeItem('givehour_pending_profile')
                 data = { ...(data || {}), id: session.user.id, ...profile }
+              } else {
+                const errBody = await resp.json().catch(() => ({}))
+                console.error('[givehour] save-profile failed (session restore):', resp.status, errBody)
               }
             }
           }
+          console.log('[givehour] dbUser after restore:', data)
           setDbUser(data)
           setActiveScreen(data?.role === 'org' ? 'orgDashboard' : 'feed')
-        } catch (_) {
+        } catch (e) {
+          console.error('[givehour] session restore error:', e)
           setActiveScreen('feed')
         }
       }
