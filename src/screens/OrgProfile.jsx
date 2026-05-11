@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
 export default function OrgProfile({ orgId, onBack, onSelectOpp }) {
@@ -11,14 +10,12 @@ export default function OrgProfile({ orgId, onBack, onSelectOpp }) {
   useEffect(() => {
     async function load() {
       try {
-        const [{ data: orgData, error: orgErr }, { data: listData, error: listErr }] = await Promise.all([
-          supabase.from('users').select('name, region, interests').eq('id', orgId).maybeSingle(),
-          supabase.from('org_listings').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
+        const [orgRes, listRes] = await Promise.all([
+          fetch(`/api/orgs?id=${orgId}`).then(r => r.json()),
+          fetch(`/api/org-directory?org=__&org_id=${orgId}`).then(r => r.json()),
         ])
-        if (orgErr) throw orgErr
-        if (listErr) throw listErr
-        setOrg(orgData)
-        setListings(listData || [])
+        setOrg(orgRes || null)
+        setListings(Array.isArray(listRes) ? listRes : [])
       } catch (e) {
         console.error(e)
         setError('Failed to load org profile')
