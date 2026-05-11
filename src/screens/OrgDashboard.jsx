@@ -54,17 +54,17 @@ export default function OrgDashboard({ user }) {
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>{user.name}</div>
+    <div style={{ flex: 1, overflowY: 'auto', padding: 20, paddingBottom: 32 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{user.name}</div>
           <div style={{ fontSize: 13, color: T.textMuted }}>
             {user.region} · {listings.length} listing{listings.length !== 1 ? 's' : ''}
           </div>
         </div>
         <button onClick={() => setShowForm(true)}
-          style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-          + Post Opportunity
+          style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+          + Post
         </button>
       </div>
 
@@ -84,24 +84,26 @@ export default function OrgDashboard({ user }) {
         const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
         const isConfirming = confirmDelete === l.id
         return (
-          <div key={l.id} style={{ background: T.card, borderRadius: 14, padding: 16, marginBottom: 12, border: `1px solid ${isConfirming ? '#E05252' : T.border}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div style={{ fontSize: 15, fontWeight: 600, color: T.text, flex: 1 }}>{l.title}</div>
-              <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap', marginLeft: 8 }}>{l.cause}</span>
-            </div>
-            <div style={{ fontSize: 13, color: T.textMuted, marginTop: 6 }}>
-              {l.remote ? 'Remote' : l.location} · {l.date || 'No date'}{l.hours ? ` · ${l.hours}h` : ''}
+          <div key={l.id} style={{ background: T.card, borderRadius: 14, padding: 14, marginBottom: 10, border: `1px solid ${isConfirming ? '#E05252' : T.border}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 3 }}>{l.title}</div>
+                <div style={{ fontSize: 12, color: T.textMuted }}>
+                  {l.remote ? 'Remote' : l.location} · {l.date || 'No date'}{l.hours ? ` · ${l.hours}h` : ''}
+                </div>
+              </div>
+              <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0 }}>{l.cause}</span>
             </div>
             {isConfirming ? (
-              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 13, color: '#E05252', fontWeight: 600, flex: 1 }}>Delete this listing?</span>
-                <button onClick={() => setConfirmDelete(null)} style={{ padding: '6px 14px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={() => deleteListing(l.id)} disabled={deleting} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{deleting ? 'Deleting...' : 'Delete'}</button>
+                <button onClick={() => setConfirmDelete(null)} style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => deleteListing(l.id)} disabled={deleting} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{deleting ? '...' : 'Delete'}</button>
               </div>
             ) : (
-              <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-                <button onClick={() => setEditListing(l)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: T.primaryLight, border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
-                <button onClick={() => setConfirmDelete(l.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
+              <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
+                <button onClick={() => setEditListing(l)} style={{ background: T.primaryLight, border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
+                <button onClick={() => setConfirmDelete(l.id)} style={{ background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
               </div>
             )}
           </div>
