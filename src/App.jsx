@@ -54,8 +54,8 @@ export default function App() {
           let { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
           if (!data?.name) {
             const stored = localStorage.getItem('givehour_pending_profile')
-            if (stored) {
-              const profile = JSON.parse(stored)
+            const profile = stored ? JSON.parse(stored) : (session.user.user_metadata?.name ? session.user.user_metadata : null)
+            if (profile?.name) {
               const resp = await fetch('/api/save-profile', {
                 method: 'POST',
                 headers: {

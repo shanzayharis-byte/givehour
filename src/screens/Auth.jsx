@@ -127,8 +127,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       let { data: dbData } = await supabase.from('users').select('*').eq('id', user.id).maybeSingle()
       if (!dbData?.name) {
         const stored = localStorage.getItem('givehour_pending_profile')
-        if (stored) {
-          const profile = JSON.parse(stored)
+        const profile = stored ? JSON.parse(stored) : (user.user_metadata?.name ? user.user_metadata : null)
+        if (profile?.name) {
           const resp = await fetch('/api/save-profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${data.session.access_token}` },
