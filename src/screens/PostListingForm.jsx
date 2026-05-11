@@ -9,13 +9,21 @@ const AGE_GROUPS = [
   { value: 'open',  label: 'No Age Restriction' },
 ]
 
-export default function PostListingForm({ user, onBack }) {
+export default function PostListingForm({ user, onBack, editListing }) {
   const [form, setForm] = useState({
-    title: '', cause: '', location: '', remote: false,
-    date: '', hours: '', age_group: 'all', description: '', external_url: ''
+    title:        editListing?.title        || '',
+    cause:        editListing?.cause        || '',
+    location:     editListing?.location     || '',
+    remote:       editListing?.remote       ?? false,
+    date:         editListing?.date         || '',
+    hours:        editListing?.hours        != null ? String(editListing.hours) : '',
+    age_group:    editListing?.age_group    || 'all',
+    description:  editListing?.description  || '',
+    external_url: editListing?.external_url || '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
+  const isEditing = !!editListing
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -25,18 +33,20 @@ export default function PostListingForm({ user, onBack }) {
       return
     }
     setSaving(true)
-    const { error: err } = await supabase.from('org_listings').insert({
-      org_id:      user.id,
-      title:       form.title,
-      cause:       form.cause,
-      location:    form.remote ? null : form.location || null,
-      remote:      form.remote,
-      date:        form.date || null,
-      hours:       form.hours ? parseInt(form.hours) : null,
-      age_group:   form.age_group,
-      description: form.description,
+    const payload = {
+      title:        form.title,
+      cause:        form.cause,
+      location:     form.remote ? null : form.location || null,
+      remote:       form.remote,
+      date:         form.date || null,
+      hours:        form.hours ? parseInt(form.hours) : null,
+      age_group:    form.age_group,
+      description:  form.description,
       external_url: form.external_url || null,
-    })
+    }
+    const { error: err } = isEditing
+      ? await supabase.from('org_listings').update(payload).eq('id', editListing.id).eq('org_id', user.id)
+      : await supabase.from('org_listings').insert({ ...payload, org_id: user.id })
     setSaving(false)
     if (err) { setError(err.message); return }
     onBack()
@@ -53,7 +63,7 @@ export default function PostListingForm({ user, onBack }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button onClick={onBack}
           style={{ background: T.primaryLight, color: T.primary, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 600, cursor: 'pointer' }}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>Post Opportunity</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{isEditing ? 'Edit Opportunity' : 'Post Opportunity'}</div>
       </div>
 
       {/* Title */}
@@ -135,7 +145,7 @@ export default function PostListingForm({ user, onBack }) {
 
       <button onClick={handleSubmit} disabled={saving}
         style={{ width: '100%', padding: 16, background: saving ? '#B8D8C8' : T.primary, color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
-        {saving ? 'Posting...' : 'Post Opportunity'}
+        {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Post Opportunity'}
       </button>
     </div>
   )

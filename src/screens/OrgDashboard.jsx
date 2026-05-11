@@ -8,6 +8,7 @@ export default function OrgDashboard({ user }) {
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState('')
   const [showForm, setShowForm]       = useState(false)
+  const [editListing, setEditListing] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting]       = useState(false)
 
@@ -48,8 +49,8 @@ export default function OrgDashboard({ user }) {
 
   useEffect(() => { fetchListings() }, [user.id])
 
-  if (showForm) {
-    return <PostListingForm user={user} onBack={() => { setShowForm(false); fetchListings() }} />
+  if (showForm || editListing) {
+    return <PostListingForm user={user} editListing={editListing} onBack={() => { setShowForm(false); setEditListing(null); fetchListings() }} />
   }
 
   return (
@@ -98,7 +99,10 @@ export default function OrgDashboard({ user }) {
                 <button onClick={() => deleteListing(l.id)} disabled={deleting} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{deleting ? 'Deleting...' : 'Delete'}</button>
               </div>
             ) : (
-              <button onClick={() => setConfirmDelete(l.id)} style={{ marginTop: 10, background: 'none', border: 'none', fontSize: 12, color: T.textMuted, cursor: 'pointer', padding: 0, fontWeight: 500 }}>🗑 Remove listing</button>
+              <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+                <button onClick={() => setEditListing(l)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: T.primaryLight, border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
+                <button onClick={() => setConfirmDelete(l.id)} style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
+              </div>
             )}
           </div>
         )
