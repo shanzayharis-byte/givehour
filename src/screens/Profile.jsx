@@ -304,12 +304,22 @@ export default function Profile({ user, onSignOut }) {
   const [notifMatches, setNotifMatches]     = useState(user?.notif_new_matches ?? true)
   const [notifReminders, setNotifReminders] = useState(user?.notif_reminders ?? true)
 
+  const [parentName, setParentName]     = useState(user?.parent_name || '')
+  const [parentEmail, setParentEmail]   = useState(user?.parent_email || '')
+  const [parentPhone, setParentPhone]   = useState(user?.parent_phone || '')
+  const [parentConsent, setParentConsent] = useState(user?.parent_consent || false)
+  const [editParentName, setEditParentName]   = useState('')
+  const [editParentEmail, setEditParentEmail] = useState('')
+  const [editParentPhone, setEditParentPhone] = useState('')
+  const [editParentConsent, setEditParentConsent] = useState(false)
+
   const [showCause, setShowCause]           = useState(false)
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showRegion, setShowRegion]         = useState(false)
   const [showSchool, setShowSchool]         = useState(false)
   const [showAvail, setShowAvail]           = useState(false)
   const [showNotif, setShowNotif]           = useState(false)
+  const [showParent, setShowParent]         = useState(false)
 
   const [applications, setApplications] = useState([])
 
@@ -336,6 +346,10 @@ export default function Profile({ user, onSignOut }) {
           setNotifMatches(profile.notif_new_matches ?? true)
           setNotifReminders(profile.notif_reminders ?? true)
           setAvatarUrl(profile.avatar_url || '')
+          setParentName(profile.parent_name || '')
+          setParentEmail(profile.parent_email || '')
+          setParentPhone(profile.parent_phone || '')
+          setParentConsent(profile.parent_consent || false)
         }
 
         const { data: hours } = await supabase.from('hours_log').select('hours, org').eq('user_id', user?.id)
@@ -420,6 +434,15 @@ export default function Profile({ user, onSignOut }) {
     setShowNotif(false)
   }
 
+  const saveParent = async () => {
+    await save({ parent_name: editParentName.trim() || null, parent_email: editParentEmail.trim() || null, parent_phone: editParentPhone.trim() || null, parent_consent: editParentConsent })
+    setParentName(editParentName.trim())
+    setParentEmail(editParentEmail.trim())
+    setParentPhone(editParentPhone.trim())
+    setParentConsent(editParentConsent)
+    setShowParent(false)
+  }
+
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     onSignOut()
@@ -483,6 +506,7 @@ export default function Profile({ user, onSignOut }) {
         { label: 'Notification settings', action: () => setShowNotif(true) },
         { label: 'Availability', action: () => setShowAvail(true) },
         { label: 'School information', action: () => setShowSchool(true) },
+        { label: 'Parent / Guardian info', action: () => { setEditParentName(parentName); setEditParentEmail(parentEmail); setEditParentPhone(parentPhone); setEditParentConsent(parentConsent); setShowParent(true) } },
         { label: 'Sign out', color: T.danger, action: handleSignOut },
       ].map(({ label, color, action }, i, arr) => (
         <button key={label} onClick={action} style={{ width: '100%', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: '#fff', border: 'none', borderBottom: i < arr.length - 1 ? `1px solid ${T.border}` : 'none', textAlign: 'left' }}>
@@ -634,6 +658,28 @@ export default function Profile({ user, onSignOut }) {
             </div>
           ))}
           <button onClick={saveNotif} style={{ width: '100%', padding: 12, background: T.primary, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', marginTop: 16 }}>Save</button>
+        </Modal>
+      )}
+
+      {showParent && (
+        <Modal title="Parent / Guardian info" subtitle="Shared with orgs when you apply to volunteer" onClose={() => setShowParent(false)}>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>Parent / Guardian name</div>
+            <input value={editParentName} onChange={e => setEditParentName(e.target.value)} placeholder="Jane Smith" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>Parent email</div>
+            <input type="email" value={editParentEmail} onChange={e => setEditParentEmail(e.target.value)} placeholder="parent@email.com" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 6 }}>Parent phone</div>
+            <input type="tel" value={editParentPhone} onChange={e => setEditParentPhone(e.target.value)} placeholder="(415) 555-0100" style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none' }} />
+          </div>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer', marginBottom: 16 }}>
+            <input type="checkbox" checked={editParentConsent} onChange={e => setEditParentConsent(e.target.checked)} style={{ marginTop: 2, accentColor: T.primary, width: 16, height: 16, flexShrink: 0 }} />
+            <span style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>My parent or guardian consents to me volunteering through Give Hour.</span>
+          </label>
+          <button onClick={saveParent} style={{ width: '100%', padding: 12, background: T.primary, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>Save</button>
         </Modal>
       )}
     </div>
