@@ -35,7 +35,7 @@ const StepHeader = ({ step, total, title, onBack }) => (
       <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Step {step} of 3</div>
-        <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{title}</div>
+        <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>{title}</div>
       </div>
     </div>
   </div>
@@ -213,12 +213,10 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
             <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Join Give Hour</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>Join Give Hour</div>
           </div>
         </div>
-        <div style={{ padding: '28px 20px' }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>Who are you?</div>
-          <div style={{ fontSize: 14, color: T.textSub, marginBottom: 24 }}>Choose your account type to get started.</div>
+        <div style={{ padding: '20px 20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {cards.map(({ emoji, title, sub, r, bg, accent }) => (
               <button key={r} onClick={() => { setRole(r); setScreen('step1') }} style={{ background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}>
@@ -245,9 +243,6 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
         <StepHeader step={1} title={role === 'org' ? 'Contact details' : 'Create your account'} onBack={() => setScreen('userType')} />
         <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
-          <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>
-            {role === 'org' ? 'Your contact info' : role === 'parent' ? 'Create your account' : 'Tell us about you'}
-          </div>
           <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>We just need a few basics to get started.</div>
 
           {[[nameLbl, name, setName, 'text'], ['Email address', email, setEmail, 'email'], ['Password', password, setPassword, 'password']].map(([label, val, set, type]) => (
@@ -283,7 +278,6 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: T.card }}>
           <StepHeader step={2} title="About you" onBack={() => setScreen('step1')} />
           <div style={{ flex: 1, padding: '24px 20px', overflowY: 'auto' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>A bit about you</div>
             <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>Helps us find age-appropriate opportunities near you.</div>
 
             <label style={lbl}>What grade are you in?</label>
@@ -347,7 +341,6 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
           <StepHeader step={2} title="Your organization" onBack={() => setScreen('step1')} />
           <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>Your organization</div>
             <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>Tell teens who you are and where you operate.</div>
 
             <div style={{ marginBottom: 16 }}>
@@ -401,8 +394,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
           <StepHeader step={3} title="Your causes" onBack={() => setScreen('step2')} />
           <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>What do you care about?</div>
-            <div style={{ fontSize: 13, color: T.textSub, marginBottom: needed > 0 ? 8 : 0 }}>Pick at least 2 — your first pick becomes your top cause.</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: needed > 0 ? 8 : 16 }}>Pick at least 2 — your first pick becomes your top cause.</div>
 
             {interests.length > 0 && (
               <div style={{ background: T.primaryLight, borderRadius: 10, padding: '8px 14px', marginBottom: 16, fontSize: 13, color: T.primary, fontWeight: 600 }}>
@@ -440,7 +432,6 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
           <StepHeader step={3} title="Causes you support" onBack={() => setScreen('step2')} />
           <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>What causes do you support?</div>
             <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>Pick at least 1. This helps teens find you.</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
               {CAUSES.map(c => {
@@ -502,12 +493,11 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
             <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Check your email</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>Check your email</div>
           </div>
         </div>
         <div style={{ padding: '48px 28px', textAlign: 'center' }}>
           <div style={{ fontSize: 44, marginBottom: 16 }}>📬</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 8, letterSpacing: '-0.02em' }}>Reset link sent!</div>
           <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, maxWidth: 280, margin: '0 auto 32px' }}>
             We sent a reset link to <strong style={{ color: T.text }}>{email}</strong>. Follow the link to set a new password.
           </div>
@@ -531,11 +521,10 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
             <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
-            <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Welcome back</div>
+            <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>Welcome back</div>
           </div>
         </div>
         <div style={{ padding: '28px 20px' }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>Log in</div>
           <div style={{ fontSize: 14, color: T.textSub, marginBottom: 28 }}>Good to see you again.</div>
 
           <div style={{ marginBottom: 16 }}>
