@@ -55,11 +55,13 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   const [region, setRegion]     = useState('')
   const [interests, setInterests] = useState([])
 
-  const [orgName, setOrgName]       = useState('')
-  const [orgType, setOrgType]       = useState('')
-  const [orgCity, setOrgCity]       = useState('')
-  const [orgWebsite, setOrgWebsite] = useState('')
-  const [orgCauses, setOrgCauses]   = useState([])
+  const [orgName, setOrgName]           = useState('')
+  const [orgType, setOrgType]           = useState('')
+  const [orgCity, setOrgCity]           = useState('')
+  const [orgWebsite, setOrgWebsite]     = useState('')
+  const [orgCauses, setOrgCauses]       = useState([])
+  const [orgContactPhone, setOrgContactPhone] = useState('')
+  const [orgIs501c3, setOrgIs501c3]           = useState(null)
 
   const [childGrade, setChildGrade]     = useState('')
   const [childSchool, setChildSchool]   = useState('')
@@ -114,7 +116,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   }
 
   const finishTeen   = () => handleSignUp({ name, role: 'teen', grade, age, zip, school_name: school, region, interests, preferred_cause: interests[0] || null })
-  const finishOrg    = () => handleSignUp({ name: orgName, role: 'org', org_type: orgType, website: orgWebsite || null, school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
+  const finishOrg    = () => handleSignUp({ name: orgName, contact_name: name.trim() || null, contact_phone: orgContactPhone.trim() || null, role: 'org', org_type: orgType, is_501c3: orgIs501c3, website: orgWebsite || null, school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
   const finishParent = () => handleSignUp({ name, role: 'parent', grade: childGrade, zip: parentZip, school_name: childSchool, interests: parentInterests, preferred_cause: parentInterests[0] || null })
 
   const handleLogin = async () => {
@@ -249,6 +251,13 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             </div>
           ))}
 
+          {role === 'org' && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={lbl}>Contact phone number <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+              <input type="tel" value={orgContactPhone} onChange={e => setOrgContactPhone(e.target.value)} style={inp} placeholder="(415) 555-0100" />
+            </div>
+          )}
+
           <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 20, lineHeight: 1.6 }}>By continuing you agree to our Terms of Service and Privacy Policy.</p>
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #F5C0C0', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: T.danger, marginBottom: 16 }}>{error}</div>}
           <button onClick={() => { setError(''); setScreen('step2') }} disabled={!ready} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : T.border, color: ready ? '#fff' : T.textMuted, transition: 'background 0.2s' }}>Continue →</button>
@@ -330,6 +339,13 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
               {ORG_TYPES.map(t => (
                 <button key={t} onClick={() => setOrgType(t)} style={{ padding: '9px 16px', borderRadius: 24, border: `2px solid ${orgType === t ? T.accent : T.border}`, background: orgType === t ? T.accentLight : '#fff', color: orgType === t ? T.accent : T.textSub, fontSize: 13, fontWeight: orgType === t ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s' }}>{t}</button>
+              ))}
+            </div>
+
+            <label style={lbl}>Are you a 501(c)(3) nonprofit? <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+              {[{ label: 'Yes', val: true }, { label: 'No', val: false }].map(({ label, val }) => (
+                <button key={label} onClick={() => setOrgIs501c3(prev => prev === val ? null : val)} style={{ flex: 1, padding: '10px 0', borderRadius: 24, border: `2px solid ${orgIs501c3 === val ? T.accent : T.border}`, background: orgIs501c3 === val ? T.accentLight : '#fff', color: orgIs501c3 === val ? T.accent : T.textSub, fontSize: 14, fontWeight: orgIs501c3 === val ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s' }}>{label}</button>
               ))}
             </div>
 

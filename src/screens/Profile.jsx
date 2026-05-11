@@ -32,11 +32,15 @@ function OrgProfile({ user, onSignOut }) {
   const [listingCount, setListingCount] = useState(0)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
 
-  const [nameVal, setNameVal]         = useState(user?.name || '')
-  const [city, setCity]               = useState(user?.region || '')
-  const [orgType, setOrgType]         = useState(user?.org_type || '')
-  const [website, setWebsite]         = useState(user?.website || '')
-  const [causes, setCauses]           = useState(user?.interests || [])
+  const [nameVal, setNameVal]             = useState(user?.name || '')
+  const [city, setCity]                   = useState(user?.region || '')
+  const [orgType, setOrgType]             = useState(user?.org_type || '')
+  const [website, setWebsite]             = useState(user?.website || '')
+  const [causes, setCauses]               = useState(user?.interests || [])
+  const [contactName, setContactName]     = useState(user?.contact_name || '')
+  const [contactPhone, setContactPhone]   = useState(user?.contact_phone || '')
+  const [contactEmail, setContactEmail]   = useState('')
+  const [is501c3, setIs501c3]             = useState(user?.is_501c3 ?? null)
 
   const [showEditOrg, setShowEditOrg] = useState(false)
   const [showCauses, setShowCauses]   = useState(false)
@@ -44,6 +48,9 @@ function OrgProfile({ user, onSignOut }) {
   const [editCity, setEditCity]       = useState(city)
   const [editOrgType, setEditOrgType] = useState(orgType)
   const [editWebsite, setEditWebsite] = useState(website)
+  const [editContactName, setEditContactName]   = useState('')
+  const [editContactPhone, setEditContactPhone] = useState('')
+  const [editIs501c3, setEditIs501c3]           = useState(null)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -65,7 +72,15 @@ function OrgProfile({ user, onSignOut }) {
           setWebsite(profile.website || '')
           setEditWebsite(profile.website || '')
           setCauses(profile.interests || [])
+          setContactName(profile.contact_name || '')
+          setEditContactName(profile.contact_name || '')
+          setContactPhone(profile.contact_phone || '')
+          setEditContactPhone(profile.contact_phone || '')
+          setIs501c3(profile.is_501c3 ?? null)
+          setEditIs501c3(profile.is_501c3 ?? null)
         }
+        const { data: { session } } = await supabase.auth.getSession()
+        setContactEmail(session?.user?.email || '')
         const { count } = await supabase.from('org_listings').select('id', { count: 'exact', head: true }).eq('org_id', user?.id)
         setListingCount(count || 0)
       } catch (e) { console.error(e) }
@@ -77,11 +92,14 @@ function OrgProfile({ user, onSignOut }) {
   const save = (fields) => supabase.from('users').update(fields).eq('id', user.id)
 
   const saveOrgInfo = async () => {
-    await save({ name: editName.trim(), region: editCity.trim(), org_type: editOrgType || null, website: editWebsite.trim() || null })
+    await save({ name: editName.trim(), region: editCity.trim(), org_type: editOrgType || null, website: editWebsite.trim() || null, contact_name: editContactName.trim() || null, contact_phone: editContactPhone.trim() || null, is_501c3: editIs501c3 })
     setNameVal(editName.trim())
     setCity(editCity.trim())
     setOrgType(editOrgType)
     setWebsite(editWebsite.trim())
+    setContactName(editContactName.trim())
+    setContactPhone(editContactPhone.trim())
+    setIs501c3(editIs501c3)
     setShowEditOrg(false)
   }
 
@@ -106,15 +124,44 @@ function OrgProfile({ user, onSignOut }) {
           <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>
             {orgType || ''}{orgType && city ? ' · ' : ''}{city || (!orgType ? 'Location not set' : '')}
           </div>
-          <div style={{ fontSize: 12, color: T.accent, fontWeight: 700, marginTop: 2 }}>{listingCount} listing{listingCount !== 1 ? 's' : ''} posted</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: T.accent, fontWeight: 700 }}>{listingCount} listing{listingCount !== 1 ? 's' : ''} posted</span>
+            {is501c3 === true && <span style={{ fontSize: 10, fontWeight: 700, background: '#E8F5E9', color: '#2E7D32', borderRadius: 20, padding: '2px 8px', letterSpacing: '0.03em' }}>501(c)(3)</span>}
+          </div>
         </div>
-        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
+        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setEditContactName(contactName); setEditContactPhone(contactPhone); setEditIs501c3(is501c3); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
       </div>
-      {website && (
-        <div style={{ paddingTop: 12, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.primary }}>
-          🔗 <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noreferrer" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>{website.replace(/^https?:\/\//, '')}</a>
-        </div>
-      )}
+
+      <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {contactName && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.text }}>
+            <span style={{ fontSize: 15 }}>👤</span>
+            <span style={{ fontWeight: 500 }}>{contactName}</span>
+            <span style={{ color: T.textMuted, fontSize: 11 }}>contact person</span>
+          </div>
+        )}
+        {contactEmail && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.text }}>
+            <span style={{ fontSize: 15 }}>✉️</span>
+            <span>{contactEmail}</span>
+          </div>
+        )}
+        {contactPhone && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: T.text }}>
+            <span style={{ fontSize: 15 }}>📞</span>
+            <span>{contactPhone}</span>
+          </div>
+        )}
+        {website && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+            <span style={{ fontSize: 15 }}>🔗</span>
+            <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noreferrer" style={{ color: T.primary, textDecoration: 'none', fontWeight: 500 }}>{website.replace(/^https?:\/\//, '')}</a>
+          </div>
+        )}
+        {!contactName && !contactPhone && !website && (
+          <div style={{ fontSize: 12, color: T.textMuted }}>No contact info added — tap Edit to fill this in.</div>
+        )}
+      </div>
     </div>
   )
 
@@ -176,12 +223,34 @@ function OrgProfile({ user, onSignOut }) {
             </div>
           </div>
           <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>501(c)(3) nonprofit status <span style={{ fontWeight: 400 }}>(optional)</span></label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[{ label: 'Yes', val: true }, { label: 'No', val: false }].map(({ label, val }) => (
+                <button key={label} onClick={() => setEditIs501c3(prev => prev === val ? null : val)} style={{ flex: 1, padding: '8px 0', borderRadius: 20, border: `1.5px solid ${editIs501c3 === val ? T.accent : T.border}`, background: editIs501c3 === val ? T.accentLight : '#fff', color: editIs501c3 === val ? T.accent : T.textSub, fontSize: 13, fontWeight: editIs501c3 === val ? 700 : 400, cursor: 'pointer' }}>{label}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 14 }}>
             <label style={lbl}>City / Location</label>
             <input value={editCity} onChange={e => setEditCity(e.target.value)} placeholder="San Francisco, CA" style={inp} />
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 14 }}>
             <label style={lbl}>Website <span style={{ fontWeight: 400 }}>(optional)</span></label>
             <input value={editWebsite} onChange={e => setEditWebsite(e.target.value)} placeholder="yourorg.org" style={inp} />
+          </div>
+          <div style={{ height: 1, background: T.border, margin: '4px 0 14px' }} />
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Contact info</div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>Contact person name</label>
+            <input value={editContactName} onChange={e => setEditContactName(e.target.value)} placeholder="Jane Smith" style={inp} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>Contact email <span style={{ fontWeight: 400 }}>(your login email — not editable here)</span></label>
+            <input value={contactEmail} disabled style={{ ...inp, background: T.bg, color: T.textMuted, cursor: 'default' }} />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={lbl}>Contact phone <span style={{ fontWeight: 400 }}>(optional)</span></label>
+            <input type="tel" value={editContactPhone} onChange={e => setEditContactPhone(e.target.value)} placeholder="(415) 555-0100" style={inp} />
           </div>
           <button onClick={saveOrgInfo} disabled={!editName.trim()} style={{ width: '100%', padding: 12, background: editName.trim() ? T.primary : T.border, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: editName.trim() ? '#fff' : T.textMuted, cursor: editName.trim() ? 'pointer' : 'default' }}>Save</button>
         </Modal>

@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   const profile = req.body
   if (!profile || !profile.name) return res.status(400).json({ error: 'Missing profile data' })
 
-  const ALLOWED = ['name', 'role', 'grade', 'age', 'zip', 'school_name', 'region', 'interests', 'preferred_cause', 'org_type', 'website']
+  const ALLOWED = ['name', 'role', 'grade', 'age', 'zip', 'school_name', 'region', 'interests', 'preferred_cause', 'org_type', 'website', 'contact_name', 'contact_phone', 'is_501c3']
   const safe = Object.fromEntries(ALLOWED.filter(k => profile[k] !== undefined).map(k => [k, profile[k]]))
 
   const { error } = await client.from('users').upsert({ id: user.id, ...safe })
