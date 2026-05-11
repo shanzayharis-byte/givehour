@@ -4,10 +4,12 @@ import { T, CAUSE } from '../lib/theme'
 import PostListingForm from './PostListingForm'
 
 export default function OrgDashboard({ user }) {
-  const [listings, setListings] = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState('')
-  const [showForm, setShowForm] = useState(false)
+  const [listings, setListings]       = useState([])
+  const [loading, setLoading]         = useState(true)
+  const [error, setError]             = useState('')
+  const [showForm, setShowForm]       = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(null)
+  const [deleting, setDeleting]       = useState(false)
 
   async function fetchListings() {
     try {
@@ -23,6 +25,24 @@ export default function OrgDashboard({ user }) {
       setError('Failed to load listings')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function deleteListing(id) {
+    setDeleting(true)
+    try {
+      const { error: err } = await supabase
+        .from('org_listings')
+        .delete()
+        .eq('id', id)
+        .eq('org_id', user.id)
+      if (err) throw err
+      setListings(prev => prev.filter(l => l.id !== id))
+      setConfirmDelete(null)
+    } catch (e) {
+      setError('Failed to delete listing')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -61,8 +81,9 @@ export default function OrgDashboard({ user }) {
 
       {listings.map(l => {
         const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
+        const isConfirming = confirmDelete === l.id
         return (
-          <div key={l.id} style={{ background: T.card, borderRadius: 14, padding: 16, marginBottom: 12, border: `1px solid ${T.border}` }}>
+          <div key={l.id} style={{ background: T.card, borderRadius: 14, padding: 16, marginBottom: 12, border: `1px solid ${isConfirming ? '#E05252' : T.border}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: T.text, flex: 1 }}>{l.title}</div>
               <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, whiteSpace: 'nowrap', marginLeft: 8 }}>{l.cause}</span>
@@ -70,6 +91,15 @@ export default function OrgDashboard({ user }) {
             <div style={{ fontSize: 13, color: T.textMuted, marginTop: 6 }}>
               {l.remote ? 'Remote' : l.location} · {l.date || 'No date'}{l.hours ? ` · ${l.hours}h` : ''}
             </div>
+            {isConfirming ? (
+              <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 13, color: '#E05252', fontWeight: 600, flex: 1 }}>Delete this listing?</span>
+                <button onClick={() => setConfirmDelete(null)} style={{ padding: '6px 14px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => deleteListing(l.id)} disabled={deleting} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{deleting ? 'Deleting...' : 'Delete'}</button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmDelete(l.id)} style={{ marginTop: 10, background: 'none', border: 'none', fontSize: 12, color: T.textMuted, cursor: 'pointer', padding: 0, fontWeight: 500 }}>🗑 Remove listing</button>
+            )}
           </div>
         )
       })}
