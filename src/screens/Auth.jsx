@@ -489,14 +489,21 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   // ── Confirm email ──────────────────────────────────────────────────────────
 
   if (screen === 'confirmEmail') {
+    const isOrgSignup = role === 'org'
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card, alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
-        <div style={{ width: 80, height: 80, borderRadius: '50%', background: T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, marginBottom: 20 }}>📬</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: T.text, marginBottom: 10, letterSpacing: '-0.02em' }}>Check your inbox!</div>
-        <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, maxWidth: 280, marginBottom: 32 }}>
-          We sent a confirmation link to <strong style={{ color: T.text }}>{email}</strong>. Click it to activate your account, then log in here.
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: isOrgSignup ? T.accentLight : T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, marginBottom: 20 }}>📬</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: T.text, marginBottom: 10, letterSpacing: '-0.02em' }}>
+          {isOrgSignup ? 'One last step!' : 'Check your inbox!'}
         </div>
-        <button onClick={() => setScreen('login')} style={{ background: T.primary, color: '#fff', padding: '14px 32px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(24,160,80,0.3)' }}>
+        <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, maxWidth: 300, marginBottom: 32 }}>
+          {isOrgSignup ? (
+            <>We sent a confirmation link to <strong style={{ color: T.text }}>{email}</strong>. Click it to activate your organization account on Give Hour, then log in to start posting listings.</>
+          ) : (
+            <>We sent a confirmation link to <strong style={{ color: T.text }}>{email}</strong>. Click it to activate your account, then log in to find opportunities near you.</>
+          )}
+        </div>
+        <button onClick={() => setScreen('login')} style={{ background: isOrgSignup ? T.accent : T.primary, color: '#fff', padding: '14px 32px', borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: isOrgSignup ? '0 4px 14px rgba(0,0,0,0.15)' : '0 4px 14px rgba(24,160,80,0.3)' }}>
           Go to log in →
         </button>
         <div style={{ marginTop: 16, fontSize: 12, color: T.textMuted }}>Don't see it? Check your spam folder.</div>
