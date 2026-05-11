@@ -57,7 +57,7 @@ function mapOpp(item) {
 }
 
 // ---------- filter modal ----------
-function FilterModal({ filters, onChange, onClose, isDesktop }) {
+function FilterModal({ filters, onChange, onClose, isDesktop, causeCounts }) {
   const [local, setLocal] = useState(filters)
   const set = (key, val) => setLocal(p => ({ ...p, [key]: val }))
   const activeCount = [local.cause, local.ageGroup].filter(Boolean).length
@@ -78,7 +78,15 @@ function FilterModal({ filters, onChange, onClose, isDesktop }) {
           {CAUSES.map(c => {
             const cs = CAUSE[c] || { bg: T.primaryLight, text: T.primary }
             const active = local.cause === c
-            return <button key={c} onClick={() => set('cause', active ? '' : c)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${active ? cs.text : T.border}`, background: active ? cs.bg : '#fff', color: active ? cs.text : T.textSub }}>{CAUSE_EMOJI[c]} {c}</button>
+            const count = causeCounts[c] || 0
+            const disabled = count === 0 && !active
+            return (
+              <button key={c} onClick={() => !disabled && set('cause', active ? '' : c)}
+                style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: disabled ? 'default' : 'pointer', border: `1.5px solid ${active ? cs.text : T.border}`, background: active ? cs.bg : '#fff', color: active ? cs.text : disabled ? T.border : T.textSub, opacity: disabled ? 0.45 : 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+                {CAUSE_EMOJI[c]} {c}
+                {!disabled && <span style={{ fontSize: 10, fontWeight: 700, background: active ? cs.text : T.bg, color: active ? '#fff' : T.textMuted, borderRadius: 20, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>{count}</span>}
+              </button>
+            )
           })}
         </div>
 
@@ -230,6 +238,14 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const filteredOrgListings = orgListings.filter(applyFilters)
   const filteredVolunteer   = opps.filter(applyFilters)
   const filteredOpps        = [...filteredOrgListings, ...filteredVolunteer]
+
+  // Count opps per cause (applying search + ageGroup only, not cause) for filter modal
+  const causeCounts = {}
+  for (const o of [...orgListings, ...opps]) {
+    if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) continue
+    if (filters.ageGroup && o.ageGroup !== filters.ageGroup) continue
+    causeCounts[o.cause] = (causeCounts[o.cause] || 0) + 1
+  }
 
   const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
   const availableLetters = new Set(orgDir.map(o => o.org[0]?.toUpperCase()).filter(Boolean))
@@ -383,7 +399,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
         )}
       </div>
 
-      {showFilter && <FilterModal filters={filters} onChange={setFilters} onClose={() => setShowFilter(false)} isDesktop={isDesktop} />}
+      {showFilter && <FilterModal filters={filters} onChange={setFilters} onClose={() => setShowFilter(false)} isDesktop={isDesktop} causeCounts={causeCounts} />}
     </div>
   )
 }
