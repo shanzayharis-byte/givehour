@@ -161,7 +161,12 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
   useEffect(() => {
     supabase.from('users').select('id, name, org_type, region, interests, website').eq('role', 'org')
-      .then(({ data }) => { setOrgs(data || []); setOrgsLoading(false) })
+      .then(({ data, error }) => {
+        if (error) console.error('[Explore] orgs fetch error:', error)
+        console.log('[Explore] orgs fetched:', data)
+        setOrgs(data || [])
+        setOrgsLoading(false)
+      })
   }, [])
 
   const fetchPage = useCallback(async (pageNum, replace = false) => {
