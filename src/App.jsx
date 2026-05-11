@@ -162,7 +162,7 @@ export default function App() {
     }
     switch (activeScreen) {
       case 'feed':          return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
-      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
+      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={setSelectedOrg} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
       case 'loghours':      return <LogHours user={dbUser} />
       case 'impact':        return <Impact user={dbUser} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} />

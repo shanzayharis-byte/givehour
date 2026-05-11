@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
 // ---------- constants ----------
@@ -20,7 +21,20 @@ const CAUSES = [
   { key: 'Seniors',      label: '🤝 Seniors' },
 ]
 
-// Ordered sections shown when "All" is active
+const REGIONS = [
+  { key: '',                 label: 'All Locations' },
+  { key: 'Remote / Online',  label: '🌐 Remote' },
+  { key: 'Bay Area, CA',     label: '📍 Bay Area' },
+  { key: 'Los Angeles, CA',  label: '📍 Los Angeles' },
+  { key: 'San Diego, CA',    label: '📍 San Diego' },
+  { key: 'New York, NY',     label: '📍 New York' },
+  { key: 'Chicago, IL',      label: '📍 Chicago' },
+  { key: 'Houston, TX',      label: '📍 Houston' },
+  { key: 'Seattle, WA',      label: '📍 Seattle' },
+  { key: 'Austin, TX',       label: '📍 Austin' },
+  { key: 'Boston, MA',       label: '📍 Boston' },
+]
+
 const SECTIONS = [
   { key: 'All Ages',      label: '✓ All Ages',       desc: 'Everyone is welcome' },
   { key: 'Teens (13-17)', label: '🧑 Teens (13–17)', desc: 'Open to teen volunteers' },
@@ -57,7 +71,6 @@ function deriveCause(activities = []) {
 function deriveAgeGroup(description = '', title = '', extra = '') {
   const text = (description + ' ' + title + ' ' + extra).toLowerCase()
   if (/must be 18|18\s*[\+&]|18 years or older|18 and over|18 or older|minimum age.*18|age.*18.*require|adults only|adult volunteer|at least 18|18 years of age|age 18|over 18|aged 18/.test(text)) return '18+ Only'
-  // 14–16 minimums are still teen-accessible, so group with teens
   if (/must be 1[4-6]|1[4-6]\s*[\+&]|minimum.*1[4-6]|at least 1[4-6]|1[4-6] years or older|1[4-6] and over|1[4-6] years of age|over 1[4-6]|aged 1[4-6]/.test(text)) return 'Teens (13-17)'
   if (/\bteen\b|teenager|high school|high-school|grades?\s+[6-9]|grades?\s+1[012]|middle school|secondary school|ages?\s+1[3-7]|youth.*1[3-7]|1[3-7].*youth|student volunteer|youth volunteer|for youth|youth program|for students/.test(text)) return 'Teens (13-17)'
   if (/all ages|family.{0,20}friendly|open to all|no age restrict|any age|everyone welcome|all welcome|no minimum age|no age requirement|of any age|open to everyone|open to anyone|all are welcome|all volunteers welcome|volunteers of all|all community|anyone can volunteer|welcome to join|no experience required|community members|open to the public|suitable for all|all backgrounds|everyone is welcome/.test(text)) return 'All Ages'
@@ -89,7 +102,7 @@ function mapOpp(item) {
   }
 }
 
-// ---------- card ----------
+// ---------- opportunity card ----------
 function OppCard({ opp, onSelect }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
   return (
@@ -107,6 +120,20 @@ function OppCard({ opp, onSelect }) {
   )
 }
 
+// ---------- org card ----------
+function OrgCard({ org, onSelect }) {
+  const firstCause = org.interests?.[0]
+  const causeStyle = firstCause && CAUSE[firstCause] ? CAUSE[firstCause] : { bg: T.primaryLight, text: T.primary }
+  return (
+    <div onClick={() => onSelect(org.id)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 14, cursor: 'pointer', flexShrink: 0, width: 160 }}>
+      <div style={{ width: 40, height: 40, borderRadius: 10, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, marginBottom: 10 }}>🏢</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 3, lineHeight: 1.3, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{org.name}</div>
+      {org.region && <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 6 }}>📍 {org.region}</div>}
+      {firstCause && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: causeStyle.bg, color: causeStyle.text, fontWeight: 600 }}>{firstCause}</span>}
+    </div>
+  )
+}
+
 // ---------- section header ----------
 function SectionHeader({ section, count, hasMore }) {
   return (
@@ -119,7 +146,7 @@ function SectionHeader({ section, count, hasMore }) {
 }
 
 // ---------- main ----------
-export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin, onHome }) {
+export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSignUp, onLogin, onHome }) {
   const [opps, setOpps]               = useState([])
   const [page, setPage]               = useState(1)
   const [hasMore, setHasMore]         = useState(false)
@@ -128,13 +155,23 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
   const [error, setError]             = useState(null)
   const [activeGroup, setActiveGroup] = useState('All Ages')
   const [activeCause, setActiveCause] = useState('All')
+  const [activeRegion, setActiveRegion] = useState('')
   const [search, setSearch]           = useState('')
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
+
+  const [orgs, setOrgs]               = useState([])
+  const [showAllOrgs, setShowAllOrgs] = useState(false)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
     window.addEventListener('resize', handle)
     return () => window.removeEventListener('resize', handle)
+  }, [])
+
+  // fetch orgs from Supabase
+  useEffect(() => {
+    supabase.from('users').select('id, name, org_type, region, interests, website').eq('role', 'org')
+      .then(({ data }) => setOrgs(data || []))
   }, [])
 
   const fetchPage = useCallback(async (pageNum, replace = false) => {
@@ -157,25 +194,32 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
 
   useEffect(() => { fetchPage(1, true) }, [fetchPage])
 
-  // Filter by search + cause
-  const searched = opps.filter(o => {
-    const matchSearch = !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.org.toLowerCase().includes(search.toLowerCase())
-    const matchCause  = activeCause === 'All' || o.cause === activeCause
-    return matchSearch && matchCause
+  // filter listings
+  const filtered = opps.filter(o => {
+    const matchSearch  = !search || o.title.toLowerCase().includes(search.toLowerCase()) || o.org.toLowerCase().includes(search.toLowerCase())
+    const matchCause   = activeCause === 'All' || o.cause === activeCause
+    const matchRegion  = !activeRegion || o.location.toLowerCase().includes(activeRegion.toLowerCase())
+    const matchGroup   = activeGroup === 'All Ages' || o.ageGroup === activeGroup
+    return matchSearch && matchCause && matchRegion && matchGroup
   })
 
-  // Then by active group
-  const isAll     = activeGroup === 'All Ages'
-  const filtered  = isAll ? searched : searched.filter(o => o.ageGroup === activeGroup)
-
-  // Build grouped sections for "All Ages" view
+  const isAll  = activeGroup === 'All Ages'
   const grouped = isAll
-    ? SECTIONS.map(s => ({ section: s, items: searched.filter(o => o.ageGroup === s.key) })).filter(g => g.items.length > 0)
+    ? SECTIONS.map(s => ({ section: s, items: filtered.filter(o => o.ageGroup === s.key) })).filter(g => g.items.length > 0)
     : null
+
+  // filter orgs by region
+  const filteredOrgs = activeRegion
+    ? orgs.filter(o => (o.region || '').toLowerCase().includes(activeRegion.toLowerCase()))
+    : orgs
 
   const gridStyle = isDesktop
     ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }
     : { display: 'flex', flexDirection: 'column', gap: 10 }
+
+  const orgGridStyle = isDesktop
+    ? { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }
+    : { display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg, display: 'flex', flexDirection: 'column' }}>
@@ -195,7 +239,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
       ) : (
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Explore</div>
-          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Browse all opportunities</div>
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Browse opportunities and organizations</div>
         </div>
       )}
 
@@ -204,11 +248,29 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
         {/* search */}
         <div style={{ display: 'flex', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', gap: 8, marginBottom: 14, alignItems: 'center' }}>
           <span style={{ fontSize: 16, color: T.textMuted }}>🔍</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search opportunities..." style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search opportunities or organizations..." style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
         </div>
 
-        {/* age group nav */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+        {/* region filter */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
+          {REGIONS.map(r => {
+            const active = activeRegion === r.key
+            return (
+              <button key={r.key} onClick={() => setActiveRegion(r.key)} style={{
+                borderRadius: 20, padding: '7px 16px', fontSize: 12, fontWeight: 600,
+                whiteSpace: 'nowrap', cursor: 'pointer', flexShrink: 0,
+                border: `1.5px solid ${active ? T.accent : T.border}`,
+                background: active ? T.accentLight : '#fff',
+                color: active ? T.accent : T.textSub,
+              }}>
+                {r.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* age group filter */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 14, paddingBottom: 4 }}>
           {AGE_GROUPS.map(g => {
             const active = activeGroup === g.key
             return (
@@ -226,7 +288,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
         </div>
 
         {/* cause pills */}
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 24, paddingBottom: 4 }}>
           {CAUSES.map(c => {
             const active = activeCause === c.key
             const style  = active && c.key !== 'All' ? CAUSE[c.key] : null
@@ -244,14 +306,42 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
           })}
         </div>
 
+        {/* organizations section */}
+        {filteredOrgs.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Organizations</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>{filteredOrgs.length} registered on Give Hour</div>
+              </div>
+              {filteredOrgs.length > 4 && (
+                <button onClick={() => setShowAllOrgs(v => !v)} style={{ fontSize: 12, fontWeight: 600, color: T.accent, background: 'none', border: 'none', cursor: 'pointer' }}>
+                  {showAllOrgs ? 'Show less' : `See all ${filteredOrgs.length} →`}
+                </button>
+              )}
+            </div>
+
+            {showAllOrgs ? (
+              <div style={orgGridStyle}>
+                {filteredOrgs.map(org => <OrgCard key={org.id} org={org} onSelect={onSelectOrg} />)}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
+                {filteredOrgs.slice(0, 8).map(org => <OrgCard key={org.id} org={org} onSelect={onSelectOrg} />)}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* listings */}
+        <div style={{ fontSize: 16, fontWeight: 700, color: T.text, marginBottom: 14 }}>Opportunities</div>
         {loading ? (
           <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading opportunities…</div>
         ) : error ? (
           <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>
             {error} — <button onClick={() => fetchPage(1, true)} style={{ color: T.primary, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>retry</button>
           </div>
-        ) : isAll && grouped ? (
+        ) : isAll && grouped && !activeRegion ? (
           <>
             {grouped.map(({ section, items }) => (
               <div key={section.key} style={{ marginBottom: 32 }}>
@@ -273,7 +363,7 @@ export default function Explore({ user, onSelectOpp, isGuest, onSignUp, onLogin,
             )}
           </>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>No opportunities in this group.</div>
+          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>No opportunities match these filters.</div>
         ) : (
           <>
             <div style={gridStyle}>
