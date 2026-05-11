@@ -123,8 +123,11 @@ function OrgCard({ org, onSelect }) {
 function OppCard({ opp, onSelect }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
   return (
-    <div onClick={() => onSelect(opp)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer' }}>
-      <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 3 }}>{opp.org}</div>
+    <div onClick={() => onSelect(opp)} style={{ background: T.card, border: `1px solid ${opp.source === 'org' ? T.primary : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
+        <div style={{ fontSize: 12, color: T.textMuted }}>{opp.org}</div>
+        {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700 }}>Local org</span>}
+      </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500 }}>{opp.cause}</span>
@@ -152,6 +155,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [orgs, setOrgs]               = useState([])
   const [orgsLoading, setOrgsLoading] = useState(true)
+  const [orgListings, setOrgListings] = useState([])
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -164,6 +168,30 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       .then(r => r.json())
       .then(data => { setOrgs(Array.isArray(data) ? data : []); setOrgsLoading(false) })
       .catch(() => setOrgsLoading(false))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/org-listings')
+      .then(r => r.json())
+      .then(data => {
+        if (!Array.isArray(data)) return
+        setOrgListings(data.map(item => ({
+          id:          item.id,
+          title:       item.title,
+          org:         item.org,
+          org_id:      item.org_id,
+          cause:       item.cause,
+          ageGroup:    item.age_group,
+          hours:       item.hours || '',
+          location:    item.location || '',
+          date:        item.date || '',
+          description: item.description || '',
+          externalUrl: item.external_url || '',
+          remote:      !!item.remote,
+          source:      'org',
+        })))
+      })
+      .catch(() => {})
   }, [])
 
   const fetchPage = useCallback(async (pageNum, replace = false) => {
@@ -185,13 +213,17 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
   const activeFilterCount = [filters.cause, filters.region, filters.ageGroup].filter(Boolean).length
 
-  const filteredOpps = opps.filter(o => {
-    if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !o.org.toLowerCase().includes(search.toLowerCase())) return false
-    if (filters.cause  && o.cause !== filters.cause) return false
-    if (filters.region && !o.location.toLowerCase().includes(filters.region.toLowerCase())) return false
+  const applyFilters = (o) => {
+    if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) return false
+    if (filters.cause    && o.cause !== filters.cause) return false
+    if (filters.region   && !(o.location||'').toLowerCase().includes(filters.region.toLowerCase())) return false
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) return false
     return true
-  })
+  }
+
+  const filteredOrgListings = orgListings.filter(applyFilters)
+  const filteredVolunteer   = opps.filter(applyFilters)
+  const filteredOpps        = [...filteredOrgListings, ...filteredVolunteer]
 
   const filteredOrgs = orgs.filter(o => {
     if (!search) return true
