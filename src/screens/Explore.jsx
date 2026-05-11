@@ -11,10 +11,10 @@ const REGIONS = ['Bay Area, CA','Los Angeles, CA','San Diego, CA','New York, NY'
 const CA_PROVINCES = new Set(['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon','BC','AB','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'])
 
 function isUS(item) {
-  if (item.remote_or_online) return true
-  const regions   = item.audience?.regions   || []
   const countries = item.audience?.countries || []
   if (countries.length && countries.every(c => !/united states|usa/i.test(c))) return false
+  if (item.remote_or_online) return true
+  const regions = item.audience?.regions || []
   if (regions.some(r => CA_PROVINCES.has(r))) return false
   return true
 }

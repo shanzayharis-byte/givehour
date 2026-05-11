@@ -42,12 +42,13 @@ CA_PROVINCES = {
 }
 
 def is_us(item):
-    if item.get("remote_or_online"):
-        return True
-    regions   = item.get("audience", {}).get("regions", [])
     countries = item.get("audience", {}).get("countries", [])
+    # Explicitly non-US country → reject even if remote
     if countries and all(not re.search(r"united states|usa", c, re.I) for c in countries):
         return False
+    if item.get("remote_or_online"):
+        return True
+    regions = item.get("audience", {}).get("regions", [])
     if any(r in CA_PROVINCES for r in regions):
         return False
     return True
@@ -128,8 +129,10 @@ blob      = client.get_blob_client(container=CONTAINER_PROCESSED, blob=blob_name
 blob.upload_blob(json.dumps(records, indent=2), overwrite=True)
 print(f"Saved {len(records)} clean records → processed/{blob_name}")
 
-# ── upsert to Supabase clean_listings ────────────────────────────────────────
+# ── replace VolunteerConnector listings in Supabase ──────────────────────────
+# Delete then re-insert so stale/Canadian entries don't linger
 db = create_client(SUPABASE_URL, SUPABASE_KEY)
+db.table("clean_listings").delete().neq("source", "org").execute()
 for i in range(0, len(records), 100):
     db.table("clean_listings").upsert(records[i:i+100]).execute()
 print(f"Supabase updated — {len(records)} VolunteerConnector records in clean_listings")
