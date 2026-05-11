@@ -82,7 +82,7 @@ function FilterModal({ filters, onChange, onClose, isDesktop, causeCounts }) {
             const disabled = count === 0 && !active
             return (
               <button key={c} onClick={() => !disabled && set('cause', active ? '' : c)}
-                style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: disabled ? 'default' : 'pointer', border: `1.5px solid ${active ? cs.text : T.border}`, background: active ? cs.bg : '#fff', color: active ? cs.text : disabled ? T.border : T.textSub, opacity: disabled ? 0.45 : 1, display: 'flex', alignItems: 'center', gap: 5 }}>
+                style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: disabled ? 'default' : 'pointer', border: `1.5px solid ${T.border}`, background: '#fff', color: active ? cs.text : disabled ? T.textMuted : T.textSub, opacity: disabled ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 5 }}>
                 {CAUSE_EMOJI[c]} {c}
                 {!disabled && <span style={{ fontSize: 10, fontWeight: 700, background: active ? cs.text : T.bg, color: active ? '#fff' : T.textMuted, borderRadius: 20, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>{count}</span>}
               </button>
