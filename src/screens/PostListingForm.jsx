@@ -59,12 +59,14 @@ export default function PostListingForm({ user, onBack, editListing }) {
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* sticky header — always visible even when keyboard is open */}
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
         <button onClick={onBack}
-          style={{ background: T.primaryLight, color: T.primary, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 600, cursor: 'pointer' }}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{isEditing ? 'Edit Opportunity' : 'Post Opportunity'}</div>
+          style={{ background: T.primaryLight, color: T.primary, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>←</button>
+        <div style={{ fontSize: 17, fontWeight: 700, color: T.text }}>{isEditing ? 'Edit Opportunity' : 'Post Opportunity'}</div>
       </div>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
 
       {/* Title */}
       <div style={{ marginBottom: 16 }}>
@@ -147,6 +149,7 @@ export default function PostListingForm({ user, onBack, editListing }) {
         style={{ width: '100%', padding: 16, background: saving ? '#B8D8C8' : T.primary, color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 700, cursor: saving ? 'default' : 'pointer' }}>
         {saving ? 'Saving...' : isEditing ? 'Save Changes' : 'Post Opportunity'}
       </button>
+      </div>
     </div>
   )
 }
