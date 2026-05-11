@@ -57,14 +57,14 @@ function mapOpp(item) {
 }
 
 // ---------- filter modal ----------
-function FilterModal({ filters, onChange, onClose }) {
+function FilterModal({ filters, onChange, onClose, isDesktop }) {
   const [local, setLocal] = useState(filters)
   const set = (key, val) => setLocal(p => ({ ...p, [key]: val }))
   const activeCount = [local.cause, local.ageGroup].filter(Boolean).length
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, maxHeight: '85vh', overflowY: 'auto', padding: 24 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: isDesktop ? 'center' : 'flex-end', justifyContent: 'center' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isDesktop ? 20 : '20px 20px 0 0', width: '100%', maxWidth: isDesktop ? 480 : 520, maxHeight: '85vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Filter opportunities</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -383,7 +383,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
         )}
       </div>
 
-      {showFilter && <FilterModal filters={filters} onChange={setFilters} onClose={() => setShowFilter(false)} />}
+      {showFilter && <FilterModal filters={filters} onChange={setFilters} onClose={() => setShowFilter(false)} isDesktop={isDesktop} />}
     </div>
   )
 }
