@@ -6,7 +6,6 @@ const CAUSES     = ['Housing', 'Food Security', 'Education', 'Environment', 'Ani
 const CAUSE_EMOJI = { Housing: '🏠', 'Food Security': '🍎', Education: '📚', Environment: '🌿', Animals: '🐾', Health: '❤️‍🔥', Arts: '🎨', Seniors: '🤝' }
 const GRADES     = ['8th', '9th', '10th', '11th', '12th', 'College']
 const AGES       = [13, 14, 15, 16, 17, 18, 19]
-const US_REGIONS = ['Bay Area, CA', 'Los Angeles, CA', 'San Diego, CA', 'New York, NY', 'Chicago, IL', 'Houston, TX', 'Seattle, WA', 'Austin, TX', 'Boston, MA', 'Remote / Online']
 const ORG_TYPES  = ['Nonprofit', 'School / University', 'Government', 'Faith-based', 'Community group', 'Other']
 
 const inp = {
@@ -74,7 +73,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
   const wrapCard = (children) => isDesktop ? (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100%', background: T.bg }}>
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: 440 }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: 440, maxHeight: '95vh' }}>
         {children}
       </div>
     </div>
@@ -281,9 +280,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     if (role === 'teen') {
       const ready = grade && age
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: T.card }}>
           <StepHeader step={2} title="About you" onBack={() => setScreen('step1')} />
-          <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
+          <div style={{ flex: 1, padding: '24px 20px', overflowY: 'auto' }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: T.text, marginBottom: 4, letterSpacing: '-0.02em' }}>A bit about you</div>
             <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>Helps us find age-appropriate opportunities near you.</div>
 
@@ -298,15 +297,6 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
               {AGES.map(a => (
                 <button key={a} onClick={() => setAge(a)} style={{ padding: '9px 18px', borderRadius: 24, border: `2px solid ${age === a ? T.primary : T.border}`, background: age === a ? T.primary : '#fff', color: age === a ? '#fff' : T.textSub, fontSize: 14, fontWeight: age === a ? 700 : 400, cursor: 'pointer', transition: 'all 0.15s' }}>{a}</button>
-              ))}
-            </div>
-
-            <label style={lbl}>Your region <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— matches nearby opportunities</span></label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
-              {US_REGIONS.map(r => (
-                <button key={r} onClick={() => setRegion(prev => prev === r ? '' : r)} style={{ padding: '11px 16px', borderRadius: 12, border: `1.5px solid ${region === r ? T.primary : T.border}`, background: region === r ? T.primaryLight : '#fff', color: region === r ? T.primary : T.text, fontSize: 14, fontWeight: region === r ? 600 : 400, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
-                  {region === r ? '✓  ' : ''}{r}
-                </button>
               ))}
             </div>
 

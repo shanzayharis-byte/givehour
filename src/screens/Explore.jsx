@@ -6,8 +6,6 @@ import { T, CAUSE } from '../lib/theme'
 const CAUSES = ['Education','Environment','Animals','Food Security','Health','Housing','Arts','Seniors']
 const CAUSE_EMOJI = { Education:'📚', Environment:'🌿', Animals:'🐾', 'Food Security':'🍎', Health:'❤️', Housing:'🏠', Arts:'🎨', Seniors:'🤝' }
 
-const REGIONS = ['Bay Area, CA','Los Angeles, CA','San Diego, CA','New York, NY','Chicago, IL','Houston, TX','Seattle, WA','Austin, TX','Boston, MA','Remote / Online']
-
 const CA_PROVINCES = new Set(['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon','BC','AB','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'])
 
 function isUS(item) {
@@ -62,21 +60,14 @@ function mapOpp(item) {
 function FilterModal({ filters, onChange, onClose }) {
   const [local, setLocal] = useState(filters)
   const set = (key, val) => setLocal(p => ({ ...p, [key]: val }))
-  const activeCount = [local.cause, local.region, local.ageGroup].filter(Boolean).length
+  const activeCount = [local.cause, local.ageGroup].filter(Boolean).length
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
       <div style={{ background: '#fff', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, maxHeight: '85vh', overflowY: 'auto', padding: 24 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Filter opportunities</div>
-          <button onClick={() => { setLocal({ cause: '', region: '', ageGroup: '' }) }} style={{ fontSize: 12, color: T.textMuted, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
-        </div>
-
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Location</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-          {REGIONS.map(r => (
-            <button key={r} onClick={() => set('region', local.region === r ? '' : r)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.region === r ? T.accent : T.border}`, background: local.region === r ? T.accentLight : '#fff', color: local.region === r ? T.accent : T.textSub }}>{r}</button>
-          ))}
+          <button onClick={() => { setLocal({ cause: '', ageGroup: '' }) }} style={{ fontSize: 12, color: T.textMuted, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
         </div>
 
         <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Cause</div>
@@ -150,7 +141,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [error, setError]             = useState(null)
   const [search, setSearch]           = useState('')
   const [showFilter, setShowFilter]   = useState(false)
-  const [filters, setFilters]         = useState({ cause: '', region: '', ageGroup: '' })
+  const [filters, setFilters]         = useState({ cause: '', ageGroup: '' })
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [orgDir, setOrgDir]               = useState([])
   const [orgDirLoading, setOrgDirLoading] = useState(true)
@@ -224,12 +215,11 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
   useEffect(() => { fetchPage(1, true) }, [fetchPage])
 
-  const activeFilterCount = [filters.cause, filters.region, filters.ageGroup].filter(Boolean).length
+  const activeFilterCount = [filters.cause, filters.ageGroup].filter(Boolean).length
 
   const applyFilters = (o) => {
     if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) return false
     if (filters.cause    && o.cause !== filters.cause) return false
-    if (filters.region   && !(o.location||'').toLowerCase().includes(filters.region.toLowerCase())) return false
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) return false
     return true
   }
