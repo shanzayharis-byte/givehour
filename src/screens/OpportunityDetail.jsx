@@ -170,7 +170,9 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
     </div>
   )
 
-  const applyButton = isGuest ? (
+  const isOrgUser = user?.role === 'org'
+
+  const applyButton = isOrgUser ? null : isGuest ? (
     <div style={{ background: T.primaryLight, borderRadius: 14, padding: 18, textAlign: 'center', border: `1px solid ${T.primary}33` }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Sign up to apply</div>
       <button onClick={onSignUp} style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 12, padding: '12px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%', boxShadow: '0 4px 14px rgba(24,160,80,0.25)' }}>Create account</button>
@@ -212,9 +214,11 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
       <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '6px 12px', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>←</button>
       {!isGuest && (
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleSave} disabled={loading} style={{ background: saved ? T.primaryLight : T.bg, border: `1px solid ${saved ? T.primary : T.border}`, color: saved ? T.primary : T.textSub, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
-            {saved ? '✓ Saved' : '🔖 Save'}
-          </button>
+          {!isOrgUser && (
+            <button onClick={handleSave} disabled={loading} style={{ background: saved ? T.primaryLight : T.bg, border: `1px solid ${saved ? T.primary : T.border}`, color: saved ? T.primary : T.textSub, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+              {saved ? '✓ Saved' : '🔖 Save'}
+            </button>
+          )}
           <button onClick={handleShare} style={{ background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {shared ? '✓ Copied!' : '↗ Share'}
           </button>
@@ -228,14 +232,16 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
       <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
         {topBar}
         {hero}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, padding: '24px 40px 40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: applyButton ? '1fr 360px' : '1fr', gap: 28, padding: '24px 40px 40px', maxWidth: applyButton ? 'none' : 880, margin: applyButton ? 0 : '0 auto' }}>
           <div>
             {aboutCard}
             {skillsCard}
           </div>
-          <div style={{ position: 'sticky', top: 80, alignSelf: 'start' }}>
-            {applyButton}
-          </div>
+          {applyButton && (
+            <div style={{ position: 'sticky', top: 80, alignSelf: 'start' }}>
+              {applyButton}
+            </div>
+          )}
         </div>
       </div>
     )
