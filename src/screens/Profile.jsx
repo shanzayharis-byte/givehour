@@ -27,7 +27,7 @@ function Modal({ title, subtitle, onClose, children }) {
 
 // ── Org Profile ───────────────────────────────────────────────────────────────
 
-function OrgProfile({ user, onSignOut }) {
+function OrgProfile({ user, onSignOut, onNavigate }) {
   const [loading, setLoading]         = useState(true)
   const [listingCount, setListingCount] = useState(0)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
@@ -218,6 +218,19 @@ function OrgProfile({ user, onSignOut }) {
     </div>
   )
 
+  const listingsCard = onNavigate && (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>Your listings</div>
+        <span style={{ fontSize: 11, color: T.textMuted }}>{listingCount} posted</span>
+      </div>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button onClick={() => onNavigate('orgDashboard')} style={{ flex: 1, minWidth: 130, background: T.primaryLight, color: T.primary, border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Manage listings →</button>
+        <button onClick={() => onNavigate('orgPost')} style={{ flex: 1, minWidth: 130, background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 10px rgba(24,160,80,0.2)' }}>+ Post new</button>
+      </div>
+    </div>
+  )
+
   const causesCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -254,10 +267,10 @@ function OrgProfile({ user, onSignOut }) {
         {isDesktop ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
             <div>{profileCard}{aboutCard}{causesCard}</div>
-            <div>{settingsCard}</div>
+            <div>{listingsCard}{settingsCard}</div>
           </div>
         ) : (
-          <>{profileCard}{aboutCard}{causesCard}{settingsCard}</>
+          <>{profileCard}{listingsCard}{aboutCard}{causesCard}{settingsCard}</>
         )}
       </div>
 
@@ -358,8 +371,8 @@ function OrgProfile({ user, onSignOut }) {
 
 // ── Teen Profile ──────────────────────────────────────────────────────────────
 
-export default function Profile({ user, onSignOut }) {
-  if (user?.role === 'org') return <OrgProfile user={user} onSignOut={onSignOut} />
+export default function Profile({ user, onSignOut, onNavigate }) {
+  if (user?.role === 'org') return <OrgProfile user={user} onSignOut={onSignOut} onNavigate={onNavigate} />
 
   const [totalHours, setTotalHours]   = useState(0)
   const [orgCount, setOrgCount]       = useState(0)

@@ -175,7 +175,7 @@ export default function App() {
       case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
       case 'loghours':      return <LogHours user={dbUser} />
       case 'impact':        return <Impact user={dbUser} />
-      case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} />
+      case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} onNavigate={setActiveScreen} />
       case 'admin':         return <Admin authUser={authUser} />
       case 'orgDashboard':  return <OrgDashboard user={dbUser} />
       case 'orgPost':       return <PostListingForm user={dbUser} onBack={() => navigate('orgDashboard')} />

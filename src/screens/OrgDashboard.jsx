@@ -62,11 +62,10 @@ export default function OrgDashboard({ user, onSignOut }) {
             {user.region} · {listings.length} listing{listings.length !== 1 ? 's' : ''}
           </div>
         </div>
-        {onSignOut && (
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={onSignOut} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, color: T.textSub, cursor: 'pointer' }}>Sign out</button>
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={() => setShowForm(true)} style={{ background: T.primary, border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 2px 10px rgba(24,160,80,0.25)' }}>+ New listing</button>
+          {onSignOut && <button onClick={onSignOut} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, color: T.textSub, cursor: 'pointer' }}>Sign out</button>}
+        </div>
       </div>
 
       {loading && <div style={{ color: T.textMuted, textAlign: 'center', padding: 40 }}>Loading...</div>}
@@ -76,8 +75,9 @@ export default function OrgDashboard({ user, onSignOut }) {
       {!loading && listings.length === 0 && (
         <div style={{ textAlign: 'center', padding: 40, color: T.textMuted }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>📋</div>
-          <div style={{ fontWeight: 600, marginBottom: 6 }}>No listings yet</div>
-          <div style={{ fontSize: 13 }}>Post your first volunteering opportunity to get started.</div>
+          <div style={{ fontWeight: 600, marginBottom: 6, color: T.text }}>No listings yet</div>
+          <div style={{ fontSize: 13, marginBottom: 18 }}>Post your first volunteering opportunity to get started.</div>
+          <button onClick={() => setShowForm(true)} style={{ background: T.primary, border: 'none', borderRadius: 10, padding: '12px 22px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(24,160,80,0.25)' }}>+ Post your first listing</button>
         </div>
       )}
 
