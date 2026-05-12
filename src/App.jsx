@@ -153,7 +153,7 @@ export default function App() {
     )
   }
 
-  const showNav = authUser && !selectedOpp && !selectedOrg && visibleNav.some(n => n.id === activeScreen)
+  const showNav = authUser && visibleNav.some(n => n.id === activeScreen)
 
   const mainContent = () => {
     if (selectedOpp) {
