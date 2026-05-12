@@ -117,9 +117,16 @@ function OppCard({ opp, onSelect, alternate }) {
       onMouseLeave={e => { e.currentTarget.style.borderColor = opp.source === 'org' ? T.primary : T.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
       style={{ background: bg, border: `1px solid ${opp.source === 'org' ? T.primary : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-        <div style={{ fontSize: 12, color: T.textMuted }}>{opp.org}</div>
-        {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3, gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+          {opp.org_logo_icon_url && (
+            <img src={opp.org_logo_icon_url} alt="" referrerPolicy="no-referrer"
+              style={{ width: 22, height: 22, borderRadius: 6, objectFit: 'cover', flexShrink: 0, background: '#fff', border: `1px solid ${T.border}` }}
+              onError={e => { e.currentTarget.style.display = 'none' }} />
+          )}
+          <div style={{ fontSize: 12, color: T.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opp.org}</div>
+        </div>
+        {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>✓ Give Hour Partner</span>}
       </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -189,19 +196,20 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       .then(data => {
         if (!Array.isArray(data)) return
         setOrgListings(data.map(item => ({
-          id:          item.id,
-          title:       item.title,
-          org:         item.org,
-          org_id:      item.org_id,
-          cause:       item.cause,
-          ageGroup:    item.age_group,
-          hours:       item.hours || '',
-          location:    item.location || '',
-          date:        item.date || '',
-          description: item.description || '',
-          externalUrl: item.external_url || '',
-          remote:      !!item.remote,
-          source:      'org',
+          id:                item.id,
+          title:             item.title,
+          org:               item.org,
+          org_id:            item.org_id,
+          cause:             item.cause,
+          ageGroup:          item.age_group,
+          hours:             item.hours || '',
+          location:          item.location || '',
+          date:              item.date || '',
+          description:       item.description || '',
+          externalUrl:       item.external_url || '',
+          remote:            !!item.remote,
+          source:            'org',
+          org_logo_icon_url: item.org_logo_icon_url || item.org_logo_url || null,
         })))
       })
       .catch(() => {})

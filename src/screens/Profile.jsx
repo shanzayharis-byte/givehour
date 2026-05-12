@@ -43,6 +43,7 @@ function OrgProfile({ user, onSignOut }) {
   const [is501c3, setIs501c3]             = useState(user?.is_501c3 ?? null)
   const [description, setDescription]     = useState(user?.description || '')
   const [logoUrl, setLogoUrl]             = useState(user?.logo_url || '')
+  const [logoIconUrl, setLogoIconUrl]     = useState(user?.logo_icon_url || '')
 
   const [showEditOrg, setShowEditOrg] = useState(false)
   const [showCauses, setShowCauses]   = useState(false)
@@ -55,6 +56,7 @@ function OrgProfile({ user, onSignOut }) {
   const [editIs501c3, setEditIs501c3]           = useState(null)
   const [editDescription, setEditDescription]   = useState('')
   const [editLogoUrl, setEditLogoUrl]           = useState('')
+  const [editLogoIconUrl, setEditLogoIconUrl]   = useState('')
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -86,6 +88,8 @@ function OrgProfile({ user, onSignOut }) {
           setEditDescription(profile.description || '')
           setLogoUrl(profile.logo_url || '')
           setEditLogoUrl(profile.logo_url || '')
+          setLogoIconUrl(profile.logo_icon_url || '')
+          setEditLogoIconUrl(profile.logo_icon_url || '')
         }
         const { data: { session } } = await supabase.auth.getSession()
         setContactEmail(session?.user?.email || '')
@@ -100,7 +104,7 @@ function OrgProfile({ user, onSignOut }) {
   const save = (fields) => supabase.from('users').update(fields).eq('id', user.id)
 
   const saveOrgInfo = async () => {
-    await save({ name: editName.trim(), region: editCity.trim(), org_type: editOrgType || null, website: editWebsite.trim() || null, contact_name: editContactName.trim() || null, contact_phone: editContactPhone.trim() || null, is_501c3: editIs501c3, description: editDescription.trim() || null, logo_url: editLogoUrl.trim() || null })
+    await save({ name: editName.trim(), region: editCity.trim(), org_type: editOrgType || null, website: editWebsite.trim() || null, contact_name: editContactName.trim() || null, contact_phone: editContactPhone.trim() || null, is_501c3: editIs501c3, description: editDescription.trim() || null, logo_url: editLogoUrl.trim() || null, logo_icon_url: editLogoIconUrl.trim() || null })
     setNameVal(editName.trim())
     setCity(editCity.trim())
     setOrgType(editOrgType)
@@ -110,6 +114,7 @@ function OrgProfile({ user, onSignOut }) {
     setIs501c3(editIs501c3)
     setDescription(editDescription.trim())
     setLogoUrl(editLogoUrl.trim())
+    setLogoIconUrl(editLogoIconUrl.trim())
     setShowEditOrg(false)
   }
 
@@ -139,7 +144,7 @@ function OrgProfile({ user, onSignOut }) {
             {is501c3 === true && <span style={{ fontSize: 10, fontWeight: 700, background: '#E8F5E9', color: '#2E7D32', borderRadius: 20, padding: '2px 8px', letterSpacing: '0.03em' }}>501(c)(3)</span>}
           </div>
         </div>
-        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setEditContactName(contactName); setEditContactPhone(contactPhone); setEditIs501c3(is501c3); setEditDescription(description); setEditLogoUrl(logoUrl); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
+        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setEditContactName(contactName); setEditContactPhone(contactPhone); setEditIs501c3(is501c3); setEditDescription(description); setEditLogoUrl(logoUrl); setEditLogoIconUrl(logoIconUrl); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
       </div>
 
       <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -249,14 +254,26 @@ function OrgProfile({ user, onSignOut }) {
             <input value={editWebsite} onChange={e => setEditWebsite(e.target.value)} placeholder="yourorg.org" style={inp} />
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={lbl}>Logo URL <span style={{ fontWeight: 400 }}>(optional)</span></label>
+            <label style={lbl}>Main logo URL <span style={{ fontWeight: 400 }}>(shown on your profile, optional)</span></label>
             <input value={editLogoUrl} onChange={e => setEditLogoUrl(e.target.value)} placeholder="https://yourorg.org/logo.png" style={inp} />
             {editLogoUrl && (
               <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <img src={editLogoUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none' }} />
                 </div>
-                <span style={{ fontSize: 11, color: T.textMuted }}>Preview</span>
+                <span style={{ fontSize: 11, color: T.textMuted }}>Profile preview</span>
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>Icon URL <span style={{ fontWeight: 400 }}>(small square logo for listing cards, optional)</span></label>
+            <input value={editLogoIconUrl} onChange={e => setEditLogoIconUrl(e.target.value)} placeholder="https://yourorg.org/apple-touch-icon.png" style={inp} />
+            {editLogoIconUrl && (
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 22, height: 22, borderRadius: 6, background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={editLogoIconUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                </div>
+                <span style={{ fontSize: 11, color: T.textMuted }}>Listing card preview</span>
               </div>
             )}
           </div>

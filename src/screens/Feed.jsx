@@ -3,6 +3,15 @@ import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 import FilterModal from '../components/FilterModal'
 
+async function attachOrgLogos(rows) {
+  const orgIds = [...new Set(rows.filter(r => r.source === 'org' && r.org_id).map(r => r.org_id))]
+  if (orgIds.length === 0) return rows
+  const { data: orgs } = await supabase.from('users').select('id, logo_url, logo_icon_url').in('id', orgIds)
+  const map = {}
+  for (const o of orgs || []) map[o.id] = o.logo_icon_url || o.logo_url || null
+  return rows.map(r => ({ ...r, org_logo_icon_url: r.source === 'org' && r.org_id ? map[r.org_id] || null : null }))
+}
+
 function MatchBadge({ score }) {
   const s = score ?? 88
   const bg = s >= 95 ? T.primaryLight : s >= 85 ? T.warningLight : '#F2F2F2'
@@ -21,7 +30,12 @@ function OppCard({ opp, onSelect, isFirst, alternate }) {
       style={{ background: bg, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', cursor: 'pointer', position: 'relative', transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s' }}
     >
       {isFirst && <span style={{ position: 'absolute', top: 14, right: 14, background: T.primaryLight, color: '#0A6830', fontSize: 10, borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>NEW</span>}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
+        {opp.org_logo_icon_url && (
+          <img src={opp.org_logo_icon_url} alt="" referrerPolicy="no-referrer"
+            style={{ width: 22, height: 22, borderRadius: 6, objectFit: 'cover', flexShrink: 0, background: '#fff', border: `1px solid ${T.border}` }}
+            onError={e => { e.currentTarget.style.display = 'none' }} />
+        )}
         <div style={{ fontSize: 12, color: T.textMuted }}>{opp.org}</div>
         {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
       </div>
@@ -85,14 +99,15 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
             .order('rank')
             .limit(10)
           if (feed && feed.length > 0) {
-            setOpps(feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) })))
+            const rows = feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) }))
+            setOpps(await attachOrgLogos(rows))
             setIsPersonalized(true)
             setLoading(false)
             return
           }
         }
         const { data } = await supabase.from('clean_listings').select('*').neq('age_group', '18+ Only').order('fetched_at', { ascending: false }).limit(10)
-        setOpps(data || [])
+        setOpps(await attachOrgLogos(data || []))
       } catch (e) {
         console.error(e)
       }
