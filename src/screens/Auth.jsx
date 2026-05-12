@@ -192,13 +192,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', maxWidth: 320, lineHeight: 1.5, margin: '0 auto', position: 'relative' }}>Find teen-friendly opportunities, log every hour you volunteer (even from school or elsewhere), and turn it all into a service letter when you need one.</p>
         </div>
 
-        {/* primary CTAs — kept above the fold */}
-        <div style={{ padding: '16px 24px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button onClick={() => setScreen('userType')} style={{ background: T.primary, color: '#fff', padding: '14px', borderRadius: 14, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)', letterSpacing: '-0.01em' }}>Get started, it's free</button>
-          <button onClick={() => setScreen('login')} style={{ background: '#fff', border: `2px solid ${T.border}`, color: T.text, padding: '13px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>I already have an account</button>
-        </div>
-
-        <div style={{ display: 'flex', borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ display: 'flex', borderBottom: `1px solid ${T.border}` }}>
           {[['2,400+', 'teens active'], ['180+', 'orgs listed'], ['12k+', 'hours logged']].map(([val, lbl], i) => (
             <div key={lbl} style={{ flex: 1, textAlign: 'center', padding: '12px 6px', borderRight: i < 2 ? `1px solid ${T.border}` : 'none' }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: T.primary }}>{val}</div>
@@ -207,8 +201,15 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           ))}
         </div>
 
+        {/* primary CTAs — kept above the fold */}
+        <div style={{ padding: '16px 24px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={() => setScreen('userType')} style={{ background: T.primary, color: '#fff', padding: '14px', borderRadius: 14, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)', letterSpacing: '-0.01em' }}>Get started, it's free</button>
+          <button onClick={() => setScreen('login')} style={{ background: '#fff', border: `2px solid ${T.border}`, color: T.text, padding: '13px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>I already have an account</button>
+          <button onClick={onGuest} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', padding: '2px 0', marginTop: 2 }}>Browse without signing up →</button>
+        </div>
+
         {/* How it works */}
-        <div style={{ padding: '20px 24px 4px' }}>
+        <div style={{ padding: '16px 24px 28px', borderTop: `1px solid ${T.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 14 }}>How it works</div>
           {[
             { n: '1', icon: '🔍', title: 'Find teen-friendly opportunities', sub: 'Most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens.' },
@@ -223,10 +224,6 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               </div>
             </div>
           ))}
-        </div>
-
-        <div style={{ padding: '8px 24px 28px', textAlign: 'center' }}>
-          <button onClick={onGuest} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', padding: '4px 0' }}>Browse without signing up →</button>
         </div>
       </div>
     )
