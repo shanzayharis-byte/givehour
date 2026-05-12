@@ -355,7 +355,9 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       {isGuest ? (
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '12px 16px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <button onClick={onHome} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, minWidth: 0 }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+            <div style={{ width: 36, height: 36, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#fff' }}>
+              <img src="/logo.png" alt="Give Hour" style={{ width: '150%', height: '150%', marginLeft: '-25%', marginTop: '-25%', display: 'block' }} />
+            </div>
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text, whiteSpace: 'nowrap' }}>Give Hour</div>
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
