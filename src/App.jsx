@@ -10,6 +10,8 @@ import Impact from './screens/Impact'
 import Profile from './screens/Profile'
 import Admin from './screens/Admin'
 import OrgDashboard from './screens/OrgDashboard'
+import PostListingForm from './screens/PostListingForm'
+import LegalPage from './screens/LegalPage'
 import OrgProfile from './screens/OrgProfile'
 import ApplicantsInbox from './screens/ApplicantsInbox'
 import './App.css'
@@ -24,12 +26,13 @@ const NAV = [
 
 const ORG_NAV = [
   { id: 'orgDashboard',   icon: '📋', label: 'Listings' },
+  { id: 'orgPost',        icon: '➕', label: 'Post' },
   { id: 'orgApplicants',  icon: '📬', label: 'Applicants' },
   { id: 'explore',        icon: '🔍', label: 'Explore' },
   { id: 'profile',        icon: '👤', label: 'Profile' },
 ]
 
-const PROTECTED = ['feed', 'loghours', 'impact', 'profile', 'admin', 'orgDashboard', 'orgApplicants']
+const PROTECTED = ['feed', 'loghours', 'impact', 'profile', 'admin', 'orgDashboard', 'orgApplicants', 'orgPost']
 
 export default function App() {
   const [authUser, setAuthUser]       = useState(null)
@@ -41,6 +44,7 @@ export default function App() {
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [appLoading, setAppLoading]   = useState(true)
   const [accountError, setAccountError] = useState(false)
+  const [drawerOpen, setDrawerOpen]   = useState(false)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -101,6 +105,7 @@ export default function App() {
     setSelectedOpp(null)
     setSelectedOrg(null)
     setActiveScreen(screen)
+    setDrawerOpen(false)
   }
 
   const handleLoggedIn = (user, db) => {
@@ -110,7 +115,8 @@ export default function App() {
     setActiveScreen(db?.role === 'org' ? 'orgDashboard' : 'feed')
   }
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
     setAuthUser(null)
     setDbUser(null)
     setIsGuest(false)
@@ -158,17 +164,24 @@ export default function App() {
     if (selectedOrg) {
       return <OrgProfile orgId={selectedOrg.id} orgName={selectedOrg.name} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} />
     }
+    if (activeScreen === 'privacy' || activeScreen === 'terms' || activeScreen === 'contact') {
+      return <LegalPage slug={activeScreen} onBack={() => setActiveScreen(authUser ? (isOrg ? 'orgDashboard' : 'feed') : 'landing')} />
+    }
     if (!authUser && !isGuest) {
       return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
     switch (activeScreen) {
       case 'feed':          return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
-      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} onSignOut={!isDesktop ? handleSignOut : undefined} />
+      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
       case 'loghours':      return <LogHours user={dbUser} />
       case 'impact':        return <Impact user={dbUser} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} />
       case 'admin':         return <Admin authUser={authUser} />
-      case 'orgDashboard':  return <OrgDashboard user={dbUser} onSignOut={!isDesktop ? handleSignOut : undefined} />
+      case 'orgDashboard':  return <OrgDashboard user={dbUser} />
+      case 'orgPost':       return <PostListingForm user={dbUser} onBack={() => navigate('orgDashboard')} />
+      case 'privacy':
+      case 'terms':
+      case 'contact':       return <LegalPage slug={activeScreen} onBack={() => setActiveScreen(authUser ? (isOrg ? 'orgDashboard' : 'feed') : 'landing')} />
       case 'orgApplicants': return <ApplicantsInbox user={dbUser} />
       default:              return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
@@ -214,25 +227,88 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100dvh', overflow: 'hidden', background: T.bg, justifyContent: 'center' }}>
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: isDesktop ? 1100 : 480, height: '100dvh', overflow: 'hidden', boxShadow: '0 0 40px rgba(0,0,0,0.08)' }}>
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        {mainContent()}
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: T.bg }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', maxWidth: isDesktop ? 1100 : 480, margin: '0 auto', flex: 1, background: T.bg, boxShadow: '0 0 40px rgba(0,0,0,0.08)' }}>
+        <div style={{ flex: 1 }}>
+          {mainContent()}
+        </div>
+        {/* footer — just sits at the end of the document */}
+        <div style={{ background: '#F0F4F1', borderTop: `1px solid ${T.border}`, padding: '14px 20px', paddingBottom: 'max(14px, env(safe-area-inset-bottom))', textAlign: 'center' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#4A7C5C', marginBottom: 4 }}>Give Hour</div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginBottom: 4, flexWrap: 'wrap' }}>
+            {[['Privacy', 'privacy'], ['Terms', 'terms'], ['Contact', 'contact']].map(([label, slug]) => (
+              <button key={slug} onClick={() => setActiveScreen(slug)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: T.textSub, cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
+            ))}
+          </div>
+          <div style={{ fontSize: 10, color: T.textMuted }}>© 2026 Shanzay Haris · All rights reserved</div>
+        </div>
       </div>
+
+      {/* hamburger FAB + drawer — mobile only */}
       {showNav && (
-        <nav style={{ background: T.card, borderTop: `1px solid ${T.border}`, paddingBottom: 'env(safe-area-inset-bottom, 8px)', display: 'flex', flexShrink: 0 }}>
-          {visibleNav.map(({ id, icon, label }) => {
-            const active = activeScreen === id
-            return (
-              <button key={id} onClick={() => navigate(id)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px 4px', background: 'none', border: 'none', cursor: 'pointer', gap: 3 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 10, background: active ? T.primaryLight : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17 }}>{icon}</div>
-                <span style={{ fontSize: 9, fontWeight: active ? 600 : 400, color: active ? T.primary : T.textMuted }}>{label}</span>
+        <>
+          {/* backdrop */}
+          {drawerOpen && (
+            <div onClick={() => setDrawerOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 400 }} />
+          )}
+
+          {/* slide-in drawer */}
+          <div style={{
+            position: 'fixed', top: 0, right: 0, bottom: 0, width: 260,
+            background: T.card,
+            transform: drawerOpen ? 'translateX(0)' : 'translateX(100%)',
+            transition: 'transform 0.24s ease',
+            zIndex: 401,
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '-6px 0 28px rgba(0,0,0,0.14)',
+          }}>
+            {/* drawer header */}
+            <div style={{ padding: '24px 20px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <img src="/logo.png" alt="Give Hour" style={{ width: 42, height: 42, borderRadius: 11, objectFit: 'cover', flexShrink: 0 }} />
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Give Hour</div>
+                <div style={{ fontSize: 11, color: T.textMuted }}>{isOrg ? 'Org Portal' : 'Teen Portal'}</div>
+              </div>
+            </div>
+
+            {/* nav items */}
+            <nav style={{ padding: '10px 12px', flex: 1 }}>
+              {visibleNav.map(({ id, icon, label }) => (
+                <button key={id} onClick={() => navigate(id)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 4, fontFamily: 'inherit', fontSize: 15, fontWeight: activeScreen === id ? 600 : 400, background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D' }}>
+                  <span style={{ fontSize: 20 }}>{icon}</span>
+                  {label}
+                </button>
+              ))}
+            </nav>
+
+            {/* sign out */}
+            <div style={{ padding: '12px 12px', borderTop: `1px solid ${T.border}`, paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+              <button onClick={handleSignOut}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: '#E05252', fontWeight: 500, fontSize: 15, fontFamily: 'inherit' }}>
+                <span style={{ fontSize: 20 }}>🚪</span> Sign out
               </button>
-            )
-          })}
-        </nav>
+            </div>
+          </div>
+
+          {/* hamburger icon button — top right */}
+          <button onClick={() => setDrawerOpen(o => !o)} aria-label="Menu" style={{
+            position: 'fixed', top: 10, right: 12,
+            width: 42, height: 42, borderRadius: 12,
+            background: drawerOpen ? T.text : T.primary,
+            color: '#fff',
+            border: 'none',
+            fontSize: 20,
+            cursor: 'pointer', zIndex: 402,
+            boxShadow: '0 3px 10px rgba(24,160,80,0.35)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.2s',
+            fontWeight: 500,
+          }}>
+            {drawerOpen ? '✕' : '☰'}
+          </button>
+        </>
       )}
-    </div>
     </div>
   )
 }

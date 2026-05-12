@@ -55,22 +55,18 @@ export default function OrgDashboard({ user, onSignOut }) {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 20, paddingBottom: 32 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 20, paddingRight: 50 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{user.name}</div>
           <div style={{ fontSize: 13, color: T.textMuted }}>
             {user.region} · {listings.length} listing{listings.length !== 1 ? 's' : ''}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          {onSignOut && (
+        {onSignOut && (
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={onSignOut} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 600, color: T.textSub, cursor: 'pointer' }}>Sign out</button>
-          )}
-          <button onClick={() => setShowForm(true)}
-            style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            + Post
-          </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {loading && <div style={{ color: T.textMuted, textAlign: 'center', padding: 40 }}>Loading...</div>}

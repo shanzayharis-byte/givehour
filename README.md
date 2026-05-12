@@ -1,6 +1,8 @@
 # Give Hour
 
-A volunteer matching platform built for Bay Area teens. Find personalized opportunities, log hours, track your impact, and generate community service letters for college applications. Organizations can sign up independently to post listings and receive applications directly through the app.
+**Built by a teen, for teens.** Finding good volunteer opportunities as a teen is hard — most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens, lets you log every hour you volunteer (even from school or family stuff), and turns it all into a service letter for college apps.
+
+Organizations can sign up independently to post listings and receive applications directly through the app.
 
 **Live:** [givehour.vercel.app](https://givehour.vercel.app)
 **GitHub:** [github.com/shanzayharis-byte/givehour](https://github.com/shanzayharis-byte/givehour)
@@ -13,13 +15,13 @@ A volunteer matching platform built for Bay Area teens. Find personalized opport
 - **Personalized feed** — top 10 listings ranked by cause match, age group, region, and remote availability
 - **Explore** — browse 700+ teen-appropriate volunteer opportunities with cause and age filters
 - **Apply** — apply to org-posted listings directly through Give Hour with an optional message
-- **Log hours** — track volunteer hours by opportunity and organization with full history
+- **Log hours from anywhere** — track every volunteer hour with full edit/delete history. School events, religious org, family stuff, opportunities found here — log it all in one place
 - **Impact dashboard** — total hours, cause breakdown, streak, and AI-generated college service letters
 - **Save & share** — bookmark opportunities and share them with friends
 - **My Applications** — track application status (Pending / Accepted / Declined) from the Profile tab
 
 ### For Organizations
-- **Post listings** — create volunteer opportunities with cause, location/remote, date, hours, and age group
+- **Post listings** — create volunteer opportunities directly from the side menu, with cause, location/remote, date, hours, and age group
 - **Applicants inbox** — view all applications received, accept or decline with one tap
 - **Email notifications** — receive an email for every new application via Gmail SMTP
 - **Public org profile** — teens can browse your listings and learn about your organization
@@ -53,10 +55,11 @@ givehour/
 │   │   ├── LogHours.jsx          # Log + view volunteer hours history
 │   │   ├── Impact.jsx            # Stats + college letter generator
 │   │   ├── Profile.jsx           # User profile + settings (role-aware)
-│   │   ├── OrgDashboard.jsx      # Org's listings + post new opportunity
+│   │   ├── OrgDashboard.jsx      # Org's listings (Post is in the menu drawer)
 │   │   ├── PostListingForm.jsx   # Form to create a new org listing
 │   │   ├── OrgProfile.jsx        # Public org page (name, city, listings)
-│   │   └── ApplicantsInbox.jsx   # Org's received applications
+│   │   ├── ApplicantsInbox.jsx   # Org's received applications
+│   │   └── LegalPage.jsx         # Privacy / Terms / Contact (footer links)
 │   ├── lib/
 │   │   ├── supabase.js           # Supabase client
 │   │   └── theme.js              # Colors + cause styles
@@ -78,11 +81,19 @@ givehour/
 
 After login, the app routes based on `users.role`:
 
-| Role | Home screen | Navigation |
+| Role | Home screen | Navigation (in drawer) |
 |---|---|---|
 | `teen` | Feed | Feed · Explore · Log Hours · Impact · Profile |
-| `org` | Org Dashboard | Listings · Applicants · Profile |
+| `org` | Org Dashboard | Listings · Post · Applicants · Explore · Profile |
 | `parent` | Feed | Feed · Explore · Log Hours · Impact · Profile |
+
+---
+
+## Navigation & Layout
+
+- **Mobile:** Page scrolls naturally — no fixed body, no internal scroll containers. Navigation lives in a slide-in drawer accessed from a green ☰ button pinned to the top-right corner. Sign-out lives at the bottom of the drawer. Footer with brand + Privacy / Terms / Contact links sits at the end of the document.
+- **Desktop:** Persistent left sidebar with logo, nav items, and sign-out. Main content scrolls in the right pane. No hamburger / drawer (the sidebar replaces it).
+- **Landing page** (signed out): Hero with "Built by a teen · for teens" badge, How-it-works section explaining the 3-step value prop (find teen-friendly opportunities → log every hour → generate a service letter), then CTAs.
 
 ---
 

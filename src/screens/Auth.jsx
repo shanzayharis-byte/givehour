@@ -9,13 +9,14 @@ const AGES       = [13, 14, 15, 16, 17, 18, 19]
 const ORG_TYPES  = ['Nonprofit', 'School / University', 'Government', 'Faith-based', 'Community group', 'Other']
 
 const inp = {
-  background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 12,
-  padding: '13px 16px', fontSize: 15, color: T.text, outline: 'none',
+  background: '#F4F6F8', border: `1.5px solid #DCE0E5`, borderRadius: 12,
+  padding: '14px 16px', fontSize: 16, color: T.text, outline: 'none',
   width: '100%', fontFamily: 'inherit', boxSizing: 'border-box',
+  transition: 'border-color 0.15s, background 0.15s',
 }
 const lbl = {
-  fontSize: 12, fontWeight: 600, color: T.textSub, letterSpacing: '0.03em',
-  marginBottom: 6, display: 'block',
+  fontSize: 12, fontWeight: 700, color: T.textSub, letterSpacing: '0.04em',
+  marginBottom: 7, display: 'block', textTransform: 'uppercase',
 }
 
 const StepHeader = ({ step, total, title, onBack }) => (
@@ -72,8 +73,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   const [parentConsent, setParentConsent] = useState(false)
 
   const wrapCard = (children) => isDesktop ? (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100%', background: T.bg }}>
-      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: 440, maxHeight: '95vh' }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', background: T.bg, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '24px 16px' }}>
+      <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 20, overflow: 'hidden', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', width: '100%', maxWidth: 440 }}>
         {children}
       </div>
     </div>
@@ -172,26 +173,59 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
   if (screen === 'landing') {
     return wrapCard(
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: isDesktop ? 'auto' : '100%', background: T.card }}>
-        <div style={{ background: 'linear-gradient(150deg, #0E7A3C 0%, #18A050 55%, #25C068 100%)', padding: '52px 28px 44px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: isDesktop ? 'none' : 1, minHeight: 0, overflowY: isDesktop ? 'visible' : 'auto', background: T.card, height: isDesktop ? 'auto' : '100%' }}>
+        <div style={{ background: 'linear-gradient(150deg, #0E7A3C 0%, #18A050 55%, #25C068 100%)', padding: '20px 24px 22px', textAlign: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-          <img src="/logo.png" alt="Give Hour" style={{ width: 76, height: 76, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 8px 28px rgba(0,0,0,0.22)', marginBottom: 20, position: 'relative' }} />
-          <h1 style={{ fontSize: 30, fontWeight: 800, lineHeight: 1.15, margin: '0 0 10px', color: '#fff', position: 'relative', letterSpacing: '-0.02em' }}>Give an Hour.<br />Change a Life.</h1>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', maxWidth: 270, lineHeight: 1.7, margin: '0 auto', position: 'relative' }}>Personalized volunteer opportunities for teens. Track hours, build your story.</p>
+
+          {/* logo */}
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', background: '#fff', marginBottom: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', overflow: 'hidden' }}>
+            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />
+          </div>
+
+          <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.1, margin: '0 0 6px', color: '#fff', position: 'relative', letterSpacing: '-0.02em' }}>Give Hour</h1>
+
+          {/* by-a-teen badge */}
+          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.18)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '4px 11px', borderRadius: 20, marginBottom: 10, position: 'relative', letterSpacing: '0.02em' }}>
+            ✨ Built by a teen · for teens
+          </div>
+
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', maxWidth: 320, lineHeight: 1.5, margin: '0 auto', position: 'relative' }}>Find teen-friendly opportunities, log every hour you volunteer (even from school or elsewhere), and turn it all into a service letter when you need one.</p>
         </div>
 
-        <div style={{ display: 'flex', borderBottom: `1px solid ${T.border}` }}>
+        {/* primary CTAs — kept above the fold */}
+        <div style={{ padding: '16px 24px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button onClick={() => setScreen('userType')} style={{ background: T.primary, color: '#fff', padding: '14px', borderRadius: 14, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)', letterSpacing: '-0.01em' }}>Get started, it's free</button>
+          <button onClick={() => setScreen('login')} style={{ background: '#fff', border: `2px solid ${T.border}`, color: T.text, padding: '13px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>I already have an account</button>
+        </div>
+
+        <div style={{ display: 'flex', borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}` }}>
           {[['2,400+', 'teens active'], ['180+', 'orgs listed'], ['12k+', 'hours logged']].map(([val, lbl], i) => (
-            <div key={lbl} style={{ flex: 1, textAlign: 'center', padding: '14px 6px', borderRight: i < 2 ? `1px solid ${T.border}` : 'none' }}>
-              <div style={{ fontSize: 17, fontWeight: 800, color: T.primary }}>{val}</div>
+            <div key={lbl} style={{ flex: 1, textAlign: 'center', padding: '12px 6px', borderRight: i < 2 ? `1px solid ${T.border}` : 'none' }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: T.primary }}>{val}</div>
               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{lbl}</div>
             </div>
           ))}
         </div>
 
-        <div style={{ padding: '28px 24px 32px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <button onClick={() => setScreen('userType')} style={{ background: T.primary, color: '#fff', padding: '16px', borderRadius: 14, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)', letterSpacing: '-0.01em' }}>Get started — it's free</button>
-          <button onClick={() => setScreen('login')} style={{ background: '#fff', border: `2px solid ${T.border}`, color: T.text, padding: '16px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>I already have an account</button>
+        {/* How it works */}
+        <div style={{ padding: '20px 24px 4px' }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 14 }}>How it works</div>
+          {[
+            { n: '1', icon: '🔍', title: 'Find teen-friendly opportunities', sub: 'Most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens.' },
+            { n: '2', icon: '⏱', title: 'Track every hour in one place', sub: 'School events, religious org, family thing, opportunities you found here. Log it all so nothing gets lost when college apps come around.' },
+            { n: '3', icon: '📜', title: 'Generate a service letter', sub: 'Turn your logged hours into a clean, ready-to-send letter for college and scholarship apps.' },
+          ].map(s => (
+            <div key={s.n} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 14 }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', background: T.primaryLight, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{s.icon}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 3 }}>{s.title}</div>
+                <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>{s.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ padding: '8px 24px 28px', textAlign: 'center' }}>
           <button onClick={onGuest} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', padding: '4px 0' }}>Browse without signing up →</button>
         </div>
       </div>
@@ -205,7 +239,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       { emoji: '🎒', title: "I'm a teen", sub: 'Find opportunities & track hours', r: 'teen', bg: T.primaryLight, accent: T.primary },
       { emoji: '🏢', title: "I'm an organization", sub: 'Post listings & manage volunteers', r: 'org', bg: T.accentLight, accent: T.accent },
     ]
-    return (
+    return wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ padding: '12px 20px 8px', display: 'flex', alignItems: 'center' }}>
@@ -229,18 +263,31 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               </button>
             ))}
           </div>
+
+          {/* already have an account */}
+          <div style={{ textAlign: 'center', marginTop: 24, paddingTop: 18, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.textSub }}>
+            Already have an account?{' '}
+            <button onClick={() => { setError(''); setScreen('login') }} style={{ background: 'none', border: 'none', color: T.primary, fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: 13 }}>Log in</button>
+          </div>
         </div>
       </div>
     )
   }
+
+  // helper to wrap step screens with the desktop card
+  const wrapStep = (children) => wrapCard(
+    <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
+      {children}
+    </div>
+  )
 
   // ── Step 1 ─────────────────────────────────────────────────────────────────
 
   if (screen === 'step1') {
     const ready = name.trim() && email.trim() && password.trim()
     const nameLbl = role === 'org' ? 'Your name (contact person)' : 'First name'
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
+    return wrapStep(
+      <>
         <StepHeader step={1} title={role === 'org' ? 'Contact details' : 'Create your account'} onBack={() => setScreen('userType')} />
         <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
           <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>We just need a few basics to get started.</div>
@@ -262,8 +309,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           <p style={{ fontSize: 11, color: T.textMuted, marginBottom: 20, lineHeight: 1.6 }}>By continuing you agree to our Terms of Service and Privacy Policy.</p>
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #F5C0C0', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: T.danger, marginBottom: 16 }}>{error}</div>}
           <button onClick={() => { setError(''); setScreen('step2') }} disabled={!ready} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : T.border, color: ready ? '#fff' : T.textMuted, transition: 'background 0.2s' }}>Continue →</button>
+
+          {/* already have an account */}
+          <div style={{ textAlign: 'center', marginTop: 20, paddingTop: 18, borderTop: `1px solid ${T.border}`, fontSize: 13, color: T.textSub }}>
+            Already have an account?{' '}
+            <button onClick={() => { setError(''); setScreen('login') }} style={{ background: 'none', border: 'none', color: T.primary, fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: 13 }}>Log in</button>
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -274,8 +327,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     // TEEN
     if (role === 'teen') {
       const ready = grade && age
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: T.card }}>
+      return wrapStep(
+        <>
           <StepHeader step={2} title="About you" onBack={() => setScreen('step1')} />
           <div style={{ flex: 1, padding: '24px 20px', overflowY: 'auto' }}>
             <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>Helps us find age-appropriate opportunities near you.</div>
@@ -307,7 +360,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
             <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 20, marginBottom: 8 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>Parent / Guardian info</div>
-              <div style={{ fontSize: 12, color: T.textSub, marginBottom: 16 }}>Optional — many orgs require a parent contact for teens under 18.</div>
+              <div style={{ fontSize: 12, color: T.textSub, marginBottom: 16 }}>Optional. Many orgs require a parent contact for teens under 18.</div>
               <div style={{ marginBottom: 14 }}>
                 <label style={lbl}>Parent / Guardian name</label>
                 <input value={parentName} onChange={e => setParentName(e.target.value)} style={inp} placeholder="Jane Smith" />
@@ -330,15 +383,15 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
             <button onClick={() => setScreen('step3')} disabled={!ready} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : T.border, color: ready ? '#fff' : T.textMuted, transition: 'background 0.2s' }}>Continue →</button>
           </div>
-        </div>
+        </>
       )
     }
 
     // ORG
     if (role === 'org') {
       const ready = orgName.trim() && orgType && orgCity.trim()
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
+      return wrapStep(
+        <>
           <StepHeader step={2} title="Your organization" onBack={() => setScreen('step1')} />
           <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
             <div style={{ fontSize: 13, color: T.textSub, marginBottom: 24 }}>Tell teens who you are and where you operate.</div>
@@ -375,7 +428,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
             <button onClick={() => setScreen('step3')} disabled={!ready} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : T.border, color: ready ? '#fff' : T.textMuted, transition: 'background 0.2s' }}>Continue →</button>
           </div>
-        </div>
+        </>
       )
     }
 
@@ -390,11 +443,11 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
       const toggle = (c) => setInterests(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
       const ready = interests.length >= 2
       const needed = 2 - interests.length
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
+      return wrapStep(
+        <>
           <StepHeader step={3} title="Your causes" onBack={() => setScreen('step2')} />
           <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
-            <div style={{ fontSize: 13, color: T.textSub, marginBottom: needed > 0 ? 8 : 16 }}>Pick at least 2 — your first pick becomes your top cause.</div>
+            <div style={{ fontSize: 13, color: T.textSub, marginBottom: needed > 0 ? 8 : 16 }}>Pick at least 2. Your first pick becomes your top cause.</div>
 
             {interests.length > 0 && (
               <div style={{ background: T.primaryLight, borderRadius: 10, padding: '8px 14px', marginBottom: 16, fontSize: 13, color: T.primary, fontWeight: 600 }}>
@@ -420,7 +473,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               {loading ? 'Creating account...' : ready ? 'Finish setup →' : `Pick ${needed} more to continue`}
             </button>
           </div>
-        </div>
+        </>
       )
     }
 
@@ -428,8 +481,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     if (role === 'org') {
       const toggle = (c) => setOrgCauses(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c])
       const ready = orgCauses.length >= 1
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
+      return wrapStep(
+        <>
           <StepHeader step={3} title="Causes you support" onBack={() => setScreen('step2')} />
           <div style={{ padding: '24px 20px', overflowY: 'auto' }}>
             <div style={{ fontSize: 13, color: T.textSub, marginBottom: 20 }}>Pick at least 1. This helps teens find you.</div>
@@ -450,7 +503,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               {loading ? 'Creating account...' : 'Finish setup →'}
             </button>
           </div>
-        </div>
+        </>
       )
     }
 
@@ -460,7 +513,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
   if (screen === 'confirmEmail') {
     const isOrgSignup = role === 'org'
-    return (
+    return wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card, alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
         <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', marginBottom: 16 }} />
         <div style={{ width: 80, height: 80, borderRadius: '50%', background: isOrgSignup ? T.accentLight : T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, marginBottom: 20 }}>📬</div>
@@ -485,7 +538,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   // ── Forgot password ────────────────────────────────────────────────────────
 
   if (screen === 'forgotSent') {
-    return (
+    return wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ padding: '12px 20px 8px', display: 'flex', alignItems: 'center' }}>
@@ -513,7 +566,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
 
   if (screen === 'login') {
     const ready = email.trim() && password.trim()
-    return (
+    return wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card }}>
         <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, flexShrink: 0 }}>
           <div style={{ padding: '12px 20px 8px', display: 'flex', alignItems: 'center' }}>

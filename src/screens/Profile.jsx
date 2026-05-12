@@ -159,7 +159,7 @@ function OrgProfile({ user, onSignOut }) {
           </div>
         )}
         {!contactName && !contactPhone && !website && (
-          <div style={{ fontSize: 12, color: T.textMuted }}>No contact info added — tap Edit to fill this in.</div>
+          <div style={{ fontSize: 12, color: T.textMuted }}>No contact info added. Tap Edit to fill this in.</div>
         )}
       </div>
     </div>
@@ -172,7 +172,7 @@ function OrgProfile({ user, onSignOut }) {
         <button onClick={() => setShowCauses(true)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.accentLight, color: T.accent, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Edit</button>
       </div>
       {causes.length === 0 ? (
-        <div style={{ fontSize: 13, color: T.textMuted }}>No causes added yet — helps teens find you.</div>
+        <div style={{ fontSize: 13, color: T.textMuted }}>No causes added yet. Helps teens find you.</div>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {causes.map(c => {
@@ -245,7 +245,7 @@ function OrgProfile({ user, onSignOut }) {
             <input value={editContactName} onChange={e => setEditContactName(e.target.value)} placeholder="Jane Smith" style={inp} />
           </div>
           <div style={{ marginBottom: 14 }}>
-            <label style={lbl}>Contact email <span style={{ fontWeight: 400 }}>(your login email — not editable here)</span></label>
+            <label style={lbl}>Contact email <span style={{ fontWeight: 400 }}>(your login email, not editable here)</span></label>
             <input value={contactEmail} disabled style={{ ...inp, background: T.bg, color: T.textMuted, cursor: 'default' }} />
           </div>
           <div style={{ marginBottom: 16 }}>
@@ -257,7 +257,7 @@ function OrgProfile({ user, onSignOut }) {
       )}
 
       {showCauses && (
-        <Modal title="Causes you support" subtitle="Pick all that apply — helps teens find you" onClose={() => setShowCauses(false)}>
+        <Modal title="Causes you support" subtitle="Pick all that apply. Helps teens find you." onClose={() => setShowCauses(false)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 4 }}>
             {CAUSES.map(c => {
               const sel = causes.includes(c)
@@ -472,7 +472,7 @@ export default function Profile({ user, onSignOut }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 12, borderTop: `1px solid ${T.border}` }}>
         <div>
           <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 2 }}>Region</div>
-          <div style={{ fontSize: 13, color: region ? T.text : T.textMuted }}>{region || 'Not set — affects your matches'}</div>
+          <div style={{ fontSize: 13, color: region ? T.text : T.textMuted }}>{region || 'Not set (affects your matches)'}</div>
         </div>
         <button onClick={() => setShowRegion(true)} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.primaryLight, color: T.primary, border: 'none', cursor: 'pointer', fontWeight: 600 }}>{region ? 'Change' : 'Set'}</button>
       </div>

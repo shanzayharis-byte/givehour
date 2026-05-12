@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
+import FilterModal from '../components/FilterModal'
 
 // ---------- constants ----------
 const CAUSES = ['Education','Environment','Animals','Food Security','Health','Housing','Arts','Seniors']
@@ -56,71 +57,48 @@ function mapOpp(item) {
   }
 }
 
-// ---------- filter modal ----------
-function FilterModal({ filters, onChange, onClose, isDesktop, causeCounts }) {
-  const [local, setLocal] = useState(filters)
-  const set = (key, val) => setLocal(p => ({ ...p, [key]: val }))
-  const activeCount = [local.cause, local.ageGroup, local.remote].filter(Boolean).length
+// ---------- org directory card ----------
+// 12-color palette — gives every org a stable, distinctive color from its name
+const AVATAR_PALETTE = [
+  { bg: '#E6F4EA', fg: '#0E7A3C' }, // green
+  { bg: '#FEF0E7', fg: '#C45A1F' }, // orange
+  { bg: '#E8EFFC', fg: '#3458C3' }, // blue
+  { bg: '#FCE8F1', fg: '#B23170' }, // pink
+  { bg: '#F1E8FB', fg: '#6E3FB3' }, // purple
+  { bg: '#FFF4D9', fg: '#9C7400' }, // gold
+  { bg: '#E0F2F1', fg: '#0B7A75' }, // teal
+  { bg: '#FBE9E7', fg: '#B23A3A' }, // red
+  { bg: '#E9F0E0', fg: '#5C7A2A' }, // olive
+  { bg: '#EAEAF4', fg: '#4A4A8A' }, // indigo
+  { bg: '#FDEEDE', fg: '#A65A1F' }, // amber
+  { bg: '#E2F0E8', fg: '#2D6A4F' }, // forest
+]
 
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: isDesktop ? 'center' : 'flex-end', justifyContent: 'center' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: isDesktop ? 20 : '20px 20px 0 0', width: '100%', maxWidth: isDesktop ? 480 : 520, maxHeight: '85vh', overflowY: 'auto', padding: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Filter opportunities</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button onClick={() => { setLocal({ cause: '', ageGroup: '', remote: false }) }} style={{ fontSize: 12, color: T.textMuted, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
-            <button onClick={onClose} style={{ width: 28, height: 28, borderRadius: '50%', background: T.bg, border: 'none', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textMuted }}>×</button>
-          </div>
-        </div>
-
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Cause</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
-          {CAUSES.map(c => {
-            const cs = CAUSE[c] || { bg: T.primaryLight, text: T.primary }
-            const active = local.cause === c
-            const count = causeCounts[c] || 0
-            const disabled = count === 0 && !active
-            return (
-              <button key={c} onClick={() => !disabled && set('cause', active ? '' : c)}
-                style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: disabled ? 'default' : 'pointer', border: `1.5px solid ${T.border}`, background: '#fff', color: active ? cs.text : disabled ? T.textMuted : T.textSub, opacity: disabled ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 5 }}>
-                {CAUSE_EMOJI[c]} {c}
-                {!disabled && <span style={{ fontSize: 10, fontWeight: 700, background: active ? cs.text : T.bg, color: active ? '#fff' : T.textMuted, borderRadius: 20, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>{count}</span>}
-              </button>
-            )
-          })}
-        </div>
-
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Location</div>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          <button onClick={() => set('remote', !local.remote)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.remote ? T.primary : T.border}`, background: local.remote ? T.primaryLight : '#fff', color: local.remote ? T.primary : T.textSub }}>🌐 Remote only</button>
-        </div>
-
-        <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Age group</div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
-          {[['All Ages','All Ages'],['Teens (13-17)','Teenager'],['Open','No age specific']].map(([key, lbl]) => (
-            <button key={key} onClick={() => set('ageGroup', local.ageGroup === key ? '' : key)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.ageGroup === key ? T.primary : T.border}`, background: local.ageGroup === key ? T.primaryLight : '#fff', color: local.ageGroup === key ? T.primary : T.textSub }}>{lbl}</button>
-          ))}
-        </div>
-
-        <button onClick={() => { onChange(local); onClose() }} style={{ width: '100%', padding: 14, background: T.primary, border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-          {activeCount > 0 ? `Apply ${activeCount} filter${activeCount > 1 ? 's' : ''}` : 'Apply'}
-        </button>
-        <button onClick={onClose} style={{ width: '100%', padding: 12, background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', marginTop: 8 }}>Cancel</button>
-      </div>
-    </div>
-  )
+function avatarColor(name) {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length]
 }
 
-// ---------- org directory card ----------
-function OrgDirCard({ org, onSelect }) {
+function OrgDirCard({ org, onSelect, alternate }) {
+  const initials = (org.org || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+  const c = avatarColor(org.org || '')
+  const bg = alternate ? '#F9FAFC' : T.card
   return (
-    <div onClick={() => onSelect(org)} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div
+      onClick={() => onSelect(org)}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.06)' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+      style={{ background: bg, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s' }}
+    >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>🏢</div>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: c.bg, color: c.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0, letterSpacing: '-0.02em' }}>{initials}</div>
         {org.isGiveHour && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
       </div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1.3 }}>{org.org}</div>
-      <div style={{ fontSize: 11, color: T.textMuted }}>{org.count} listing{org.count !== 1 ? 's' : ''}</div>
+      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1.35, flex: 1 }}>{org.org}</div>
+      <div style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 20, background: T.bg, fontSize: 11, fontWeight: 600, color: T.textSub }}>
+        {org.count} listing{org.count !== 1 ? 's' : ''}
+      </div>
     </div>
   )
 }
@@ -128,11 +106,17 @@ function OrgDirCard({ org, onSelect }) {
 const AGE_LABEL = { 'All Ages': 'All Ages', 'Teens (13-17)': 'Teenager', 'Open': 'No age specific' }
 
 // ---------- opp card ----------
-function OppCard({ opp, onSelect }) {
+function OppCard({ opp, onSelect, alternate }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
   const ageLabel = AGE_LABEL[opp.ageGroup]
+  const bg = alternate ? '#F9FAFC' : T.card
   return (
-    <div onClick={() => onSelect(opp)} style={{ background: T.card, border: `1px solid ${opp.source === 'org' ? T.primary : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer' }}>
+    <div
+      onClick={() => onSelect(opp)}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.06)' }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = opp.source === 'org' ? T.primary : T.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+      style={{ background: bg, border: `1px solid ${opp.source === 'org' ? T.primary : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s' }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
         <div style={{ fontSize: 12, color: T.textMuted }}>{opp.org}</div>
         {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700 }}>Local org</span>}
@@ -166,6 +150,8 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [orgDir, setOrgDir]               = useState([])
   const [orgDirLoading, setOrgDirLoading] = useState(true)
   const [activeOrgLetter, setActiveOrgLetter] = useState('')
+  const [orgFilters, setOrgFilters] = useState({ cause: '', ageGroup: '', remote: false })
+  const [showOrgFilter, setShowOrgFilter] = useState(false)
   const [orgView, setOrgView]             = useState(null)
   const [orgViewListings, setOrgViewListings] = useState([])
   const [orgViewLoading, setOrgViewLoading]   = useState(false)
@@ -297,8 +283,17 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const filteredOrgDir = orgDir.filter(o => {
     if (activeOrgLetter && o.org[0]?.toUpperCase() !== activeOrgLetter) return false
     if (search && !o.org.toLowerCase().includes(search.toLowerCase())) return false
+    if (orgFilters.cause && !(o.causes || []).includes(orgFilters.cause)) return false
+    if (orgFilters.ageGroup && !(o.ageGroups || []).includes(orgFilters.ageGroup)) return false
+    if (orgFilters.remote && !o.hasRemote) return false
     return true
   })
+
+  // org cause counts for the filter modal
+  const orgCauseCounts = {}
+  for (const o of orgDir) for (const c of (o.causes || [])) orgCauseCounts[c] = (orgCauseCounts[c] || 0) + 1
+
+  const orgActiveFilterCount = [orgFilters.cause, orgFilters.ageGroup, orgFilters.remote].filter(Boolean).length
 
   const gridStyle = isDesktop
     ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }
@@ -318,29 +313,30 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
             <img src="/logo.png" alt="Give Hour" style={{ width: 36, height: 36, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
             <div style={{ fontSize: 16, fontWeight: 700, color: T.text, whiteSpace: 'nowrap' }}>Give Hour</div>
           </button>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={onLogin} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 20, padding: '7px 14px', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer', whiteSpace: 'nowrap' }}>Log in</button>
-            <button onClick={onSignUp} style={{ background: T.primary, border: 'none', borderRadius: 20, padding: '7px 14px', fontSize: 13, fontWeight: 600, color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign up</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            <button onClick={onLogin} style={{ background: 'none', border: 'none', padding: '8px 14px', fontSize: 14, fontWeight: 600, color: T.textSub, cursor: 'pointer', whiteSpace: 'nowrap', borderRadius: 10 }}>Log in</button>
+            <button onClick={onSignUp} style={{ background: T.primary, border: 'none', borderRadius: 10, padding: '9px 18px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(24,160,80,0.25)' }}>Sign up</button>
           </div>
         </div>
       ) : (
-        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', flexShrink: 0 }}>
           <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Explore</div>
-          {onSignOut && (
-            <button onClick={onSignOut} style={{ background: 'none', border: `1.5px solid ${T.border}`, borderRadius: 20, padding: '6px 14px', fontSize: 13, fontWeight: 600, color: T.textSub, cursor: 'pointer' }}>Sign out</button>
-          )}
         </div>
       )}
 
       {/* tabs */}
       <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, display: 'flex', flexShrink: 0 }}>
-        {[['opportunities','Opportunities'],['organizations','Organizations']].map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '12px 0', fontSize: 13, fontWeight: tab === key ? 700 : 500, color: tab === key ? T.primary : T.textMuted, background: 'none', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${tab === key ? T.primary : 'transparent'}`, transition: 'all 0.15s' }}>
-            {label}
-            {key === 'organizations' && orgDir.length > 0 && <span style={{ marginLeft: 6, fontSize: 11, background: T.accentLight, color: T.accent, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>{orgDir.length}</span>}
-            {key === 'opportunities' && filteredOpps.length > 0 && <span style={{ marginLeft: 6, fontSize: 11, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '1px 7px', fontWeight: 700 }}>{filteredOpps.length}{hasMore ? '+' : ''}</span>}
-          </button>
-        ))}
+        {[['opportunities','Opportunities'],['organizations','Organizations']].map(([key, label]) => {
+          const active = tab === key
+          const count = key === 'organizations' ? orgDir.length : (key === 'opportunities' ? filteredOpps.length : 0)
+          const countText = count > 0 ? `${count}${key === 'opportunities' && hasMore ? '+' : ''}` : null
+          return (
+            <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '14px 0', fontSize: 14, fontWeight: active ? 700 : 500, color: active ? T.primary : T.textMuted, background: 'none', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${active ? T.primary : 'transparent'}`, transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              {label}
+              {countText && <span style={{ fontSize: 11, color: active ? T.primary : T.textMuted, fontWeight: 600, opacity: active ? 1 : 0.6 }}>{countText}</span>}
+            </button>
+          )
+        })}
       </div>
 
       <div style={{ padding: isDesktop ? '28px 40px' : '16px 20px', flex: 1 }}>
@@ -352,12 +348,17 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tab === 'opportunities' ? 'Search opportunities…' : 'Search organizations…'} style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
             {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textMuted, fontSize: 16, padding: 0 }}>×</button>}
           </div>
-          {tab === 'opportunities' && (
-            <button onClick={() => setShowFilter(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${activeFilterCount > 0 ? T.primary : T.border}`, background: activeFilterCount > 0 ? T.primaryLight : T.card, color: activeFilterCount > 0 ? T.primary : T.textSub, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
-              <span>⚙️</span> Filter
-              {activeFilterCount > 0 && <span style={{ background: T.primary, color: '#fff', borderRadius: '50%', width: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{activeFilterCount}</span>}
-            </button>
-          )}
+          {(() => {
+            const isOpps = tab === 'opportunities'
+            const count = isOpps ? activeFilterCount : orgActiveFilterCount
+            const open = () => isOpps ? setShowFilter(true) : setShowOrgFilter(true)
+            return (
+              <button onClick={open} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, border: `1.5px solid ${count > 0 ? T.primary : T.border}`, background: count > 0 ? T.primaryLight : T.card, color: count > 0 ? T.primary : T.textSub, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+                <span>⚙️</span> Filter
+                {count > 0 && <span style={{ background: T.primary, color: '#fff', borderRadius: '50%', width: 18, height: 18, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{count}</span>}
+              </button>
+            )
+          })()}
         </div>
 
         {/* opportunities tab */}
@@ -366,7 +367,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
             <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading…</div>
           ) : error ? (
             <div style={{ textAlign: 'center', padding: 40, color: T.textMuted, fontSize: 13 }}>
-              {error} — <button onClick={() => fetchPage(1, true)} style={{ color: T.primary, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>retry</button>
+              {error} · <button onClick={() => fetchPage(1, true)} style={{ color: T.primary, background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, fontFamily: 'inherit' }}>retry</button>
             </div>
           ) : filteredOpps.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>No opportunities match your filters.</div>
@@ -374,7 +375,11 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
             <>
               <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOpps.length}{hasMore ? '+' : ''} opportunities</div>
               <div style={gridStyle}>
-                {filteredOpps.map(opp => <OppCard key={opp.id} opp={opp} onSelect={onSelectOpp} />)}
+                {filteredOpps.map((opp, i) => {
+                  const cols = isDesktop ? 3 : 1
+                  const alternate = Math.floor(i / cols) % 2 === 1
+                  return <OppCard key={opp.id} opp={opp} alternate={alternate} onSelect={onSelectOpp} />
+                })}
               </div>
               {hasMore && (
                 <div style={{ textAlign: 'center', marginTop: 24 }}>
@@ -412,8 +417,8 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
                 <>
                   <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{orgViewListings.length} listing{orgViewListings.length !== 1 ? 's' : ''}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {orgViewListings.map(item => (
-                      <OppCard key={item.id} opp={{ id: item.id, title: item.title, org: item.org || orgView.org, org_id: item.org_id || orgView.org_id, cause: item.cause, ageGroup: item.age_group, hours: item.hours, location: item.location, date: item.date, description: item.description, externalUrl: item.external_url, remote: !!item.remote, source: item.source }} onSelect={onSelectOpp} />
+                    {orgViewListings.map((item, i) => (
+                      <OppCard key={item.id} alternate={i % 2 === 1} opp={{ id: item.id, title: item.title, org: item.org || orgView.org, org_id: item.org_id || orgView.org_id, cause: item.cause, ageGroup: item.age_group, hours: item.hours, location: item.location, date: item.date, description: item.description, externalUrl: item.external_url, remote: !!item.remote, source: item.source }} onSelect={onSelectOpp} />
                     ))}
                   </div>
                 </>
@@ -430,25 +435,34 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
           ) : (
             <>
               {/* A–Z strip */}
-              <div style={{ display: 'flex', overflowX: 'auto', gap: 4, marginBottom: 16, paddingBottom: 4 }}>
-                <button onClick={() => setActiveOrgLetter('')} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${!activeOrgLetter ? T.primary : T.border}`, background: !activeOrgLetter ? T.primaryLight : '#fff', color: !activeOrgLetter ? T.primary : T.textMuted }}>All</button>
-                {LETTERS.map(l => (
-                  <button key={l} onClick={() => setActiveOrgLetter(activeOrgLetter === l ? '' : l)} disabled={!availableLetters.has(l)} style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: availableLetters.has(l) ? 'pointer' : 'default', border: `1.5px solid ${activeOrgLetter === l ? T.primary : T.border}`, background: activeOrgLetter === l ? T.primaryLight : '#fff', color: activeOrgLetter === l ? T.primary : availableLetters.has(l) ? T.textSub : T.border }}>
-                    {l}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginBottom: 16, alignItems: 'center' }}>
+                <button onClick={() => setActiveOrgLetter('')} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 16, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none', background: !activeOrgLetter ? T.primary : 'transparent', color: !activeOrgLetter ? '#fff' : T.textSub, transition: 'all 0.15s' }}>All</button>
+                <span style={{ width: 1, height: 14, background: T.border, margin: '0 4px' }} />
+                {LETTERS.map(l => {
+                  const available = availableLetters.has(l)
+                  const active = activeOrgLetter === l
+                  return (
+                    <button key={l} onClick={() => available && setActiveOrgLetter(active ? '' : l)} disabled={!available} style={{ flexShrink: 0, width: 26, height: 26, borderRadius: '50%', fontSize: 12, fontWeight: active ? 700 : 600, cursor: available ? 'pointer' : 'default', border: 'none', background: active ? T.primary : 'transparent', color: active ? '#fff' : available ? T.textSub : T.border, transition: 'all 0.15s', padding: 0 }}>
+                      {l}
+                    </button>
+                  )
+                })}
               </div>
               <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 14 }}>{filteredOrgDir.length} organization{filteredOrgDir.length !== 1 ? 's' : ''}</div>
               <div style={orgGridStyle}>
-                {filteredOrgDir.map(org => (
-                  <OrgDirCard key={org.org} org={org} onSelect={(o) => {
+                {filteredOrgDir.map((org, i) => {
+                  const cols = isDesktop ? 4 : 2
+                  const alternate = Math.floor(i / cols) % 2 === 1
+                  return (
+                  <OrgDirCard key={org.org} org={org} alternate={alternate} onSelect={(o) => {
                     if (o.org_id) {
                       onSelectOrg(o.org_id, o.org)
                     } else {
                       setOrgView(o)
                     }
                   }} />
-                ))}
+                  )
+                })}
               </div>
             </>
           )
@@ -456,6 +470,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       </div>
 
       {showFilter && <FilterModal filters={filters} onChange={setFilters} onClose={() => setShowFilter(false)} isDesktop={isDesktop} causeCounts={causeCounts} />}
+      {showOrgFilter && <FilterModal filters={orgFilters} onChange={setOrgFilters} onClose={() => setShowOrgFilter(false)} isDesktop={isDesktop} causeCounts={orgCauseCounts} title="Filter organizations" />}
     </div>
   )
 }

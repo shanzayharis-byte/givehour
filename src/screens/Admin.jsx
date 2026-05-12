@@ -35,7 +35,7 @@ export default function Admin({ authUser }) {
         setToken(session.access_token)
         loadUsers(session.access_token)
       } else {
-        setLoadError('No active session — please sign in again.')
+        setLoadError('No active session. Please sign in again.')
         setLoading(false)
       }
     })
@@ -150,7 +150,7 @@ export default function Admin({ authUser }) {
               <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: i < users.length - 1 ? `1px solid ${T.border}` : 'none' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{u.name || '—'}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{u.name || '-'}</span>
                     {isActive && (
                       <span title="Active now" style={{ width: 7, height: 7, borderRadius: '50%', background: '#4CAF7D', display: 'inline-block', flexShrink: 0 }} />
                     )}
@@ -166,7 +166,7 @@ export default function Admin({ authUser }) {
                   </div>
                 </div>
                 <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 6, background: roleStyle.bg, color: roleStyle.text, flexShrink: 0 }}>
-                  {u.role || '—'}
+                  {u.role || '-'}
                 </span>
                 {isSelf ? (
                   <span style={{ fontSize: 12, color: T.textMuted, width: 52, textAlign: 'center' }}>You</span>

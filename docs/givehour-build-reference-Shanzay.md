@@ -984,3 +984,18 @@ No code changes needed in System 1 — the fallback logic handles both states.
 8. Click Generate letter → personalized college letter appears in modal
 9. Open Profile → see interests, hours count, settings list
 10. Sign out → returns to landing page
+
+---
+
+## Addendum — May 2026 UX overhaul
+
+The original spec described a fixed-shell mobile layout with a bottom tab bar. The shipped app uses a different model — see project memory `project_givehour.md` System 5 for full details. Key deviations from this doc:
+
+- **No bottom nav bar.** Replaced by a green ☰ button (`position: fixed; top: 10px; right: 12px`) that opens a slide-in drawer from the right. Drawer contains the same nav items (per role), plus Sign out at the bottom.
+- **No `position: fixed` body / `100dvh` chains.** Mobile uses natural document scroll. `index.css` is just `html, body { background; }` plus `overscroll-behavior-y: none`. Each screen renders content at natural height; the page scrolls.
+- **Persistent footer** at the end of the document with Privacy / Terms / Contact links → opens `LegalPage.jsx`.
+- **Org nav now includes `orgPost`** route → renders `<PostListingForm>` directly. The inline + Post button on OrgDashboard was removed.
+- **LogHours has edit/delete** per-entry. Requires `hours_log` UPDATE + DELETE RLS policies (`auth.uid() = user_id`).
+- **Landing rebranded** "Built by a teen, for teens" with a How-it-works 3-step section emphasising teen-friendly filtering, log-from-anywhere tracking, and the service letter generator as the killer feature.
+
+When updating screens, defer to the actual code in `src/screens/` rather than the original spec sections above — the spec is preserved for context but the implementation has evolved past it.

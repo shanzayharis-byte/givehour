@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     // All orgs from clean_listings — group by name
     const { data, error } = await db
       .from('clean_listings')
-      .select('org, source, org_id')
+      .select('org, source, org_id, cause, age_group, remote')
       .not('org', 'is', null)
       .neq('org', '')
 
@@ -59,8 +59,11 @@ export default async function handler(req, res) {
     const map = {}
     for (const row of data || []) {
       if (!row.org) continue
-      if (!map[row.org]) map[row.org] = { org: row.org, count: 0, org_id: null, isGiveHour: false }
+      if (!map[row.org]) map[row.org] = { org: row.org, count: 0, org_id: null, isGiveHour: false, causes: new Set(), ageGroups: new Set(), hasRemote: false }
       map[row.org].count++
+      if (row.cause) map[row.org].causes.add(row.cause)
+      if (row.age_group) map[row.org].ageGroups.add(row.age_group)
+      if (row.remote) map[row.org].hasRemote = true
       if (row.source === 'org') {
         map[row.org].org_id = row.org_id
         map[row.org].isGiveHour = true
@@ -70,19 +73,45 @@ export default async function handler(req, res) {
     // Always include Give Hour registered orgs even if they have no clean_listings yet
     const { data: giveHourOrgs } = await db.from('users').select('id, name').eq('role', 'org')
 
-    // Count directly from org_listings per org_id — avoids name-mismatch bugs
-    const { data: directListings } = await db.from('org_listings').select('org_id')
+    // Count + causes + ages + remote directly from org_listings per org_id — avoids name-mismatch bugs
+    const { data: directListings } = await db.from('org_listings').select('org_id, cause, age_group, remote')
     const directCount = {}
-    for (const r of directListings || []) directCount[r.org_id] = (directCount[r.org_id] || 0) + 1
+    const directCauses = {}
+    const directAges = {}
+    const directRemote = {}
+    for (const r of directListings || []) {
+      directCount[r.org_id] = (directCount[r.org_id] || 0) + 1
+      if (r.cause) {
+        if (!directCauses[r.org_id]) directCauses[r.org_id] = new Set()
+        directCauses[r.org_id].add(r.cause)
+      }
+      if (r.age_group) {
+        if (!directAges[r.org_id]) directAges[r.org_id] = new Set()
+        directAges[r.org_id].add(r.age_group)
+      }
+      if (r.remote) directRemote[r.org_id] = true
+    }
 
     for (const org of giveHourOrgs || []) {
       if (!org.name) continue
       const count = directCount[org.id] || 0
-      if (!map[org.name]) map[org.name] = { org: org.name, count, org_id: org.id, isGiveHour: true }
-      else { map[org.name].isGiveHour = true; map[org.name].org_id = org.id; if (count > map[org.name].count) map[org.name].count = count }
+      const causes = directCauses[org.id] || new Set()
+      const ageGroups = directAges[org.id] || new Set()
+      const hasRemote = !!directRemote[org.id]
+      if (!map[org.name]) map[org.name] = { org: org.name, count, org_id: org.id, isGiveHour: true, causes, ageGroups, hasRemote }
+      else {
+        map[org.name].isGiveHour = true
+        map[org.name].org_id = org.id
+        if (count > map[org.name].count) map[org.name].count = count
+        causes.forEach(c => map[org.name].causes.add(c))
+        ageGroups.forEach(a => map[org.name].ageGroups.add(a))
+        if (hasRemote) map[org.name].hasRemote = true
+      }
     }
 
-    res.status(200).json(Object.values(map).sort((a, b) => a.org.localeCompare(b.org)))
+    // Serialize Sets → Arrays
+    const result = Object.values(map).map(o => ({ ...o, causes: [...o.causes], ageGroups: [...o.ageGroups] }))
+    res.status(200).json(result.sort((a, b) => a.org.localeCompare(b.org)))
   } catch (e) {
     res.status(500).json({ error: e.message })
   }
