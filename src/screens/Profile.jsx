@@ -133,7 +133,11 @@ function OrgProfile({ user, onSignOut }) {
   const profileCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
       <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 14, background: T.accentLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0 }}>🏢</div>
+        <div style={{ width: 60, height: 60, borderRadius: 14, background: logoUrl ? '#fff' : T.accentLight, border: logoUrl ? `1px solid ${T.border}` : 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, overflow: 'hidden' }}>
+          {logoUrl
+            ? <img src={logoUrl} alt={nameVal || 'Logo'} referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 6, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+            : '🏢'}
+        </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.text }}>{nameVal || 'Your Organization'}</div>
           <div style={{ fontSize: 12, color: T.textSub, marginTop: 2 }}>
@@ -180,6 +184,40 @@ function OrgProfile({ user, onSignOut }) {
     </div>
   )
 
+  const aboutCard = (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>About your organization</div>
+        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setEditContactName(contactName); setEditContactPhone(contactPhone); setEditIs501c3(is501c3); setEditDescription(description); setEditLogoUrl(logoUrl); setEditLogoIconUrl(logoIconUrl); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.accentLight, color: T.accent, border: 'none', cursor: 'pointer', fontWeight: 600 }}>Edit</button>
+      </div>
+      {description ? (
+        <div style={{ fontSize: 13, color: T.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{description}</div>
+      ) : (
+        <div style={{ fontSize: 13, color: T.textMuted }}>No description yet. Tell teens about your mission so they know what you're about.</div>
+      )}
+      {(logoUrl || logoIconUrl) && (
+        <div style={{ display: 'flex', gap: 18, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
+          {logoUrl && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <img src={logoUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+              </div>
+              <span style={{ fontSize: 11, color: T.textMuted }}>Main logo</span>
+            </div>
+          )}
+          {logoIconUrl && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 22, height: 22, borderRadius: 6, background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <img src={logoIconUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+              </div>
+              <span style={{ fontSize: 11, color: T.textMuted }}>Listing icon</span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+
   const causesCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -215,11 +253,11 @@ function OrgProfile({ user, onSignOut }) {
       <div style={{ padding: isDesktop ? '32px 40px' : '20px' }}>
         {isDesktop ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-            <div>{profileCard}{causesCard}</div>
+            <div>{profileCard}{aboutCard}{causesCard}</div>
             <div>{settingsCard}</div>
           </div>
         ) : (
-          <>{profileCard}{causesCard}{settingsCard}</>
+          <>{profileCard}{aboutCard}{causesCard}{settingsCard}</>
         )}
       </div>
 
