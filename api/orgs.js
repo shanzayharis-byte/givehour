@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     if (id) {
       const { data, error } = await db
         .from('users')
-        .select('id, name, org_type, region, interests, website, is_501c3')
+        .select('id, name, org_type, region, interests, website, is_501c3, description, logo_url')
         .eq('id', id)
         .maybeSingle()
       if (error) return res.status(500).json({ error: error.message })
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     const { data, error } = await db
       .from('users')
-      .select('id, name, org_type, region, zip, interests, website, is_501c3')
+      .select('id, name, org_type, region, zip, interests, website, is_501c3, description, logo_url')
       .eq('role', 'org')
     if (error) return res.status(500).json({ error: error.message })
     res.status(200).json(data || [])

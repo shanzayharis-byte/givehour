@@ -92,8 +92,10 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
             <div style={{ background: 'linear-gradient(150deg, #0E7A3C 0%, #18A050 55%, #25C068 100%)', padding: '28px 24px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
-              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 80, height: 80, borderRadius: '50%', background: c.bg, color: c.fg, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 14, boxShadow: '0 6px 20px rgba(0,0,0,0.22)' }}>
-                {initials}
+              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 80, height: 80, borderRadius: '50%', background: org?.logo_url ? '#fff' : c.bg, color: c.fg, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 14, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', overflow: 'hidden' }}>
+                {org?.logo_url
+                  ? <img src={org.logo_url} alt={name} referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.textContent = initials; e.currentTarget.parentElement.style.background = c.bg }} />
+                  : initials}
               </div>
 
               <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, margin: '0 0 10px', color: '#fff', position: 'relative', letterSpacing: '-0.02em' }}>{name}</h1>
@@ -125,6 +127,13 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
 
             {/* body */}
             <div style={{ padding: 20 }}>
+              {org?.description && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>About</div>
+                  <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{org.description}</div>
+                </div>
+              )}
+
               {org?.interests?.length > 0 && (
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Causes</div>

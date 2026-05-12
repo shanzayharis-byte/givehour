@@ -41,6 +41,8 @@ function OrgProfile({ user, onSignOut }) {
   const [contactPhone, setContactPhone]   = useState(user?.contact_phone || '')
   const [contactEmail, setContactEmail]   = useState('')
   const [is501c3, setIs501c3]             = useState(user?.is_501c3 ?? null)
+  const [description, setDescription]     = useState(user?.description || '')
+  const [logoUrl, setLogoUrl]             = useState(user?.logo_url || '')
 
   const [showEditOrg, setShowEditOrg] = useState(false)
   const [showCauses, setShowCauses]   = useState(false)
@@ -51,6 +53,8 @@ function OrgProfile({ user, onSignOut }) {
   const [editContactName, setEditContactName]   = useState('')
   const [editContactPhone, setEditContactPhone] = useState('')
   const [editIs501c3, setEditIs501c3]           = useState(null)
+  const [editDescription, setEditDescription]   = useState('')
+  const [editLogoUrl, setEditLogoUrl]           = useState('')
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -78,6 +82,10 @@ function OrgProfile({ user, onSignOut }) {
           setEditContactPhone(profile.contact_phone || '')
           setIs501c3(profile.is_501c3 ?? null)
           setEditIs501c3(profile.is_501c3 ?? null)
+          setDescription(profile.description || '')
+          setEditDescription(profile.description || '')
+          setLogoUrl(profile.logo_url || '')
+          setEditLogoUrl(profile.logo_url || '')
         }
         const { data: { session } } = await supabase.auth.getSession()
         setContactEmail(session?.user?.email || '')
@@ -92,7 +100,7 @@ function OrgProfile({ user, onSignOut }) {
   const save = (fields) => supabase.from('users').update(fields).eq('id', user.id)
 
   const saveOrgInfo = async () => {
-    await save({ name: editName.trim(), region: editCity.trim(), org_type: editOrgType || null, website: editWebsite.trim() || null, contact_name: editContactName.trim() || null, contact_phone: editContactPhone.trim() || null, is_501c3: editIs501c3 })
+    await save({ name: editName.trim(), region: editCity.trim(), org_type: editOrgType || null, website: editWebsite.trim() || null, contact_name: editContactName.trim() || null, contact_phone: editContactPhone.trim() || null, is_501c3: editIs501c3, description: editDescription.trim() || null, logo_url: editLogoUrl.trim() || null })
     setNameVal(editName.trim())
     setCity(editCity.trim())
     setOrgType(editOrgType)
@@ -100,6 +108,8 @@ function OrgProfile({ user, onSignOut }) {
     setContactName(editContactName.trim())
     setContactPhone(editContactPhone.trim())
     setIs501c3(editIs501c3)
+    setDescription(editDescription.trim())
+    setLogoUrl(editLogoUrl.trim())
     setShowEditOrg(false)
   }
 
@@ -129,7 +139,7 @@ function OrgProfile({ user, onSignOut }) {
             {is501c3 === true && <span style={{ fontSize: 10, fontWeight: 700, background: '#E8F5E9', color: '#2E7D32', borderRadius: 20, padding: '2px 8px', letterSpacing: '0.03em' }}>501(c)(3)</span>}
           </div>
         </div>
-        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setEditContactName(contactName); setEditContactPhone(contactPhone); setEditIs501c3(is501c3); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
+        <button onClick={() => { setEditName(nameVal); setEditCity(city); setEditOrgType(orgType); setEditWebsite(website); setEditContactName(contactName); setEditContactPhone(contactPhone); setEditIs501c3(is501c3); setEditDescription(description); setEditLogoUrl(logoUrl); setShowEditOrg(true) }} style={{ fontSize: 12, padding: '5px 12px', borderRadius: 20, background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, cursor: 'pointer', fontWeight: 500, flexShrink: 0 }}>Edit</button>
       </div>
 
       <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -237,6 +247,22 @@ function OrgProfile({ user, onSignOut }) {
           <div style={{ marginBottom: 14 }}>
             <label style={lbl}>Website <span style={{ fontWeight: 400 }}>(optional)</span></label>
             <input value={editWebsite} onChange={e => setEditWebsite(e.target.value)} placeholder="yourorg.org" style={inp} />
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>Logo URL <span style={{ fontWeight: 400 }}>(optional)</span></label>
+            <input value={editLogoUrl} onChange={e => setEditLogoUrl(e.target.value)} placeholder="https://yourorg.org/logo.png" style={inp} />
+            {editLogoUrl && (
+              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={editLogoUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                </div>
+                <span style={{ fontSize: 11, color: T.textMuted }}>Preview</span>
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={lbl}>About your organization <span style={{ fontWeight: 400 }}>(optional)</span></label>
+            <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="Tell teens about your mission, what you do, and how they can get involved." rows={5} style={{ ...inp, resize: 'vertical', minHeight: 100, lineHeight: 1.5 }} />
           </div>
           <div style={{ height: 1, background: T.border, margin: '4px 0 14px' }} />
           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>Contact info</div>
