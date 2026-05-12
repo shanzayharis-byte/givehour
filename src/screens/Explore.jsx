@@ -84,6 +84,9 @@ function OrgDirCard({ org, onSelect, alternate }) {
   const initials = (org.org || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
   const c = avatarColor(org.org || '')
   const bg = alternate ? '#F9FAFC' : T.card
+  const logo = org.logo_icon_url || org.logo_url || null
+  const visibleCauses = (org.causes || []).slice(0, 3)
+  const extraCauses = Math.max(0, (org.causes || []).length - visibleCauses.length)
   return (
     <div
       onClick={() => onSelect(org)}
@@ -92,10 +95,44 @@ function OrgDirCard({ org, onSelect, alternate }) {
       style={{ background: bg, border: `1px solid ${T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10, transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s' }}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ width: 44, height: 44, borderRadius: 12, background: c.bg, color: c.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, flexShrink: 0, letterSpacing: '-0.02em' }}>{initials}</div>
-        {org.isGiveHour && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: logo ? '#fff' : c.bg, color: c.fg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, flexShrink: 0, letterSpacing: '-0.02em', overflow: 'hidden', border: logo ? `1px solid ${T.border}` : 'none' }}>
+          {logo
+            ? <img src={logo} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+            : initials}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+          {org.isGiveHour && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
+          {org.is_501c3 === true && <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: '#FFF8E0', color: '#8A6000', fontWeight: 700, whiteSpace: 'nowrap' }}>501(c)(3)</span>}
+        </div>
       </div>
-      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, lineHeight: 1.35, flex: 1 }}>{org.org}</div>
+
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text, lineHeight: 1.3 }}>{org.org}</div>
+        {(org.region || org.org_type) && (
+          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 3, lineHeight: 1.4 }}>
+            {org.region && <>📍 {org.region}</>}
+            {org.region && org.org_type ? ' · ' : ''}
+            {org.org_type}
+          </div>
+        )}
+      </div>
+
+      {org.description && (
+        <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {org.description}
+        </div>
+      )}
+
+      {visibleCauses.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {visibleCauses.map(cause => {
+            const s = CAUSE[cause] || { bg: T.primaryLight, text: T.primary }
+            return <span key={cause} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: s.bg, color: s.text, fontWeight: 600 }}>{cause}</span>
+          })}
+          {extraCauses > 0 && <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: T.bg, color: T.textMuted, fontWeight: 600 }}>+{extraCauses}</span>}
+        </div>
+      )}
+
       <div style={{ display: 'inline-flex', alignSelf: 'flex-start', alignItems: 'center', gap: 4, padding: '3px 9px', borderRadius: 20, background: T.bg, fontSize: 11, fontWeight: 600, color: T.textSub }}>
         {org.count} listing{org.count !== 1 ? 's' : ''}
       </div>

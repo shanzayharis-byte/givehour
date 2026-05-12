@@ -71,7 +71,9 @@ export default async function handler(req, res) {
     }
 
     // Always include Give Hour registered orgs even if they have no clean_listings yet
-    const { data: giveHourOrgs } = await db.from('users').select('id, name').eq('role', 'org')
+    const { data: giveHourOrgs } = await db.from('users')
+      .select('id, name, region, org_type, is_501c3, description, logo_url, logo_icon_url')
+      .eq('role', 'org')
 
     // Count + causes + ages + remote directly from org_listings per org_id — avoids name-mismatch bugs
     const { data: directListings } = await db.from('org_listings').select('org_id, cause, age_group, remote')
@@ -98,7 +100,15 @@ export default async function handler(req, res) {
       const causes = directCauses[org.id] || new Set()
       const ageGroups = directAges[org.id] || new Set()
       const hasRemote = !!directRemote[org.id]
-      if (!map[org.name]) map[org.name] = { org: org.name, count, org_id: org.id, isGiveHour: true, causes, ageGroups, hasRemote }
+      const meta = {
+        region:        org.region        || null,
+        org_type:      org.org_type      || null,
+        is_501c3:      org.is_501c3      ?? null,
+        description:   org.description   || null,
+        logo_url:      org.logo_url      || null,
+        logo_icon_url: org.logo_icon_url || null,
+      }
+      if (!map[org.name]) map[org.name] = { org: org.name, count, org_id: org.id, isGiveHour: true, causes, ageGroups, hasRemote, ...meta }
       else {
         map[org.name].isGiveHour = true
         map[org.name].org_id = org.id
@@ -106,6 +116,7 @@ export default async function handler(req, res) {
         causes.forEach(c => map[org.name].causes.add(c))
         ageGroups.forEach(a => map[org.name].ageGroups.add(a))
         if (hasRemote) map[org.name].hasRemote = true
+        Object.assign(map[org.name], meta)
       }
     }
 
