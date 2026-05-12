@@ -63,6 +63,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   const [orgType, setOrgType]           = useState('')
   const [orgCity, setOrgCity]           = useState('')
   const [orgWebsite, setOrgWebsite]     = useState('')
+  const [orgLogoUrl, setOrgLogoUrl]     = useState('')
+  const [orgLogoIconUrl, setOrgLogoIconUrl] = useState('')
   const [orgCauses, setOrgCauses]       = useState([])
   const [orgContactPhone, setOrgContactPhone] = useState('')
   const [orgIs501c3, setOrgIs501c3]           = useState(null)
@@ -120,7 +122,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   }
 
   const finishTeen = () => handleSignUp({ name, role: 'teen', grade, age, zip, school_name: school, region, interests, preferred_cause: interests[0] || null, parent_name: parentName.trim() || null, parent_email: parentEmail.trim() || null, parent_phone: parentPhone.trim() || null, parent_consent: parentConsent || null })
-  const finishOrg  = () => handleSignUp({ name: orgName, contact_name: name.trim() || null, contact_phone: orgContactPhone.trim() || null, role: 'org', org_type: orgType, is_501c3: orgIs501c3, website: orgWebsite || null, school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
+  const finishOrg  = () => handleSignUp({ name: orgName, contact_name: name.trim() || null, contact_phone: orgContactPhone.trim() || null, role: 'org', org_type: orgType, is_501c3: orgIs501c3, website: orgWebsite || null, logo_url: orgLogoUrl.trim() || null, logo_icon_url: orgLogoIconUrl.trim() || null, school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
 
   const handleLogin = async () => {
     setLoading(true)
@@ -412,7 +414,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               ))}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
                 <label style={lbl}>City / Location</label>
                 <input value={orgCity} onChange={e => setOrgCity(e.target.value)} style={inp} placeholder="San Francisco, CA" />
@@ -421,6 +423,32 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
                 <label style={lbl}>Website <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
                 <input value={orgWebsite} onChange={e => setOrgWebsite(e.target.value)} style={inp} placeholder="yourorg.org" />
               </div>
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={lbl}>Main logo URL <span style={{ fontWeight: 400, textTransform: 'none' }}>(shown on your profile, optional)</span></label>
+              <input value={orgLogoUrl} onChange={e => setOrgLogoUrl(e.target.value)} style={inp} placeholder="https://yourorg.org/logo.png" />
+              {orgLogoUrl && (
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: '50%', background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src={orgLogoUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                  </div>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>Profile preview</span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: 28 }}>
+              <label style={lbl}>Icon URL <span style={{ fontWeight: 400, textTransform: 'none' }}>(small square logo for listing cards, optional)</span></label>
+              <input value={orgLogoIconUrl} onChange={e => setOrgLogoIconUrl(e.target.value)} style={inp} placeholder="https://yourorg.org/apple-touch-icon.png" />
+              {orgLogoIconUrl && (
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 6, background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src={orgLogoIconUrl} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                  </div>
+                  <span style={{ fontSize: 11, color: T.textMuted }}>Listing card preview</span>
+                </div>
+              )}
             </div>
 
             <button onClick={() => setScreen('step3')} disabled={!ready} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : T.border, color: ready ? '#fff' : T.textMuted, transition: 'background 0.2s' }}>Continue →</button>
