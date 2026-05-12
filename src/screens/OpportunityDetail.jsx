@@ -4,7 +4,7 @@ import { T, CAUSE } from '../lib/theme'
 
 const CAUSE_EMOJI = { Education: '📚', Environment: '🌿', Animals: '🐾', 'Food Security': '🍎', Health: '❤️', Housing: '🏠', Arts: '🎨', Seniors: '🤝' }
 
-export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp, onSelectOrg }) {
+export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp, onSelectOrg, onEdit }) {
   const [saved, setSaved]       = useState(false)
   const [loading, setLoading]   = useState(false)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
@@ -171,6 +171,7 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
   )
 
   const isOrgUser = user?.role === 'org'
+  const isOwner   = isOrgUser && opp.org_id && user?.id === opp.org_id
 
   const applyButton = isOrgUser ? null : isGuest ? (
     <div style={{ background: T.primaryLight, borderRadius: 14, padding: 18, textAlign: 'center', border: `1px solid ${T.primary}33` }}>
@@ -214,6 +215,11 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
       <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '6px 12px', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>←</button>
       {!isGuest && (
         <div style={{ display: 'flex', gap: 8 }}>
+          {isOwner && onEdit && (
+            <button onClick={() => onEdit(opp)} style={{ background: T.primary, border: 'none', color: '#fff', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(24,160,80,0.25)' }}>
+              ✏️ Edit listing
+            </button>
+          )}
           {!isOrgUser && (
             <button onClick={handleSave} disabled={loading} style={{ background: saved ? T.primaryLight : T.bg, border: `1px solid ${saved ? T.primary : T.border}`, color: saved ? T.primary : T.textSub, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               {saved ? '✓ Saved' : '🔖 Save'}

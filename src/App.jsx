@@ -45,6 +45,7 @@ export default function App() {
   const [appLoading, setAppLoading]   = useState(true)
   const [accountError, setAccountError] = useState(false)
   const [drawerOpen, setDrawerOpen]   = useState(false)
+  const [editTargetId, setEditTargetId] = useState(null)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -159,6 +160,7 @@ export default function App() {
     if (selectedOpp) {
       return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest}
         onSelectOrg={(orgId, orgName) => { setSelectedOpp(null); setSelectedOrg({ id: orgId, name: orgName }) }}
+        onEdit={(opp) => { setEditTargetId(opp.id); setSelectedOpp(null); setActiveScreen('orgDashboard') }}
         onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('landing') }} />
     }
     if (selectedOrg) {
@@ -177,7 +179,7 @@ export default function App() {
       case 'impact':        return <Impact user={dbUser} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} onNavigate={setActiveScreen} />
       case 'admin':         return <Admin authUser={authUser} />
-      case 'orgDashboard':  return <OrgDashboard user={dbUser} />
+      case 'orgDashboard':  return <OrgDashboard user={dbUser} editTargetId={editTargetId} onConsumeEditTarget={() => setEditTargetId(null)} />
       case 'orgPost':       return <PostListingForm user={dbUser} onBack={() => navigate('orgDashboard')} />
       case 'privacy':
       case 'terms':

@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 import PostListingForm from './PostListingForm'
 
-export default function OrgDashboard({ user, onSignOut }) {
+export default function OrgDashboard({ user, onSignOut, editTargetId, onConsumeEditTarget }) {
   const [listings, setListings]       = useState([])
   const [loading, setLoading]         = useState(true)
   const [error, setError]             = useState('')
@@ -48,6 +48,15 @@ export default function OrgDashboard({ user, onSignOut }) {
   }
 
   useEffect(() => { fetchListings() }, [user.id])
+
+  useEffect(() => {
+    if (!editTargetId || listings.length === 0) return
+    const match = listings.find(l => String(l.id) === String(editTargetId))
+    if (match) {
+      setEditListing(match)
+      onConsumeEditTarget?.()
+    }
+  }, [editTargetId, listings, onConsumeEditTarget])
 
   if (showForm || editListing) {
     return <PostListingForm user={user} editListing={editListing} onBack={() => { setShowForm(false); setEditListing(null); fetchListings() }} />
