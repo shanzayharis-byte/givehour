@@ -89,26 +89,26 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
         {!loading && !error && (
           <>
             {/* hero */}
-            <div style={{ background: 'linear-gradient(150deg, #0E7A3C 0%, #18A050 55%, #25C068 100%)', padding: '28px 24px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
+            <div style={{ background: `linear-gradient(160deg, ${T.primaryLight} 0%, #FFFFFF 100%)`, padding: '28px 24px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle, ${T.primary}1A 1px, transparent 1px)`, backgroundSize: '28px 28px', opacity: 0.35 }} />
 
-              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 80, height: 80, borderRadius: '50%', background: org?.logo_url ? '#fff' : c.bg, color: c.fg, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 14, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', overflow: 'hidden' }}>
+              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 80, height: 80, borderRadius: '50%', background: org?.logo_url ? '#fff' : c.bg, color: c.fg, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 14, boxShadow: '0 6px 20px rgba(0,0,0,0.08)', overflow: 'hidden', border: `1px solid ${T.border}` }}>
                 {org?.logo_url
                   ? <img src={org.logo_url} alt={name} referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement.textContent = initials; e.currentTarget.parentElement.style.background = c.bg }} />
                   : initials}
               </div>
 
-              <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, margin: '0 0 10px', color: '#fff', position: 'relative', letterSpacing: '-0.02em' }}>{name}</h1>
+              <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, margin: '0 0 10px', color: T.text, position: 'relative', letterSpacing: '-0.02em' }}>{name}</h1>
 
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, position: 'relative' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fff', color: T.primary, fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, position: 'relative', border: `1px solid ${T.primary}33` }}>
                 ✓ Give Hour Partner
               </div>
 
               {(org?.region || org?.org_type) && (
                 <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 6, marginTop: 12, position: 'relative' }}>
-                  {org?.region && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.14)', padding: '4px 10px', borderRadius: 20 }}>📍 {org.region}</span>}
-                  {org?.org_type && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.14)', padding: '4px 10px', borderRadius: 20 }}>{org.org_type}</span>}
-                  {org?.is_501c3 === true && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.14)', padding: '4px 10px', borderRadius: 20 }}>501(c)(3)</span>}
+                  {org?.region && <span style={{ fontSize: 12, color: T.text, background: '#fff', border: `1px solid ${T.border}`, padding: '4px 10px', borderRadius: 20 }}>📍 {org.region}</span>}
+                  {org?.org_type && <span style={{ fontSize: 12, color: T.text, background: '#fff', border: `1px solid ${T.border}`, padding: '4px 10px', borderRadius: 20 }}>{org.org_type}</span>}
+                  {org?.is_501c3 === true && <span style={{ fontSize: 12, color: T.text, background: '#fff', border: `1px solid ${T.border}`, padding: '4px 10px', borderRadius: 20 }}>501(c)(3)</span>}
                 </div>
               )}
             </div>
