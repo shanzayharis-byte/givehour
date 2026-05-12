@@ -65,6 +65,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   const [orgWebsite, setOrgWebsite]     = useState('')
   const [orgLogoUrl, setOrgLogoUrl]     = useState('')
   const [orgLogoIconUrl, setOrgLogoIconUrl] = useState('')
+  const [orgDescription, setOrgDescription] = useState('')
   const [orgCauses, setOrgCauses]       = useState([])
   const [orgContactPhone, setOrgContactPhone] = useState('')
   const [orgIs501c3, setOrgIs501c3]           = useState(null)
@@ -122,7 +123,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   }
 
   const finishTeen = () => handleSignUp({ name, role: 'teen', grade, age, zip, school_name: school, region, interests, preferred_cause: interests[0] || null, parent_name: parentName.trim() || null, parent_email: parentEmail.trim() || null, parent_phone: parentPhone.trim() || null, parent_consent: parentConsent || null })
-  const finishOrg  = () => handleSignUp({ name: orgName, contact_name: name.trim() || null, contact_phone: orgContactPhone.trim() || null, role: 'org', org_type: orgType, is_501c3: orgIs501c3, website: orgWebsite || null, logo_url: orgLogoUrl.trim() || null, logo_icon_url: orgLogoIconUrl.trim() || null, school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
+  const finishOrg  = () => handleSignUp({ name: orgName, contact_name: name.trim() || null, contact_phone: orgContactPhone.trim() || null, role: 'org', org_type: orgType, is_501c3: orgIs501c3, website: orgWebsite || null, logo_url: orgLogoUrl.trim() || null, logo_icon_url: orgLogoIconUrl.trim() || null, description: orgDescription.trim() || null, school_name: orgName, region: orgCity, interests: orgCauses, preferred_cause: orgCauses[0] || null })
 
   const handleLogin = async () => {
     setLoading(true)
@@ -438,7 +439,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               )}
             </div>
 
-            <div style={{ marginBottom: 28 }}>
+            <div style={{ marginBottom: 16 }}>
               <label style={lbl}>Icon URL <span style={{ fontWeight: 400, textTransform: 'none' }}>(small square logo for listing cards, optional)</span></label>
               <input value={orgLogoIconUrl} onChange={e => setOrgLogoIconUrl(e.target.value)} style={inp} placeholder="https://yourorg.org/apple-touch-icon.png" />
               {orgLogoIconUrl && (
@@ -449,6 +450,11 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
                   <span style={{ fontSize: 11, color: T.textMuted }}>Listing card preview</span>
                 </div>
               )}
+            </div>
+
+            <div style={{ marginBottom: 28 }}>
+              <label style={lbl}>About your organization <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <textarea value={orgDescription} onChange={e => setOrgDescription(e.target.value)} placeholder="Tell teens about your mission, what you do, and how they can get involved." rows={5} style={{ ...inp, resize: 'vertical', minHeight: 100, lineHeight: 1.5 }} />
             </div>
 
             <button onClick={() => setScreen('step3')} disabled={!ready} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: ready ? 'pointer' : 'default', background: ready ? T.primary : T.border, color: ready ? '#fff' : T.textMuted, transition: 'background 0.2s' }}>Continue →</button>
