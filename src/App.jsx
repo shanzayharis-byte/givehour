@@ -196,7 +196,9 @@ export default function App() {
         {/* sidebar */}
         <div style={{ width: 220, background: T.card, borderRight: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <button onClick={() => navigate(isOrg ? 'orgDashboard' : 'feed')} style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', borderBottom: `1px solid ${T.border}`, cursor: 'pointer', textAlign: 'left', width: '100%' }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 52, height: 52, borderRadius: 14, objectFit: 'cover', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.12)' }} />
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.12)', flexShrink: 0, padding: 7, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+              </div>
             <div>
               <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Give Hour</div>
               <div style={{ fontSize: 11, color: T.textMuted }}>{isOrg ? 'Org Portal' : 'Teen Portal'}</div>
@@ -266,7 +268,9 @@ export default function App() {
           }}>
             {/* drawer header */}
             <div style={{ padding: '24px 20px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src="/logo.png" alt="Give Hour" style={{ width: 42, height: 42, borderRadius: 11, objectFit: 'cover', flexShrink: 0 }} />
+              <div style={{ width: 42, height: 42, borderRadius: 11, background: '#fff', flexShrink: 0, padding: 5, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+              </div>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Give Hour</div>
                 <div style={{ fontSize: 11, color: T.textMuted }}>{isOrg ? 'Org Portal' : 'Teen Portal'}</div>

@@ -33,7 +33,9 @@ const StepHeader = ({ step, total, title, onBack }) => (
       </div>
     </div>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4px 20px 16px', gap: 8 }}>
-      <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+      <div style={{ width: 64, height: 64, borderRadius: 18, background: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+      </div>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Step {step} of 3</div>
         <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>{title}</div>
@@ -181,8 +183,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
           {/* logo */}
-          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', background: '#fff', marginBottom: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', overflow: 'hidden' }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, objectFit: 'cover' }} />
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', background: '#fff', marginBottom: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', padding: 8 }}>
+            <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
           </div>
 
           <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.1, margin: '0 0 6px', color: '#fff', position: 'relative', letterSpacing: '-0.02em' }}>Give Hour</h1>
@@ -246,7 +248,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             <button onClick={() => setScreen('landing')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+            <div style={{ width: 64, height: 64, borderRadius: 18, background: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+      </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>Join Give Hour</div>
           </div>
         </div>
@@ -546,7 +550,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
     const isOrgSignup = role === 'org'
     return wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', height: isDesktop ? 'auto' : '100%', background: T.card, alignItems: 'center', justifyContent: 'center', padding: '40px 28px', textAlign: 'center' }}>
-        <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', marginBottom: 16 }} />
+        <div style={{ width: 64, height: 64, borderRadius: 18, background: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+          <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+        </div>
         <div style={{ width: 80, height: 80, borderRadius: '50%', background: isOrgSignup ? T.accentLight : T.primaryLight, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 38, marginBottom: 20 }}>📬</div>
         <div style={{ fontSize: 24, fontWeight: 800, color: T.text, marginBottom: 10, letterSpacing: '-0.02em' }}>
           {isOrgSignup ? 'One last step!' : 'Check your inbox!'}
@@ -576,7 +582,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             <button onClick={() => setScreen('login')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+            <div style={{ width: 64, height: 64, borderRadius: 18, background: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+      </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>Check your email</div>
           </div>
         </div>
@@ -604,7 +612,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             <button onClick={() => setScreen('landing')} style={{ background: T.bg, color: T.textSub, borderRadius: 8, width: 32, height: 32, fontSize: 16, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>←</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px 16px', gap: 8 }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: 64, height: 64, borderRadius: 18, objectFit: 'cover', boxShadow: '0 4px 14px rgba(0,0,0,0.12)' }} />
+            <div style={{ width: 64, height: 64, borderRadius: 18, background: '#fff', boxShadow: '0 4px 14px rgba(0,0,0,0.12)', padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+      </div>
             <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.01em' }}>Welcome back</div>
           </div>
         </div>
