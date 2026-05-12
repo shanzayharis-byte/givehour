@@ -1,6 +1,37 @@
 import { useState, useEffect } from 'react'
 import { T, CAUSE } from '../lib/theme'
 
+const AVATAR_PALETTE = [
+  { bg: '#E6F4EA', fg: '#0E7A3C' },
+  { bg: '#FEF0E7', fg: '#C45A1F' },
+  { bg: '#E8EFFC', fg: '#3458C3' },
+  { bg: '#FCE8F1', fg: '#B23170' },
+  { bg: '#F1E8FB', fg: '#6E3FB3' },
+  { bg: '#FFF4D9', fg: '#9C7400' },
+  { bg: '#E0F2F1', fg: '#0B7A75' },
+  { bg: '#FBE9E7', fg: '#B23A3A' },
+  { bg: '#E9F0E0', fg: '#5C7A2A' },
+  { bg: '#EAEAF4', fg: '#4A4A8A' },
+  { bg: '#FDEEDE', fg: '#A65A1F' },
+  { bg: '#E2F0E8', fg: '#2D6A4F' },
+]
+
+function avatarColor(name) {
+  let h = 0
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length]
+}
+
+function normalizeUrl(url) {
+  if (!url) return ''
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`
+}
+
+function displayUrl(url) {
+  if (!url) return ''
+  return url.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+}
+
 export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
   const [org, setOrg]           = useState(null)
   const [listings, setListings] = useState([])
@@ -26,21 +57,26 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
     load()
   }, [orgId])
 
+  const name = org?.name || orgName || 'Organization'
+  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
+  const c = avatarColor(name)
+  const causeCount = new Set(listings.map(l => l.cause).filter(Boolean)).size
+
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {/* sticky header — always visible, never scrolls away */}
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: T.bg }}>
+      {/* sticky back bar */}
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, position: 'sticky', top: 0, zIndex: 10 }}>
         <button onClick={onBack}
           style={{ background: T.primaryLight, color: T.primary, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 16, cursor: 'pointer', flexShrink: 0 }}>←</button>
-        <div style={{ fontSize: 17, fontWeight: 700, color: T.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {org?.name || orgName || 'Organization'}
+        <div style={{ fontSize: 14, fontWeight: 600, color: T.textSub, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Organization
         </div>
       </div>
 
       {/* scrollable body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
         {loading && (
-          <div style={{ textAlign: 'center', padding: 40, color: T.textMuted }}>Loading...</div>
+          <div style={{ textAlign: 'center', padding: 60, color: T.textMuted }}>Loading…</div>
         )}
 
         {error && !loading && (
@@ -52,49 +88,98 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
 
         {!loading && !error && (
           <>
-            {org && (
-              <div style={{ marginBottom: 16 }}>
-                <span style={{ display: 'inline-block', background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>✓ Give Hour Partner</span>
-              </div>
-            )}
+            {/* hero */}
+            <div style={{ background: 'linear-gradient(150deg, #0E7A3C 0%, #18A050 55%, #25C068 100%)', padding: '28px 24px 32px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
 
-            {(org?.region || org?.interests?.length > 0) && (
-              <div style={{ background: T.card, borderRadius: 14, padding: 16, marginBottom: 20, border: `1px solid ${T.border}` }}>
-                {org?.region && <div style={{ fontSize: 13, color: T.textMuted, marginBottom: org?.interests?.length ? 8 : 0 }}>{org.region}</div>}
-                {org?.interests?.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {org.interests.map(c => (
-                      <span key={c} style={{ background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20 }}>{c}</span>
-                    ))}
-                  </div>
-                )}
+              <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 80, height: 80, borderRadius: '50%', background: c.bg, color: c.fg, fontSize: 28, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 14, boxShadow: '0 6px 20px rgba(0,0,0,0.22)' }}>
+                {initials}
               </div>
-            )}
 
-            <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 12 }}>
-              Opportunities ({listings.length})
+              <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, margin: '0 0 10px', color: '#fff', position: 'relative', letterSpacing: '-0.02em' }}>{name}</h1>
+
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, position: 'relative' }}>
+                ✓ Give Hour Partner
+              </div>
+
+              {(org?.region || org?.org_type) && (
+                <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 6, marginTop: 12, position: 'relative' }}>
+                  {org?.region && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.14)', padding: '4px 10px', borderRadius: 20 }}>📍 {org.region}</span>}
+                  {org?.org_type && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.14)', padding: '4px 10px', borderRadius: 20 }}>{org.org_type}</span>}
+                  {org?.is_501c3 === true && <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.92)', background: 'rgba(255,255,255,0.14)', padding: '4px 10px', borderRadius: 20 }}>501(c)(3)</span>}
+                </div>
+              )}
             </div>
 
-            {listings.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 32, color: T.textMuted, fontSize: 14 }}>No active listings</div>
-            )}
+            {/* stats */}
+            <div style={{ display: 'flex', background: T.card, borderBottom: `1px solid ${T.border}` }}>
+              <div style={{ flex: 1, textAlign: 'center', padding: '14px 6px', borderRight: `1px solid ${T.border}` }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: T.primary }}>{listings.length}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>{listings.length === 1 ? 'opportunity' : 'opportunities'}</div>
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', padding: '14px 6px' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: T.primary }}>{causeCount}</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>{causeCount === 1 ? 'cause' : 'causes'}</div>
+              </div>
+            </div>
 
-            {listings.map(l => {
-              const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
-              return (
-                <button key={l.id}
-                  onClick={() => onSelectOpp({ ...l, org: org?.name || orgName, org_id: l.org_id || orgId })}
-                  style={{ width: '100%', textAlign: 'left', background: T.card, borderRadius: 14, padding: 16, marginBottom: 10, border: `1px solid ${T.border}`, cursor: 'pointer' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: T.text, flex: 1 }}>{l.title}</div>
-                    <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '3px 8px', borderRadius: 20, marginLeft: 8, whiteSpace: 'nowrap' }}>{l.cause}</span>
+            {/* body */}
+            <div style={{ padding: 20 }}>
+              {org?.interests?.length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Causes</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {org.interests.map(cause => {
+                      const s = CAUSE[cause] || { bg: T.primaryLight, text: T.primary }
+                      return (
+                        <span key={cause} style={{ background: s.bg, color: s.text, fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 20 }}>{cause}</span>
+                      )
+                    })}
                   </div>
-                  <div style={{ fontSize: 13, color: T.textMuted, marginTop: 6 }}>
-                    {l.remote ? 'Remote' : l.location} · {l.date || 'Flexible'}{l.hours ? ` · ${l.hours}h` : ''}
+                </div>
+              )}
+
+              {org?.website && (
+                <a href={normalizeUrl(org.website)} target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: '14px 16px', marginBottom: 20, textDecoration: 'none', cursor: 'pointer', transition: 'border-color 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = T.border }}
+                >
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>Website</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: T.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayUrl(org.website)}</div>
                   </div>
-                </button>
-              )
-            })}
+                  <span style={{ color: T.primary, fontSize: 18, fontWeight: 600, flexShrink: 0 }}>↗</span>
+                </a>
+              )}
+
+              <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>Opportunities ({listings.length})</div>
+
+              {listings.length === 0 && (
+                <div style={{ background: T.card, border: `1px dashed ${T.border}`, borderRadius: 14, padding: 32, textAlign: 'center', color: T.textMuted, fontSize: 14 }}>No active listings yet</div>
+              )}
+
+              {listings.map(l => {
+                const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
+                return (
+                  <button key={l.id}
+                    onClick={() => onSelectOpp({ ...l, org: name, org_id: l.org_id || orgId, externalUrl: l.external_url, source: l.source || 'org' })}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.06)' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+                    style={{ width: '100%', textAlign: 'left', background: T.card, borderRadius: 14, padding: 16, marginBottom: 10, border: `1px solid ${T.border}`, cursor: 'pointer', transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s', fontFamily: 'inherit' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: T.text, flex: 1, lineHeight: 1.35 }}>{l.title}</div>
+                      <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0 }}>{l.cause}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8, fontSize: 12, color: T.textMuted }}>
+                      {l.remote ? <span>💻 Remote</span> : l.location && <span>📍 {l.location}</span>}
+                      <span>📅 {l.date || 'Flexible'}</span>
+                      {l.hours && <span>⏱ {l.hours}h</span>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </>
         )}
       </div>
