@@ -177,6 +177,7 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
               </button>
             : <span>{opp.org}</span>
         )}
+        {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap', marginLeft: 6 }}>✓ Give Hour Partner</span>}
         {opp.date ? ` · ${opp.date}` : ''}
       </div>
       {applyButton}
@@ -186,7 +187,7 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
   const header = (
     <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '14px 40px' : '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
       <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '5px 11px', fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer' }}>←</button>
-      <div style={{ fontSize: 17, fontWeight: 600, color: T.text, flex: 1 }}>
+      <div style={{ fontSize: 17, fontWeight: 600, color: T.text, flex: 1, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
         {opp.org && (
           opp.org_id && onSelectOrg
             ? <button onClick={() => onSelectOrg(opp.org_id, opp.org)}
@@ -195,6 +196,7 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
               </button>
             : <span>{opp.org}</span>
         )}
+        {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
       </div>
       {!isGuest && (
         <div style={{ display: 'flex', gap: 8 }}>

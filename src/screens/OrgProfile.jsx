@@ -52,6 +52,12 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
 
         {!loading && !error && (
           <>
+            {org && (
+              <div style={{ marginBottom: 16 }}>
+                <span style={{ display: 'inline-block', background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>✓ Give Hour Partner</span>
+              </div>
+            )}
+
             {(org?.region || org?.interests?.length > 0) && (
               <div style={{ background: T.card, borderRadius: 14, padding: 16, marginBottom: 20, border: `1px solid ${T.border}` }}>
                 {org?.region && <div style={{ fontSize: 13, color: T.textMuted, marginBottom: org?.interests?.length ? 8 : 0 }}>{org.region}</div>}
