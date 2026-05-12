@@ -172,7 +172,7 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
                 const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
                 return (
                   <button key={l.id}
-                    onClick={() => onSelectOpp({ ...l, org: name, org_id: l.org_id || orgId, externalUrl: l.external_url, source: l.source || 'org' })}
+                    onClick={() => onSelectOpp({ ...l, org: name, org_id: l.org_id || orgId, externalUrl: l.external_url, source: l.source || 'org', org_logo_icon_url: org?.logo_icon_url || null, org_logo_url: org?.logo_url || null })}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.06)' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
                     style={{ width: '100%', textAlign: 'left', background: T.card, borderRadius: 14, padding: 16, marginBottom: 10, border: `1px solid ${T.border}`, cursor: 'pointer', transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s', fontFamily: 'inherit' }}>

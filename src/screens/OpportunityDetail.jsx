@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
+const CAUSE_EMOJI = { Education: '📚', Environment: '🌿', Animals: '🐾', 'Food Security': '🍎', Health: '❤️', Housing: '🏠', Arts: '🎨', Seniors: '🤝' }
+
 export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp, onSelectOrg }) {
   const [saved, setSaved]       = useState(false)
   const [loading, setLoading]   = useState(false)
@@ -82,128 +84,138 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
   }
 
   const cause       = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
+  const causeEmoji  = CAUSE_EMOJI[opp.cause] || '✨'
   const matchScore  = opp.score ?? null
   const externalUrl = opp.externalUrl || opp.external_url
   const skills      = opp.skills?.length > 0 ? opp.skills : null
+  const orgLogo     = opp.org_logo_icon_url || opp.org_logo_url || null
 
-  const infoItems = [
-    opp.date     && ['📅', 'DATE', opp.date],
-    opp.hours    && ['⏱', 'DURATION', opp.hours],
-    opp.location && ['📍', 'LOCATION', opp.location],
-    opp.remote   && ['💻', 'FORMAT', 'Remote / Online'],
+  const factChips = [
+    opp.date     && ['📅', opp.date],
+    opp.hours    && ['⏱', `${opp.hours}${typeof opp.hours === 'number' || /^\d+$/.test(String(opp.hours)) ? ' hours' : ''}`],
+    opp.location && !opp.remote && ['📍', opp.location],
+    opp.remote   && ['💻', 'Remote / Online'],
   ].filter(Boolean)
 
-  const infoGrid = infoItems.length > 0 && (
-    <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(4,1fr)' : 'repeat(2,1fr)', gap: 10, margin: '20px 0' }}>
-      {infoItems.map(([icon, label, val]) => (
-        <div key={label} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: 12 }}>
-          <div style={{ fontSize: 16, marginBottom: 4 }}>{icon}</div>
-          <div style={{ fontSize: 10, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>{label}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{val}</div>
-        </div>
-      ))}
+  const orgPill = opp.org && (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.85)', border: `1px solid ${T.border}`, borderRadius: 24, padding: '4px 12px 4px 4px', maxWidth: '100%', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#fff', border: `1px solid ${T.border}`, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {orgLogo
+          ? <img src={orgLogo} alt="" referrerPolicy="no-referrer" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+          : <span style={{ fontSize: 12, fontWeight: 800, color: cause.text }}>{(opp.org || '?').slice(0, 1).toUpperCase()}</span>
+        }
+      </div>
+      {opp.org_id && onSelectOrg ? (
+        <button onClick={() => onSelectOrg(opp.org_id, opp.org)}
+          style={{ background: 'none', border: 'none', padding: 0, color: T.text, fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>
+          {opp.org}
+        </button>
+      ) : (
+        <span style={{ fontSize: 13, fontWeight: 700, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>{opp.org}</span>
+      )}
+      {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>✓ Give Hour Partner</span>}
     </div>
   )
 
-  const aboutCard = opp.description && (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 8 }}>About this opportunity</div>
-      <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.7 }}>{opp.description}</div>
+  const hero = (
+    <div style={{ background: `linear-gradient(160deg, ${cause.bg} 0%, #FFFFFF 100%)`, padding: isDesktop ? '32px 40px 36px' : '24px 20px 28px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: -40, right: -30, fontSize: 200, opacity: 0.06, pointerEvents: 'none', userSelect: 'none' }}>{causeEmoji}</div>
+
+      <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginBottom: 14 }}>
+        {orgPill}
+        {matchScore !== null && (
+          <span style={{ fontSize: 11, background: matchScore >= 85 ? T.primaryLight : 'rgba(255,255,255,0.85)', color: matchScore >= 85 ? T.primary : T.textSub, border: `1px solid ${matchScore >= 85 ? T.primary : T.border}`, borderRadius: 20, padding: '4px 10px', fontWeight: 700 }}>
+            ⭐ {matchScore}% match
+          </span>
+        )}
+      </div>
+
+      <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6, background: cause.bg, color: cause.text, fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, marginBottom: 12, border: `1px solid ${cause.text}22` }}>
+        <span>{causeEmoji}</span>
+        <span>{opp.cause || 'Volunteer'}</span>
+      </div>
+
+      <h1 style={{ position: 'relative', fontSize: isDesktop ? 32 : 26, fontWeight: 800, color: T.text, margin: '0 0 16px', lineHeight: 1.15, letterSpacing: '-0.02em' }}>{opp.title}</h1>
+
+      {factChips.length > 0 && (
+        <div style={{ position: 'relative', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {factChips.map(([icon, val]) => (
+            <span key={val} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.85)', border: `1px solid ${T.border}`, borderRadius: 20, padding: '5px 12px', fontSize: 13, color: T.text, fontWeight: 500 }}>
+              <span style={{ fontSize: 13 }}>{icon}</span>
+              {val}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+
+  const aboutCard = (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>About this opportunity</div>
+      <div style={{ fontSize: 15, color: T.text, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+        {opp.description || <span style={{ color: T.textMuted, fontStyle: 'italic' }}>The organization hasn't added a description yet. Reach out to learn more.</span>}
+      </div>
     </div>
   )
 
   const skillsCard = skills && (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 16, marginBottom: 14 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 8 }}>Skills you'll build</div>
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>Skills you'll build</div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {skills.map(s => (
-          <span key={s} style={{ background: T.primaryLight, color: '#0A6830', fontSize: 12, padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>{s}</span>
+          <span key={s} style={{ background: T.primaryLight, color: T.primaryDark, fontSize: 13, padding: '6px 12px', borderRadius: 20, fontWeight: 600 }}>{s}</span>
         ))}
       </div>
     </div>
   )
 
   const applyButton = isGuest ? (
-    <div style={{ background: T.primaryLight, borderRadius: 14, padding: 16, textAlign: 'center' }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>Sign up to apply</div>
-      <button onClick={onSignUp} style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>Create account</button>
+    <div style={{ background: T.primaryLight, borderRadius: 14, padding: 18, textAlign: 'center', border: `1px solid ${T.primary}33` }}>
+      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Sign up to apply</div>
+      <button onClick={onSignUp} style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 12, padding: '12px 22px', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%', boxShadow: '0 4px 14px rgba(24,160,80,0.25)' }}>Create account</button>
     </div>
   ) : externalUrl ? (
     <button onClick={handleApply}
-      style={{ width: '100%', padding: 16, borderRadius: 12, border: 'none', background: T.primary, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+      style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', background: T.primary, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)' }}>
       Apply on {opp.org ? `${opp.org}'s website` : 'website'} →
     </button>
   ) : opp.org_id ? (
     applyStep === 'done' ? (
-      <div style={{ background: T.primaryLight, borderRadius: 14, padding: 16, textAlign: 'center' }}>
-        <div style={{ fontSize: 20, marginBottom: 6 }}>✅</div>
-        <div style={{ fontWeight: 700, color: T.text }}>Application sent!</div>
-        <div style={{ fontSize: 13, color: T.textMuted, marginTop: 4 }}>The org will be in touch. Check "My Applications" in your Profile.</div>
+      <div style={{ background: T.primaryLight, borderRadius: 14, padding: 20, textAlign: 'center', border: `1px solid ${T.primary}33` }}>
+        <div style={{ fontSize: 28, marginBottom: 6 }}>✅</div>
+        <div style={{ fontWeight: 700, color: T.text, fontSize: 15 }}>Application sent!</div>
+        <div style={{ fontSize: 13, color: T.textMuted, marginTop: 6 }}>The org will be in touch. Check "My Applications" in your Profile.</div>
       </div>
     ) : applyStep === 'form' || applyStep === 'sending' ? (
-      <div style={{ background: T.card, borderRadius: 14, padding: 16, border: `1px solid ${T.border}` }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Why do you want to help? (optional)</div>
+      <div style={{ background: T.card, borderRadius: 14, padding: 18, border: `1px solid ${T.border}` }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 10 }}>Why do you want to help? <span style={{ fontWeight: 400, color: T.textMuted }}>(optional)</span></div>
         <textarea value={appMessage} onChange={e => setAppMessage(e.target.value)}
           placeholder="Tell them a bit about yourself..."
-          rows={3}
-          style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', background: T.bg, resize: 'none', marginBottom: 12 }} />
+          rows={4}
+          style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box', background: T.bg, resize: 'none', marginBottom: 12, lineHeight: 1.5 }} />
         <button onClick={handleApplyLocal} disabled={applyStep === 'sending'}
-          style={{ width: '100%', padding: 14, background: applyStep === 'sending' ? '#B8D8C8' : T.primary, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: applyStep === 'sending' ? 'default' : 'pointer' }}>
-          {applyStep === 'sending' ? 'Sending...' : 'Send Application'}
+          style={{ width: '100%', padding: 14, background: applyStep === 'sending' ? '#B8D8C8' : T.primary, color: '#fff', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: applyStep === 'sending' ? 'default' : 'pointer' }}>
+          {applyStep === 'sending' ? 'Sending…' : 'Send Application'}
         </button>
       </div>
     ) : (
       <button onClick={() => setApplyStep('form')}
-        style={{ width: '100%', padding: 16, borderRadius: 12, border: 'none', background: T.primary, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+        style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', background: T.primary, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)' }}>
         Apply on Give Hour
       </button>
     )
   ) : null
 
-  const sidePanel = (
-    <div style={{ position: 'sticky', top: 24, background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 24, alignSelf: 'start' }}>
-      {matchScore !== null && (
-        <span style={{ fontSize: 11, background: matchScore >= 85 ? T.primaryLight : '#F2F2F2', color: matchScore >= 85 ? T.primary : T.textMuted, borderRadius: 20, padding: '3px 8px', fontWeight: 600 }}>
-          {matchScore}% match for you
-        </span>
-      )}
-      <div style={{ fontSize: 17, fontWeight: 700, color: T.text, margin: '10px 0 4px' }}>{opp.title}</div>
-      <div style={{ fontSize: 13, color: T.textMuted, marginBottom: 20 }}>
-        {opp.org && (
-          opp.org_id && onSelectOrg
-            ? <button onClick={() => onSelectOrg(opp.org_id, opp.org)}
-                style={{ background: 'none', border: 'none', padding: 0, color: T.primary, fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>
-                {opp.org}
-              </button>
-            : <span>{opp.org}</span>
-        )}
-        {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap', marginLeft: 6 }}>✓ Give Hour Partner</span>}
-        {opp.date ? ` · ${opp.date}` : ''}
-      </div>
-      {applyButton}
-    </div>
-  )
-
-  const header = (
-    <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '14px 40px' : '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-      <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '5px 11px', fontSize: 15, fontWeight: 600, border: 'none', cursor: 'pointer' }}>←</button>
-      <div style={{ fontSize: 17, fontWeight: 600, color: T.text, flex: 1, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
-        {opp.org && (
-          opp.org_id && onSelectOrg
-            ? <button onClick={() => onSelectOrg(opp.org_id, opp.org)}
-                style={{ background: 'none', border: 'none', padding: 0, color: T.primary, fontWeight: 600, cursor: 'pointer', fontSize: 'inherit', textDecoration: 'underline' }}>
-                {opp.org}
-              </button>
-            : <span>{opp.org}</span>
-        )}
-        {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}
-      </div>
+  const topBar = (
+    <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '12px 40px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
+      <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '6px 12px', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>←</button>
       {!isGuest && (
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleSave} disabled={loading} style={{ background: saved ? T.primaryLight : T.bg, border: `1px solid ${saved ? T.primary : T.border}`, color: saved ? T.primary : T.textSub, borderRadius: 8, padding: '5px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={handleSave} disabled={loading} style={{ background: saved ? T.primaryLight : T.bg, border: `1px solid ${saved ? T.primary : T.border}`, color: saved ? T.primary : T.textSub, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {saved ? '✓ Saved' : '🔖 Save'}
           </button>
-          <button onClick={handleShare} style={{ background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, borderRadius: 8, padding: '5px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={handleShare} style={{ background: T.bg, border: `1px solid ${T.border}`, color: T.textSub, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             {shared ? '✓ Copied!' : '↗ Share'}
           </button>
         </div>
@@ -214,16 +226,16 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
   if (isDesktop) {
     return (
       <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
-        {header}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, padding: '32px 40px' }}>
+        {topBar}
+        {hero}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28, padding: '24px 40px 40px' }}>
           <div>
-            <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500, display: 'inline-block', marginBottom: 8 }}>{opp.cause}</span>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text, margin: '8px 0' }}>{opp.title}</h1>
-            {infoGrid}
             {aboutCard}
             {skillsCard}
           </div>
-          {sidePanel}
+          <div style={{ position: 'sticky', top: 80, alignSelf: 'start' }}>
+            {applyButton}
+          </div>
         </div>
       </div>
     )
@@ -231,12 +243,9 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
-      {header}
+      {topBar}
+      {hero}
       <div style={{ padding: 20 }}>
-        <span style={{ fontSize: 11, padding: '3px 9px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500, display: 'inline-block', marginBottom: 8 }}>{opp.cause}</span>
-        {matchScore !== null && <span style={{ marginLeft: 8, fontSize: 11, background: matchScore >= 85 ? T.primaryLight : '#F2F2F2', color: matchScore >= 85 ? T.primary : T.textMuted, borderRadius: 20, padding: '3px 8px', fontWeight: 600 }}>{matchScore}% match</span>}
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: T.text, margin: '8px 0' }}>{opp.title}</h1>
-        {infoGrid}
         {aboutCard}
         {skillsCard}
         {applyButton}
