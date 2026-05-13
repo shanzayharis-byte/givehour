@@ -174,7 +174,7 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
       {opps.length > 0 && (
         <div style={{ padding: isDesktop ? '20px 40px 0' : '14px 20px 0' }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <div style={{ flex: 1, display: 'flex', gap: 10, background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', alignItems: 'center' }}>
+            <div style={{ flex: 1, display: 'flex', gap: 10, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', alignItems: 'center' }}>
               <span style={{ fontSize: 16, color: T.textMuted }}>🔍</span>
               <input
                 value={search}
