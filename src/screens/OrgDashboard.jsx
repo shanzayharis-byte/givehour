@@ -3,6 +3,18 @@ import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 import PostListingForm from './PostListingForm'
 
+const AVATAR_PALETTE = [
+  { bg: '#E6F4EA', fg: '#0E7A3C' }, { bg: '#FEF0E7', fg: '#C45A1F' },
+  { bg: '#E8EFFC', fg: '#3458C3' }, { bg: '#FCE8F1', fg: '#B23170' },
+  { bg: '#F1E8FB', fg: '#6E3FB3' }, { bg: '#FFF4D9', fg: '#9C7400' },
+  { bg: '#E0F2F1', fg: '#0B7A75' }, { bg: '#FBE9E7', fg: '#B23A3A' },
+]
+function avatarColor(name) {
+  let h = 0
+  for (let i = 0; i < (name || '').length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0
+  return AVATAR_PALETTE[h % AVATAR_PALETTE.length]
+}
+
 function isUpcoming(dateStr) {
   if (!dateStr) return false
   return new Date(dateStr) >= new Date()
@@ -69,33 +81,41 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, 
 
   const causeSet      = new Set(listings.map(l => l.cause).filter(Boolean))
   const upcomingCount = listings.filter(l => isUpcoming(l.date)).length
-  const pad           = isDesktop ? '24px 40px' : '20px 20px'
-  const padR          = isDesktop ? 40 : 72
+  const ac            = avatarColor(user.name || '')
+  const logoUrl       = user.logo_icon_url || user.logo_url || null
+  const initials      = (user.name || 'O').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase()
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
 
-      {/* green gradient header */}
+      {/* soft hero header */}
       <div style={{
-        background: `linear-gradient(135deg, ${T.primaryDark} 0%, ${T.primary} 100%)`,
-        padding: pad,
-        paddingRight: padR,
-        paddingBottom: 20,
+        background: `linear-gradient(160deg, ${T.primaryLight} 0%, #FFFFFF 100%)`,
+        padding: isDesktop ? '28px 40px 20px' : '22px 20px 20px',
+        paddingRight: isDesktop ? 40 : 72,
+        position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* subtle dot pattern */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle, ${T.primary}1A 1px, transparent 1px)`, backgroundSize: '28px 28px', opacity: 0.35, pointerEvents: 'none' }} />
+
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* org logo / initials avatar */}
             <div style={{
-              width: 50, height: 50, borderRadius: 14, flexShrink: 0,
-              background: 'rgba(255,255,255,0.2)',
-              border: '2px solid rgba(255,255,255,0.35)',
-              color: '#fff', fontSize: 22, fontWeight: 800,
+              width: 56, height: 56, borderRadius: 14, flexShrink: 0,
+              background: logoUrl ? '#fff' : ac.bg,
+              border: `1px solid ${T.border}`,
+              boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden',
             }}>
-              {(user.name || 'O')[0].toUpperCase()}
+              {logoUrl
+                ? <img src={logoUrl} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8, boxSizing: 'border-box' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                : <span style={{ fontSize: 20, fontWeight: 800, color: ac.fg }}>{initials}</span>}
             </div>
             <div>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>{user.name}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)', marginTop: 3 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: T.text, lineHeight: 1.2 }}>{user.name}</div>
+              <div style={{ fontSize: 13, color: T.textMuted, marginTop: 3 }}>
                 {user.org_type || 'Organization'}{user.region ? ` · ${user.region}` : ''}
               </div>
             </div>
@@ -103,9 +123,9 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, 
           <button
             onClick={() => setShowForm(true)}
             style={{
-              background: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px',
-              fontSize: 13, fontWeight: 700, color: T.primary, cursor: 'pointer',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.18)', flexShrink: 0,
+              background: T.primary, border: 'none', borderRadius: 10, padding: '10px 18px',
+              fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer',
+              boxShadow: '0 2px 10px rgba(24,160,80,0.25)', flexShrink: 0,
             }}
           >
             + New listing
@@ -113,19 +133,19 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, 
         </div>
 
         {/* stat chips */}
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ position: 'relative', display: 'flex', gap: 8 }}>
           {[
             { val: listings.length, lbl: listings.length === 1 ? 'listing' : 'listings' },
             { val: causeSet.size,   lbl: causeSet.size === 1 ? 'cause' : 'causes' },
             { val: upcomingCount,   lbl: 'upcoming' },
           ].map(({ val, lbl }) => (
             <div key={lbl} style={{
-              background: 'rgba(255,255,255,0.18)',
-              border: '1px solid rgba(255,255,255,0.28)',
+              background: '#fff', border: `1px solid ${T.border}`,
               borderRadius: 10, padding: '10px 16px', textAlign: 'center', minWidth: 68,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
             }}>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{val}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.72)' }}>{lbl}</div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: T.primary }}>{val}</div>
+              <div style={{ fontSize: 11, color: T.textMuted }}>{lbl}</div>
             </div>
           ))}
         </div>
