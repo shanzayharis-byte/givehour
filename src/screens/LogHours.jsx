@@ -1,18 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import { T } from '../lib/theme'
 
 const CATEGORIES = ['Community', 'Sr. Community', 'Fund Raising', 'Environmental', 'Educational', 'Religious', 'Healthcare', 'Arts', 'Others']
-
-const BADGES = [
-  { icon: '🌱', label: 'First Step',      threshold: 1 },
-  { icon: '👟', label: 'Getting Started', threshold: 5 },
-  { icon: '🔥', label: 'On Fire',         threshold: 10 },
-  { icon: '⭐', label: 'Committed',       threshold: 25 },
-  { icon: '💯', label: 'Century Club',    threshold: 50 },
-  { icon: '🚀', label: 'Superstar',       threshold: 100 },
-  { icon: '🏆', label: 'Legend',          threshold: 250 },
-]
 
 function calcHours(start, end) {
   if (!start || !end) return ''
@@ -36,26 +26,16 @@ const EMPTY = { org: '', date: '', category: '', startTime: '', endTime: '', hou
 
 export default function LogHours({ user }) {
   const [history, setHistory]       = useState([])
-  const [totalHours, setTotalHours] = useState(0)
   const [form, setForm]             = useState(EMPTY)
   const [editEntry, setEditEntry]   = useState(null)
-  const [showModal, setShowModal]   = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting]     = useState(false)
   const [submitted, setSubmitted]   = useState(false)
   const [loading, setLoading]       = useState(true)
   const [isDesktop, setIsDesktop]   = useState(window.innerWidth >= 1024)
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const [hoursGoal, setHoursGoal]   = useState(null)
-  const [editingGoal, setEditingGoal] = useState(false)
-  const [goalInput, setGoalInput]   = useState('')
   const [expandedOrgs, setExpandedOrgs] = useState(new Set())
-
-  const toggleOrg = (key) => setExpandedOrgs(prev => {
-    const next = new Set(prev)
-    next.has(key) ? next.delete(key) : next.add(key)
-    return next
-  })
+  const formRef = useRef(null)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -66,36 +46,14 @@ export default function LogHours({ user }) {
   const loadHistory = async () => {
     try {
       const { data } = await supabase.from('hours_log').select('*').eq('user_id', user?.id).order('logged_at', { ascending: false })
-      const rows = data || []
-      setHistory(rows)
-      setTotalHours(rows.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0))
+      setHistory(data || [])
     } catch (e) { console.error(e) }
   }
 
   useEffect(() => {
-    async function load() {
-      await loadHistory()
-      try {
-        const { data: prof } = await supabase.from('users').select('hours_goal').eq('id', user?.id).maybeSingle()
-        if (prof?.hours_goal) {
-          setHoursGoal(prof.hours_goal)
-          setGoalInput(String(prof.hours_goal))
-        }
-      } catch (e) { console.error(e) }
-      setLoading(false)
-    }
+    async function load() { await loadHistory(); setLoading(false) }
     load()
   }, [user])
-
-  const saveGoal = async () => {
-    const g = parseFloat(goalInput)
-    if (!g || g <= 0) return
-    try {
-      await supabase.from('users').update({ hours_goal: g }).eq('id', user?.id)
-      setHoursGoal(g)
-      setEditingGoal(false)
-    } catch (e) { console.error(e) }
-  }
 
   const setField = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -119,14 +77,10 @@ export default function LogHours({ user }) {
       location:  r.location || '',
       notes:     r.notes || '',
     })
-    setShowModal(true)
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const closeModal = () => {
-    setShowModal(false)
-    setEditEntry(null)
-    setForm(EMPTY)
-  }
+  const cancelEdit = () => { setEditEntry(null); setForm(EMPTY) }
 
   const handleDelete = async (id) => {
     setDeleting(true)
@@ -161,9 +115,15 @@ export default function LogHours({ user }) {
       }
       setSubmitted(true)
       await loadHistory()
-      setTimeout(() => { setSubmitted(false); closeModal() }, 1200)
+      setTimeout(() => { setSubmitted(false); setEditEntry(null); setForm(EMPTY) }, 1200)
     } catch (e) { console.error('[submit]', e) }
   }
+
+  const toggleOrg = (key) => setExpandedOrgs(prev => {
+    const next = new Set(prev)
+    next.has(key) ? next.delete(key) : next.add(key)
+    return next
+  })
 
   const pastOrgs    = [...new Set(history.map(r => r.org).filter(Boolean))]
   const suggestions = form.org
@@ -174,116 +134,34 @@ export default function LogHours({ user }) {
   const lbl  = { fontSize: 11, fontWeight: 600, color: T.textSub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 5, display: 'block' }
   const ready = form.hours && parseFloat(form.hours) > 0
 
-  // goal + progress section
-  const pct = hoursGoal ? Math.min(100, Math.round((totalHours / hoursGoal) * 100)) : 0
-  const earnedBadges = BADGES.filter(b => totalHours >= b.threshold)
-  const nextBadge    = BADGES.find(b => totalHours < b.threshold)
+  // group history by org
+  const grouped = []
+  const seenOrgs = {}
+  for (const r of history) {
+    const key = r.org || 'Independent'
+    if (seenOrgs[key] == null) { seenOrgs[key] = grouped.length; grouped.push({ key, rows: [] }) }
+    grouped[seenOrgs[key]].rows.push(r)
+  }
 
-  const goalSection = (
-    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14 }}>
-      {/* goal header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hoursGoal ? 12 : 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>🎯 Hours Goal</div>
-        {!editingGoal && (
-          <button
-            onClick={() => { setEditingGoal(true); setGoalInput(hoursGoal ? String(hoursGoal) : '') }}
-            style={{ background: T.primaryLight, border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>
-            {hoursGoal ? '✏️ Edit' : '+ Set goal'}
-          </button>
-        )}
+  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 16, color: T.textMuted }}>Loading...</div>
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px' }}>
+        <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Log Hours</div>
+        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Track your volunteer time</div>
       </div>
 
-      {/* inline goal editor */}
-      {editingGoal && (
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
-          <input
-            type="number" min="1" step="1" value={goalInput}
-            onChange={e => setGoalInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && saveGoal()}
-            placeholder="e.g. 50"
-            autoFocus
-            style={{ ...inp, width: 110, flexShrink: 0 }}
-          />
-          <span style={{ fontSize: 13, color: T.textSub, flexShrink: 0 }}>hours</span>
-          <button onClick={saveGoal} style={{ background: T.primary, border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}>Save</button>
-          <button onClick={() => setEditingGoal(false)} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', flexShrink: 0 }}>Cancel</button>
-        </div>
-      )}
+      <div style={{ padding: isDesktop ? '28px 40px' : '16px 20px', maxWidth: isDesktop ? 700 : 'none', margin: '0 auto' }}>
 
-      {/* progress bar */}
-      {hoursGoal && !editingGoal && (
-        <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
-            <span style={{ fontSize: 13, color: T.textSub }}>{fmtHours(totalHours) || '0h'} of {hoursGoal}h goal</span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: pct >= 100 ? T.primary : T.text }}>{pct}%</span>
-          </div>
-          <div style={{ height: 10, background: '#E8EAED', borderRadius: 20, overflow: 'hidden' }}>
-            <div style={{
-              height: '100%',
-              width: `${pct}%`,
-              background: pct >= 100 ? T.primary : `linear-gradient(90deg, #18A050, #34C97A)`,
-              borderRadius: 20,
-              transition: 'width 0.5s ease',
-            }} />
-          </div>
-          {pct >= 100 && <div style={{ marginTop: 7, fontSize: 12, color: T.primary, fontWeight: 600 }}>🎉 Goal reached! Keep going!</div>}
-          {nextBadge && pct < 100 && (
-            <div style={{ marginTop: 6, fontSize: 11, color: T.textMuted }}>Next badge: {nextBadge.icon} {nextBadge.label} at {nextBadge.threshold}h</div>
-          )}
-        </>
-      )}
-    </div>
-  )
-
-  // badges section
-  const badgesSection = (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 10 }}>🏅 Badges</div>
-      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-        {BADGES.map(b => {
-          const earned = totalHours >= b.threshold
-          return (
-            <div key={b.label} style={{
-              flexShrink: 0,
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
-              background: earned ? T.primaryLight : '#F4F6F8',
-              border: `1.5px solid ${earned ? T.primary : '#DCE0E5'}`,
-              borderRadius: 12, padding: '12px 14px', minWidth: 70,
-              opacity: earned ? 1 : 0.5,
-            }}>
-              <span style={{ fontSize: 24, filter: earned ? 'none' : 'grayscale(1)' }}>{b.icon}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, color: earned ? T.primary : T.textMuted, textAlign: 'center', lineHeight: 1.3 }}>{b.label}</span>
-              <span style={{ fontSize: 9, color: earned ? T.primary : T.textMuted }}>{b.threshold}h</span>
+        {/* inline form */}
+        <div ref={formRef} style={{ background: T.card, border: `1.5px solid ${editEntry ? T.primary : T.border}`, borderRadius: 14, padding: '18px 20px', marginBottom: 24 }}>
+          {editEntry && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: T.primaryLight, borderRadius: 8, padding: '8px 12px', marginBottom: 14 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.primary }}>✏️ Editing: {editEntry.org || 'Independent'}</span>
+              <button onClick={cancelEdit} style={{ background: 'none', border: 'none', fontSize: 12, color: T.primary, cursor: 'pointer', fontWeight: 600 }}>Cancel</button>
             </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-
-  const modal = showModal && (
-    <>
-      <div onClick={closeModal} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 500 }} />
-      <div style={{
-        position: 'fixed',
-        ...(isDesktop
-          ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 520, maxHeight: '88vh', borderRadius: 18 }
-          : { bottom: 0, left: 0, right: 0, maxHeight: '92vh', borderRadius: '18px 18px 0 0' }),
-        background: '#fff',
-        zIndex: 501,
-        display: 'flex',
-        flexDirection: 'column',
-        boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
-        overflow: 'hidden',
-      }}>
-        {/* modal header */}
-        <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{editEntry ? 'Edit entry' : 'Log hours'}</div>
-          <button onClick={closeModal} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-        </div>
-
-        {/* scrollable form */}
-        <div style={{ overflowY: 'auto', padding: '16px 20px 20px', flex: 1 }}>
+          )}
 
           {/* Category */}
           <div style={{ marginBottom: 14 }}>
@@ -321,179 +199,110 @@ export default function LogHours({ user }) {
             )}
           </div>
 
-          {/* Date */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={lbl}>Date</label>
-            <input type="date" value={form.date} onChange={e => setField('date', e.target.value)} style={{ ...inp, fontSize: 15 }} />
-          </div>
-
-          {/* Start / End time */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+          {/* Date / Start / End — 3 cols on desktop, stacked on mobile */}
+          <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr 1fr' : '1fr', gap: 12, marginBottom: 14 }}>
             <div>
-              <label style={lbl}>Start Time <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <label style={lbl}>Date</label>
+              <input type="date" value={form.date} onChange={e => setField('date', e.target.value)} style={{ ...inp, fontSize: 15 }} />
+            </div>
+            <div>
+              <label style={lbl}>Start Time <span style={{ fontWeight: 400, textTransform: 'none' }}>(opt.)</span></label>
               <input type="time" value={form.startTime} onChange={e => handleTimeChange('startTime', e.target.value)} style={{ ...inp, fontSize: 15 }} />
             </div>
             <div>
-              <label style={lbl}>End Time <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <label style={lbl}>End Time <span style={{ fontWeight: 400, textTransform: 'none' }}>(opt.)</span></label>
               <input type="time" value={form.endTime} onChange={e => handleTimeChange('endTime', e.target.value)} style={{ ...inp, fontSize: 15 }} />
             </div>
           </div>
 
-          {/* Hours */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={lbl}>Hours {form.startTime && form.endTime && <span style={{ fontWeight: 400, textTransform: 'none', color: T.primary }}>(auto-calculated)</span>}</label>
-            <input type="number" min="0.1" step="0.25" value={form.hours} onChange={e => setField('hours', e.target.value)} style={{ ...inp, fontSize: 15 }} placeholder="e.g. 2.5" />
-          </div>
-
-          {/* Location */}
-          <div style={{ marginBottom: 14 }}>
-            <label style={lbl}>Location <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
-            <input value={form.location} onChange={e => setField('location', e.target.value)} style={inp} placeholder="e.g. Oakland, CA" />
+          {/* Hours / Location */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 12, marginBottom: 14 }}>
+            <div>
+              <label style={lbl}>Hours {form.startTime && form.endTime && <span style={{ fontWeight: 400, textTransform: 'none', color: T.primary }}>(auto)</span>}</label>
+              <input type="number" min="0.1" step="0.25" value={form.hours} onChange={e => setField('hours', e.target.value)} style={{ ...inp, fontSize: 15 }} placeholder="e.g. 2.5" />
+            </div>
+            <div>
+              <label style={lbl}>Location <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+              <input value={form.location} onChange={e => setField('location', e.target.value)} style={inp} placeholder="e.g. Oakland, CA" />
+            </div>
           </div>
 
           {/* Activity */}
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 16 }}>
             <label style={lbl}>Activity <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
-            <textarea rows={3} value={form.notes} onChange={e => setField('notes', e.target.value)} style={{ ...inp, resize: 'vertical' }} placeholder="What did you do?" />
+            <textarea rows={2} value={form.notes} onChange={e => setField('notes', e.target.value)} style={{ ...inp, resize: 'vertical' }} placeholder="What did you do?" />
           </div>
 
           <button onClick={handleSubmit} disabled={!ready}
             style={{ width: '100%', padding: 13, borderRadius: 10, border: submitted ? `2px solid ${T.primary}` : 'none', background: submitted ? T.primaryLight : (!ready ? '#B8D8C8' : T.primary), color: submitted ? T.primary : '#fff', fontSize: 14, fontWeight: 700, cursor: ready ? 'pointer' : 'default' }}>
-            {submitted ? '✓ Saved!' : editEntry ? 'Save Changes' : 'Submit Hours'}
+            {submitted ? '✓ Saved!' : editEntry ? 'Save Changes' : 'Log Hours'}
           </button>
         </div>
-      </div>
-    </>
-  )
 
-  // group history by org
-  const grouped = []
-  const seenOrgs = {}
-  for (const r of history) {
-    const key = r.org || 'Independent'
-    if (seenOrgs[key] == null) {
-      seenOrgs[key] = grouped.length
-      grouped.push({ key, rows: [] })
-    }
-    grouped[seenOrgs[key]].rows.push(r)
-  }
-
-  const historySection = (
-    <div>
-      {history.length === 0 ? (
-        <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 32, textAlign: 'center' }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>⏱</div>
-          <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 4 }}>No hours logged yet</div>
-          <div style={{ fontSize: 12, color: T.textMuted }}>Tap the button above to log your first session.</div>
-        </div>
-      ) : grouped.map(({ key, rows: entries }) => {
-        const expanded   = expandedOrgs.has(key)
-        const groupHours = entries.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0)
-        const categories = [...new Set(entries.map(r => r.category).filter(Boolean))]
-
-        return (
-          <div key={key} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 10, overflow: 'hidden' }}>
-            {/* group header — click to expand */}
-            <div
-              onClick={() => toggleOrg(key)}
-              style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-              onMouseEnter={e => e.currentTarget.style.background = T.bg}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>{key}</div>
-                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                  {categories.map(c => (
-                    <span key={c} style={{ fontSize: 10, fontWeight: 700, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '2px 8px' }}>{c}</span>
-                  ))}
-                  <span style={{ fontSize: 11, color: T.textMuted }}>{entries.length} session{entries.length !== 1 ? 's' : ''}</span>
-                </div>
-              </div>
-              <span style={{ background: T.primaryLight, color: T.primary, fontSize: 13, fontWeight: 700, padding: '4px 12px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(groupHours)}</span>
-              <span style={{ fontSize: 12, color: T.textMuted, flexShrink: 0, transition: 'transform 0.2s', display: 'inline-block', transform: expanded ? 'rotate(180deg)' : 'none' }}>▼</span>
-            </div>
-
-            {/* individual entries */}
-            {expanded && (
-              <div style={{ borderTop: `1px solid ${T.border}` }}>
-                {entries.map((r, i) => {
-                  const isConfirming = confirmDelete === r.id
-                  return (
-                    <div key={r.id} style={{ padding: '12px 16px', borderBottom: i < entries.length - 1 ? `1px solid ${T.border}` : 'none', background: isConfirming ? '#FFF5F5' : 'transparent' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, color: T.textMuted }}>
-                            {r.logged_at ? new Date(r.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                            {r.start_time && r.end_time && ` · ${r.start_time} – ${r.end_time}`}
-                          </div>
-                          {r.location && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>📍 {r.location}</div>}
-                          {r.notes && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>{r.notes}</div>}
-                        </div>
-                        <span style={{ background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(r.hours)}</span>
+        {/* history */}
+        {history.length > 0 && (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 10 }}>History</div>
+            {grouped.map(({ key, rows: entries }) => {
+              const expanded   = expandedOrgs.has(key)
+              const groupHours = entries.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0)
+              const categories = [...new Set(entries.map(r => r.category).filter(Boolean))]
+              return (
+                <div key={key} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 10, overflow: 'hidden' }}>
+                  <div onClick={() => toggleOrg(key)} style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.background = T.bg}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>{key}</div>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                        {categories.map(c => (
+                          <span key={c} style={{ fontSize: 10, fontWeight: 700, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '2px 8px' }}>{c}</span>
+                        ))}
+                        <span style={{ fontSize: 11, color: T.textMuted }}>{entries.length} session{entries.length !== 1 ? 's' : ''}</span>
                       </div>
-                      {isConfirming ? (
-                        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 12, color: '#E05252', fontWeight: 600, flex: 1 }}>Delete this entry?</span>
-                          <button onClick={() => setConfirmDelete(null)} style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 12, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
-                          <button onClick={() => handleDelete(r.id)} disabled={deleting} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{deleting ? '...' : 'Delete'}</button>
-                        </div>
-                      ) : (
-                        <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
-                          <button onClick={() => openEdit(r)} style={{ background: T.primaryLight, border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
-                          <button onClick={() => setConfirmDelete(r.id)} style={{ background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
-                        </div>
-                      )}
                     </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-
-  const totalCard = (
-    <div style={{ background: 'linear-gradient(135deg, #18A050, #0E7A3C)', borderRadius: 12, padding: 20, marginBottom: 14, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-      <div>
-        <div style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{totalHours || 0}</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>total hours</div>
-      </div>
-      <div style={{ width: 1, background: 'rgba(255,255,255,0.2)' }} />
-      <div>
-        <div style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{new Set(history.map(r => r.org).filter(Boolean)).size}</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>organizations</div>
-      </div>
-      <div style={{ width: 1, background: 'rgba(255,255,255,0.2)' }} />
-      <div>
-        <div style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{history.length}</div>
-        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>sessions</div>
-      </div>
-    </div>
-  )
-
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 16, color: T.textMuted }}>Loading...</div>
-
-  return (
-    <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
-      {modal}
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Log Hours</div>
-          <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Track your volunteer time</div>
-        </div>
-        <button onClick={() => { setForm(EMPTY); setEditEntry(null); setShowModal(true) }}
-          style={{ background: T.primary, color: '#fff', border: 'none', borderRadius: 10, padding: '9px 18px', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(24,160,80,0.25)' }}>
-          + Log Hours
-        </button>
-      </div>
-      <div style={{ padding: isDesktop ? '32px 40px' : '16px 20px', maxWidth: isDesktop ? 700 : 'none', margin: '0 auto' }}>
-        {totalCard}
-        {goalSection}
-        {badgesSection}
-        <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 10 }}>Recent history</div>
-        {historySection}
+                    <span style={{ background: T.primaryLight, color: T.primary, fontSize: 13, fontWeight: 700, padding: '4px 12px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(groupHours)}</span>
+                    <span style={{ fontSize: 12, color: T.textMuted, flexShrink: 0, display: 'inline-block', transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+                  </div>
+                  {expanded && (
+                    <div style={{ borderTop: `1px solid ${T.border}` }}>
+                      {entries.map((r, i) => {
+                        const isConfirming = confirmDelete === r.id
+                        return (
+                          <div key={r.id} style={{ padding: '12px 16px', borderBottom: i < entries.length - 1 ? `1px solid ${T.border}` : 'none', background: isConfirming ? '#FFF5F5' : 'transparent' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 12, color: T.textMuted }}>
+                                  {r.logged_at ? new Date(r.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                  {r.start_time && r.end_time && ` · ${r.start_time} – ${r.end_time}`}
+                                </div>
+                                {r.location && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>📍 {r.location}</div>}
+                                {r.notes && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>{r.notes}</div>}
+                              </div>
+                              <span style={{ background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(r.hours)}</span>
+                            </div>
+                            {isConfirming ? (
+                              <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 12, color: '#E05252', fontWeight: 600, flex: 1 }}>Delete this entry?</span>
+                                <button onClick={() => setConfirmDelete(null)} style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 12, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
+                                <button onClick={() => handleDelete(r.id)} disabled={deleting} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{deleting ? '...' : 'Delete'}</button>
+                              </div>
+                            ) : (
+                              <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
+                                <button onClick={() => openEdit(r)} style={{ background: T.primaryLight, border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
+                                <button onClick={() => setConfirmDelete(r.id)} style={{ background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </>
+        )}
       </div>
     </div>
   )
