@@ -81,6 +81,18 @@ def derive_cause(activities):
     if re.search(r"teach|tutor|coach|mentor|literacy|school|education|youth|kid|child|student|learn|read|math|stem|college|library|homework|afterschool|curriculum", text): return "Education"
     return "Education"
 
+def derive_cause_text(text):
+    """Text-based cause detection for sources that have no activities array (e.g. Idealist)."""
+    text = text.lower()
+    if re.search(r"animal|wildlife|pet|spca|humane|rescue|dog|cat|bird|zoo|aquarium", text):                     return "Animals"
+    if re.search(r"food|hunger|meal|nutrition|pantry|harvest|farm|feeding|food bank|soup", text):                 return "Food Security"
+    if re.search(r"hous|shelter|homeless|habitat|affordable housing|transitional", text):                         return "Housing"
+    if re.search(r"senior|elder|aged|retirement|nursing home|assisted living|older adult|aging", text):           return "Seniors"
+    if re.search(r"environ|nature|trail|plant|garden|ecology|conserv|climate|recycl|clean up|ocean|beach|park|forest|tree|sustainab", text): return "Environment"
+    if re.search(r"health|medical|cancer|mental|hospital|clinic|nurse|wellness|disability|blood|hospice|therapy|rehab", text):               return "Health"
+    if re.search(r"art|music|theatre|theater|craft|creative|writing|design|dance|film|gallery|mural|perform|drama|culture|museum", text):    return "Arts"
+    return "Education"
+
 def derive_location(item):
     if item.get("remote_or_online"):
         return "Remote / Online"
@@ -185,3 +197,58 @@ else:
     for i in range(0, len(org_records), 100):
         db.table("clean_listings").upsert(org_records[i:i+100]).execute()
     print(f"Supabase updated — {len(org_records)} org listing records in clean_listings")
+
+# ── process Idealist listings ─────────────────────────────────────────────────
+def clean_idealist_item(item):
+    org  = item.get("organization") or {}
+    addr = item.get("address") or {}
+    is_remote = bool(item.get("remote") or item.get("isRemote"))
+    if is_remote:
+        location = "Remote / Online"
+    else:
+        city  = addr.get("city", "")
+        state = addr.get("state", "")
+        parts = [p for p in [city, state] if p]
+        location = ", ".join(parts) if parts else "In-Person"
+    url_field    = item.get("url") or {}
+    external_url = (url_field.get("en") or next(iter(url_field.values()), "")) if isinstance(url_field, dict) else str(url_field)
+    title        = item.get("name") or item.get("title") or ""
+    description  = item.get("description") or ""
+    return {
+        "id":           f"idealist_{item['id']}",
+        "title":        title,
+        "org":          org.get("name") or org.get("organizationName") or "",
+        "org_id":       None,
+        "cause":        derive_cause_text(title + " " + description),
+        "age_group":    derive_age_group(description, title, ""),
+        "location":     location,
+        "remote":       is_remote,
+        "description":  description,
+        "hours":        str(item.get("hours") or item.get("commitment") or ""),
+        "date":         str(item.get("dates") or item.get("startDate") or ""),
+        "external_url": external_url,
+        "source":       "idealist",
+        "fetched_at":   datetime.now(timezone.utc).isoformat(),
+    }
+
+idealist_blobs = sorted(
+    container.list_blobs(name_starts_with="idealist/"),
+    key=lambda b: b.name, reverse=True
+)
+
+if not idealist_blobs:
+    print("No idealist raw file found — skipping")
+else:
+    print(f"Reading: raw/{idealist_blobs[0].name}")
+    raw_idealist = json.loads(
+        client.get_blob_client(container=CONTAINER_RAW, blob=idealist_blobs[0].name)
+              .download_blob().readall()
+    )
+    if not raw_idealist:
+        print("Idealist raw file is empty — skipping")
+    else:
+        idealist_records = [clean_idealist_item(item) for item in raw_idealist]
+        db.table("clean_listings").delete().eq("source", "idealist").execute()
+        for i in range(0, len(idealist_records), 100):
+            db.table("clean_listings").upsert(idealist_records[i:i+100]).execute()
+        print(f"Supabase updated — {len(idealist_records)} Idealist records in clean_listings")
