@@ -438,7 +438,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
         {/* search + filter row */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
-          <div style={{ flex: 1, display: 'flex', background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', gap: 8, alignItems: 'center' }}>
+          <div style={{ flex: 1, display: 'flex', background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 14px', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: 16, color: T.textMuted }}>🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tab === 'opportunities' ? 'Search opportunities…' : 'Search organizations…'} style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
             {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.textMuted, fontSize: 16, padding: 0 }}>×</button>}
