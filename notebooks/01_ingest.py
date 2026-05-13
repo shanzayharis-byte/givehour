@@ -13,6 +13,7 @@
 %pip install azure-storage-blob supabase
 
 import os
+import time
 import requests
 import json
 from datetime import datetime, timezone
@@ -72,3 +73,45 @@ org_blob_name = f"org_listings/{timestamp}.json"
 org_blob      = client.get_blob_client(container=CONTAINER_RAW, blob=org_blob_name)
 org_blob.upload_blob(json.dumps(org_listings, indent=2), overwrite=True)
 print(f"Saved {len(org_listings)} org listings → raw/{org_blob_name}")
+
+# ── fetch Idealist volunteer opportunities ────────────────────────────────────
+IDEALIST_KEY = os.environ["IDEALIST_API_KEY"]
+IDEALIST_URL = "https://www.idealist.org/api/v1/listings/volops"
+
+print("Fetching Idealist listings...")
+idealist_results = []
+
+try:
+    since = None
+    while True:
+        url = IDEALIST_URL if not since else f"{IDEALIST_URL}?since={since}"
+        r = requests.get(
+            url,
+            auth=(IDEALIST_KEY, ""),
+            headers={"Accept": "application/json"},
+            timeout=30
+        )
+        r.raise_for_status()
+        page_data = r.json()
+        # API may return a list or a dict with results/data key
+        items = page_data if isinstance(page_data, list) else page_data.get("results", page_data.get("data", []))
+        if not items:
+            break
+        # Idealist's `since` pagination is inclusive — skip the last item from previous page
+        batch = items[1:] if since else items
+        idealist_results.extend(batch)
+        print(f"  Fetched {len(batch)} items (total: {len(idealist_results)})")
+        if len(items) < 100:
+            break
+        since = items[-1].get("updated")
+        if not since:
+            break
+        time.sleep(0.25)
+
+    idealist_blob_name = f"idealist/{timestamp}.json"
+    idealist_blob = client.get_blob_client(container=CONTAINER_RAW, blob=idealist_blob_name)
+    idealist_blob.upload_blob(json.dumps(idealist_results, indent=2), overwrite=True)
+    print(f"Saved {len(idealist_results)} Idealist listings → raw/{idealist_blob_name}")
+
+except Exception as e:
+    print(f"⚠️  Idealist ingest failed: {e} — skipping")
