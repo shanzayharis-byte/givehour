@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { T } from '../lib/theme'
 
-const CATEGORIES = ['Community', 'Sr. Community', 'Fund Raising', 'Environmental', 'Educational', 'Religious', 'Healthcare', 'Arts']
+const CATEGORIES = ['Community', 'Sr. Community', 'Fund Raising', 'Environmental', 'Educational', 'Religious', 'Healthcare', 'Arts', 'Others']
 
 function calcHours(start, end) {
   if (!start || !end) return ''
