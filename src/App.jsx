@@ -178,7 +178,7 @@ export default function App() {
         onLogin={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('auth-login') }} />
     }
     if (selectedOrg) {
-      return <OrgProfile orgId={selectedOrg.id} orgName={selectedOrg.name} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} />
+      return <OrgProfile orgId={selectedOrg.id} orgName={selectedOrg.name} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} isGuest={isGuest} onLogin={() => { setSelectedOrg(null); setIsGuest(false); setActiveScreen('auth-login') }} onSignUp={() => { setSelectedOrg(null); setIsGuest(false); setActiveScreen('auth-signup') }} />
     }
     if (activeScreen === 'privacy' || activeScreen === 'terms' || activeScreen === 'contact') {
       return <LegalPage slug={activeScreen} onBack={() => setActiveScreen(authUser ? (isOrg ? 'orgDashboard' : 'feed') : 'landing')} />

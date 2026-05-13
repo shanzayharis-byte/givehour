@@ -32,7 +32,7 @@ function displayUrl(url) {
   return url.replace(/^https?:\/\//i, '').replace(/\/$/, '')
 }
 
-export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
+export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp, isGuest, onLogin, onSignUp }) {
   const [org, setOrg]           = useState(null)
   const [listings, setListings] = useState([])
   const [loading, setLoading]   = useState(true)
@@ -71,6 +71,12 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp }) {
         <div style={{ fontSize: 14, fontWeight: 600, color: T.textSub, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           Organization
         </div>
+        {isGuest && (
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <button onClick={onLogin} style={{ background: 'none', border: `1px solid ${T.border}`, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Log in</button>
+            <button onClick={onSignUp} style={{ background: T.primary, border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Sign up</button>
+          </div>
+        )}
       </div>
 
       {/* scrollable body */}
