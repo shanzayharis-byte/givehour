@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 import PostListingForm from './PostListingForm'
 
-export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget }) {
+export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, onSelectOpp }) {
   const [listings, setListings]           = useState([])
   const [loading, setLoading]             = useState(true)
   const [error, setError]                 = useState('')
@@ -125,26 +125,32 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget }
                 const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
                 const isConfirming = confirmDelete === l.id
                 return (
-                  <div key={l.id} style={{ background: T.card, borderRadius: 14, padding: 16, border: `1px solid ${isConfirming ? '#E05252' : T.border}`, transition: 'border-color 0.15s' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 4 }}>{l.title}</div>
-                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                          <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20 }}>{l.cause}</span>
-                          {l.age_group && l.age_group !== 'all' && (
-                            <span style={{ background: '#F0F4FF', color: '#4A6FA5', fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20 }}>{l.age_group}</span>
-                          )}
-                          {l.remote && <span style={{ background: T.primaryLight, color: T.primary, fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20 }}>Remote</span>}
+                  <div key={l.id} style={{ background: T.card, borderRadius: 14, border: `1px solid ${isConfirming ? '#E05252' : T.border}`, transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
+                    <div
+                      onClick={() => onSelectOpp && onSelectOpp({ id: `org_${l.id}`, title: l.title, org: user.name, org_id: l.org_id || user.id, cause: l.cause, location: l.location, hours: l.hours, date: l.date, description: l.description, externalUrl: l.external_url, remote: !!l.remote, source: 'org' })}
+                      onMouseEnter={e => { e.currentTarget.style.background = '#F9FAFC' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = T.card }}
+                      style={{ padding: 16, cursor: 'pointer' }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 4 }}>{l.title}</div>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <span style={{ background: cause.bg, color: cause.text, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 20 }}>{l.cause}</span>
+                            {l.age_group && l.age_group !== 'all' && (
+                              <span style={{ background: '#F0F4FF', color: '#4A6FA5', fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20 }}>{l.age_group}</span>
+                            )}
+                            {l.remote && <span style={{ background: T.primaryLight, color: T.primary, fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20 }}>Remote</span>}
+                          </div>
                         </div>
+                      </div>
+                      <div style={{ fontSize: 12, color: T.textMuted }}>
+                        {[l.remote ? 'Remote' : l.location, l.date, l.hours ? `${l.hours}h` : null].filter(Boolean).join(' · ')}
                       </div>
                     </div>
 
-                    <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 10 }}>
-                      {[l.remote ? 'Remote' : l.location, l.date, l.hours ? `${l.hours}h` : null].filter(Boolean).join(' · ')}
-                    </div>
-
                     {isConfirming ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', paddingTop: 8, borderTop: `1px solid #FEE2E2` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 16px', borderTop: `1px solid #FEE2E2` }}>
                         <span style={{ fontSize: 13, color: '#E05252', fontWeight: 600, flex: 1 }}>Delete this listing?</span>
                         <button onClick={() => setConfirmDelete(null)} style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
                         <button onClick={() => deleteListing(l.id)} disabled={deleting} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
@@ -152,7 +158,7 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget }
                         </button>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', gap: 8, paddingTop: 8, borderTop: `1px solid ${T.border}` }}>
+                      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', borderTop: `1px solid ${T.border}` }}>
                         <button onClick={() => setEditListing(l)} style={{ flex: 1, background: T.primaryLight, border: 'none', borderRadius: 8, padding: '7px 0', fontSize: 13, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
                         <button onClick={() => setConfirmDelete(l.id)} style={{ flex: 1, background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '7px 0', fontSize: 13, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
                       </div>

@@ -196,7 +196,7 @@ export default function App() {
       case 'impact':        return <Impact user={dbUser} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} onNavigate={setActiveScreen} />
       case 'admin':         return <Admin authUser={authUser} />
-      case 'orgDashboard':  return <OrgDashboard user={dbUser} editTargetId={editTargetId} onConsumeEditTarget={() => setEditTargetId(null)} />
+      case 'orgDashboard':  return <OrgDashboard user={dbUser} editTargetId={editTargetId} onConsumeEditTarget={() => setEditTargetId(null)} onSelectOpp={setSelectedOpp} />
       case 'orgPost':       return <PostListingForm user={dbUser} onBack={() => navigate('orgDashboard')} />
       case 'privacy':
       case 'terms':
