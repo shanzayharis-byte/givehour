@@ -6,9 +6,9 @@ import FilterModal from '../components/FilterModal'
 async function attachOrgLogos(rows) {
   const orgIds = [...new Set(rows.filter(r => r.source === 'org' && r.org_id).map(r => r.org_id))]
   if (orgIds.length === 0) return rows
-  const { data: orgs } = await supabase.from('users').select('id, logo_url, logo_icon_url').in('id', orgIds)
+  const orgs = await fetch(`/api/orgs?ids=${orgIds.join(',')}`).then(r => r.json()).catch(() => [])
   const map = {}
-  for (const o of orgs || []) map[o.id] = o.logo_icon_url || o.logo_url || null
+  for (const o of Array.isArray(orgs) ? orgs : []) map[o.id] = o.logo_icon_url || o.logo_url || null
   return rows.map(r => ({ ...r, org_logo_icon_url: (r.source === 'org' && r.org_id ? map[r.org_id] : null) || r.org_logo_icon_url || r.org_logo_url || null }))
 }
 

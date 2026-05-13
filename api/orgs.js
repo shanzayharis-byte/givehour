@@ -11,7 +11,17 @@ export default async function handler(req, res) {
 
   try {
     const db = makeAdminClient()
-    const { id } = req.query
+    const { id, ids } = req.query
+
+    if (ids) {
+      const idList = ids.split(',').filter(Boolean)
+      const { data, error } = await db
+        .from('users')
+        .select('id, logo_url, logo_icon_url')
+        .in('id', idList)
+      if (error) return res.status(500).json({ error: error.message })
+      return res.status(200).json(data || [])
+    }
 
     if (id) {
       const { data, error } = await db
