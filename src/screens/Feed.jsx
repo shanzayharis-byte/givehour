@@ -61,7 +61,7 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
   const [totalHours, setTotalHours] = useState(0)
   const [orgCount, setOrgCount] = useState(0)
-  const [streak, setStreak] = useState(0)
+  const [sessions, setSessions] = useState(0)
   const [isPersonalized, setIsPersonalized] = useState(false)
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState({ cause: '', ageGroup: '', remote: false })
@@ -82,6 +82,7 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
           if (hours) {
             setTotalHours(Math.round(hours.reduce((s, r) => s + (r.hours || 0), 0)))
             setOrgCount(new Set(hours.map(r => r.org).filter(Boolean)).size)
+            setSessions(hours.length)
           }
 
           // load personalized feed (view may not exist — handle 400 gracefully)
@@ -143,7 +144,7 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
           </div>
           {isDesktop ? (
             <div style={{ display: 'flex', gap: 12 }}>
-              {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [streak, 'streak', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
+              {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
                 <div key={lbl} style={{ minWidth: 80, textAlign: 'center', background: bg, borderRadius: 10, padding: '12px 16px' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color }}>{val}</div>
                   <div style={{ fontSize: 12, color, opacity: 0.75 }}>{lbl}</div>
@@ -154,7 +155,7 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
         </div>
         {!isDesktop && (
           <div style={{ display: 'flex', gap: 8 }}>
-            {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [streak, 'streak', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
+            {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
               <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}>
                 <div style={{ fontSize: 18, fontWeight: 700, color }}>{val}</div>
                 <div style={{ fontSize: 10, color, opacity: 0.75 }}>{lbl}</div>
