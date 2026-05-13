@@ -9,6 +9,7 @@
 #   AZURE_STORAGE_KEY   — Access key for the givehourdata storage account
 #   SUPABASE_URL        — https://your-project.supabase.co
 #   SUPABASE_KEY        — service_role key from Supabase → Settings → API
+#   IDEALIST_API_KEY    — API key for Idealist.org API
 
 %pip install azure-storage-blob supabase
 
@@ -75,18 +76,20 @@ org_blob.upload_blob(json.dumps(org_listings, indent=2), overwrite=True)
 print(f"Saved {len(org_listings)} org listings → raw/{org_blob_name}")
 
 # ── fetch Idealist volunteer opportunities ────────────────────────────────────
-IDEALIST_KEY = os.environ["IDEALIST_API_KEY"]
-IDEALIST_URL = "https://www.idealist.org/api/v1/listings/volops"
-
-print("Fetching Idealist listings...")
 idealist_results = []
 
 try:
+    IDEALIST_KEY = os.environ["IDEALIST_API_KEY"]
+    IDEALIST_URL = "https://www.idealist.org/api/v1/listings/volops"
+    PAGE_SIZE = 100
+
+    print("Fetching Idealist listings...")
     since = None
     while True:
         url = IDEALIST_URL if not since else f"{IDEALIST_URL}?since={since}"
         r = requests.get(
             url,
+            params={"page_size": PAGE_SIZE},
             auth=(IDEALIST_KEY, ""),
             headers={"Accept": "application/json"},
             timeout=30
@@ -101,7 +104,7 @@ try:
         batch = items[1:] if since else items
         idealist_results.extend(batch)
         print(f"  Fetched {len(batch)} items (total: {len(idealist_results)})")
-        if len(items) < 100:
+        if len(items) < PAGE_SIZE:
             break
         since = items[-1].get("updated")
         if not since:
