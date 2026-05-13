@@ -115,6 +115,7 @@ def clean_item(item):
         "hours":        item.get("duration", ""),
         "date":         item.get("dates", ""),
         "external_url": item.get("url", ""),
+        "source":       "volunteerconnector",
         "fetched_at":   datetime.now(timezone.utc).isoformat(),
     }
 
@@ -145,7 +146,7 @@ print(f"Saved {len(records)} clean records → processed/{blob_name}")
 # ── replace VolunteerConnector listings in Supabase ──────────────────────────
 # Delete then re-insert so stale/Canadian entries don't linger
 db = create_client(SUPABASE_URL, SUPABASE_KEY)
-db.table("clean_listings").delete().neq("source", "org").execute()
+db.table("clean_listings").delete().eq("source", "volunteerconnector").execute()
 for i in range(0, len(records), 100):
     db.table("clean_listings").upsert(records[i:i+100]).execute()
 print(f"Supabase updated — {len(records)} VolunteerConnector records in clean_listings")

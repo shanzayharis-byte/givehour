@@ -108,6 +108,7 @@ try:
             break
         since = items[-1].get("updated")
         if not since:
+            print(f"⚠️  Idealist pagination stopped early — 'updated' field missing on item {items[-1].get('id')}")
             break
         time.sleep(0.25)
 
