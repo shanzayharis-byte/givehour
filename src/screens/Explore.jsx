@@ -63,11 +63,15 @@ function interleave(primary, secondary, every = 3) {
   let sIdx = 0
   primary.forEach((item, i) => {
     out.push(item)
-    if ((i + 1) % every === 0) {
-      out.push(secondary[sIdx % secondary.length])
+    if ((i + 1) % every === 0 && sIdx < secondary.length) {
+      out.push(secondary[sIdx])
       sIdx++
     }
   })
+  // If primary was too short to trigger any insertions, append a batch of secondary
+  if (sIdx === 0 && secondary.length) {
+    out.push(...secondary.slice(0, every))
+  }
   return out
 }
 
@@ -280,7 +284,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
           org:              item.org || '',
           org_id:           item.org_id || null,
           cause:            item.cause,
-          ageGroup:         item.age_group,
+          ageGroup:         item.age_group || 'Open',
           hours:            item.hours || '',
           location:         item.location || '',
           date:             item.date || '',
@@ -468,7 +472,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
                 {filteredOpps.map((opp, i) => {
                   const cols = isDesktop ? 3 : 1
                   const alternate = Math.floor(i / cols) % 2 === 1
-                  return <OppCard key={opp.id} opp={opp} alternate={alternate} onSelect={onSelectOpp} />
+                  return <OppCard key={`${opp.source ?? 'vc'}-${opp.id}`} opp={opp} alternate={alternate} onSelect={onSelectOpp} />
                 })}
               </div>
               {hasMore && (
