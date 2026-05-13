@@ -451,7 +451,7 @@ export default function Profile({ user, onSignOut, onNavigate }) {
 
         const { data: hours } = await supabase.from('hours_log').select('hours, org').eq('user_id', user?.id)
         if (hours) {
-          setTotalHours(hours.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0))
+          setTotalHours(Math.round(hours.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0)))
           setOrgCount(new Set(hours.map(r => r.org)).size)
         }
 
