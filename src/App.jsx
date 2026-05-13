@@ -161,7 +161,8 @@ export default function App() {
       return <OpportunityDetail opp={selectedOpp} user={dbUser} onBack={() => setSelectedOpp(null)} isGuest={isGuest}
         onSelectOrg={(orgId, orgName) => { setSelectedOpp(null); setSelectedOrg({ id: orgId, name: orgName }) }}
         onEdit={(opp) => { setEditTargetId(opp.id); setSelectedOpp(null); setActiveScreen('orgDashboard') }}
-        onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('landing') }} />
+        onSignUp={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('auth-signup') }}
+        onLogin={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('auth-login') }} />
     }
     if (selectedOrg) {
       return <OrgProfile orgId={selectedOrg.id} orgName={selectedOrg.name} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} />

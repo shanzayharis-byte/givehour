@@ -4,7 +4,7 @@ import { T, CAUSE } from '../lib/theme'
 
 const CAUSE_EMOJI = { Education: '📚', Environment: '🌿', Animals: '🐾', 'Food Security': '🍎', Health: '❤️', Housing: '🏠', Arts: '🎨', Seniors: '🤝' }
 
-export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp, onSelectOrg, onEdit }) {
+export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp, onLogin, onSelectOrg, onEdit }) {
   const [saved, setSaved]       = useState(false)
   const [loading, setLoading]   = useState(false)
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024)
@@ -223,7 +223,12 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
           </div>
         )}
       </div>
-      {!isGuest && (
+      {isGuest ? (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={onLogin} style={{ background: 'none', border: 'none', padding: '8px 14px', fontSize: 14, fontWeight: 600, color: T.textSub, cursor: 'pointer', borderRadius: 10 }}>Log in</button>
+          <button onClick={onSignUp} style={{ background: T.primary, border: 'none', borderRadius: 10, padding: '9px 18px', fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 2px 8px rgba(24,160,80,0.25)' }}>Sign up</button>
+        </div>
+      ) : (
         <div style={{ display: 'flex', gap: 8 }}>
           {isOwner && onEdit && (
             <button onClick={() => onEdit(opp)} style={{ background: T.primary, border: 'none', color: '#fff', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 2px 8px rgba(24,160,80,0.25)' }}>
