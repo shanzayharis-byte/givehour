@@ -84,13 +84,14 @@ def derive_cause(activities):
 def derive_cause_text(text):
     """Text-based cause detection for sources that have no activities array (e.g. Idealist)."""
     text = text.lower()
-    if re.search(r"animal|wildlife|pet|spca|humane|rescue|dog|cat|bird|zoo|aquarium", text):                     return "Animals"
-    if re.search(r"food|hunger|meal|nutrition|pantry|harvest|farm|feeding|food bank|soup", text):                 return "Food Security"
-    if re.search(r"hous|shelter|homeless|habitat|affordable housing|transitional", text):                         return "Housing"
-    if re.search(r"senior|elder|aged|retirement|nursing home|assisted living|older adult|aging", text):           return "Seniors"
-    if re.search(r"environ|nature|trail|plant|garden|ecology|conserv|climate|recycl|clean up|ocean|beach|park|forest|tree|sustainab", text): return "Environment"
-    if re.search(r"health|medical|cancer|mental|hospital|clinic|nurse|wellness|disability|blood|hospice|therapy|rehab", text):               return "Health"
-    if re.search(r"art|music|theatre|theater|craft|creative|writing|design|dance|film|gallery|mural|perform|drama|culture|museum", text):    return "Arts"
+    if re.search(r"animal|wildlife|pet|spca|humane|rescue|shelter.*animal|dog|cat|bird|zoo|aquarium", text):                     return "Animals"
+    if re.search(r"food|hunger|meal|nutrition|pantry|harvest|farm|feeding|grocery|kitchen|lunch|dinner|breakfast|food bank|soup", text): return "Food Security"
+    if re.search(r"hous|shelter|homeless|habitat|affordable housing|transitional|domestic violence|refugee.*hous", text):                                  return "Housing"
+    if re.search(r"senior|elder|aged|retirement|nursing home|assisted living|older adult|grandparent|aging", text):           return "Seniors"
+    if re.search(r"environ|nature|trail|plant|garden|ecology|conserv|climate|recycl|clean up|cleanup|ocean|beach|park|forest|tree|green|sustainab|carbon|pollution", text): return "Environment"
+    if re.search(r"health|medical|cancer|mental|hospital|clinic|nurse|wellness|covid|vaccine|disability|blood|hospice|vision|hearing|therapy|rehab", text):               return "Health"
+    if re.search(r"art|music|theatre|theater|craft|creative|writing|design|dance|film|photo|gallery|mural|perform|drama|choir|band|culture|heritage|museum", text):    return "Arts"
+    if re.search(r"teach|tutor|coach|mentor|literacy|school|education|youth|kid|child|student|learn|read|math|stem|college|library|homework|afterschool|curriculum", text): return "Education"
     return "Education"
 
 def derive_location(item):
@@ -248,7 +249,10 @@ else:
         print("Idealist raw file is empty — skipping")
     else:
         idealist_records = [clean_idealist_item(item) for item in raw_idealist]
-        db.table("clean_listings").delete().eq("source", "idealist").execute()
-        for i in range(0, len(idealist_records), 100):
-            db.table("clean_listings").upsert(idealist_records[i:i+100]).execute()
-        print(f"Supabase updated — {len(idealist_records)} Idealist records in clean_listings")
+        if len(idealist_records) < 10:
+            print(f"⚠️  Only {len(idealist_records)} Idealist records — skipping replace to avoid data loss")
+        else:
+            db.table("clean_listings").delete().eq("source", "idealist").execute()
+            for i in range(0, len(idealist_records), 100):
+                db.table("clean_listings").upsert(idealist_records[i:i+100]).execute()
+            print(f"Supabase updated — {len(idealist_records)} Idealist records in clean_listings")
