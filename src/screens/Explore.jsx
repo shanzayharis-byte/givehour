@@ -182,6 +182,7 @@ function OppCard({ opp, onSelect, alternate }) {
           <div style={{ fontSize: 12, color: T.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opp.org}</div>
         </div>
         {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>✓ Give Hour Partner</span>}
+        {opp.source === 'idealist' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: '#EDE9FE', color: '#6D28D9', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>🌐 Idealist</span>}
       </div>
       <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 10 }}>{opp.title}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
