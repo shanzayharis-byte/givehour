@@ -426,7 +426,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
           const count = key === 'organizations' ? orgDir.length : (key === 'opportunities' ? filteredOpps.length : 0)
           const countText = count > 0 ? `${count}${key === 'opportunities' && hasMore ? '+' : ''}` : null
           return (
-            <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '14px 0', fontSize: 14, fontWeight: active ? 700 : 500, color: active ? T.primary : T.textMuted, background: 'none', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${active ? T.primary : 'transparent'}`, transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '14px 0', fontSize: 14, fontWeight: active ? 700 : 500, color: active ? T.primary : T.textMuted, background: active ? T.primaryLight : '#F4F6F8', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${active ? T.primary : 'transparent'}`, transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {label}
               {countText && <span style={{ fontSize: 11, color: active ? T.primary : T.textMuted, fontWeight: 600, opacity: active ? 1 : 0.6 }}>{countText}</span>}
             </button>
