@@ -77,28 +77,22 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
     async function load() {
       try {
         if (user?.id) {
-          // load impact stats (hours, orgs, streak)
-          const [{ data: stats }, { data: hours }] = await Promise.all([
-            supabase.from('impact_stats').select('total_hours, streak_days').eq('user_id', user.id).maybeSingle(),
-            supabase.from('hours_log').select('hours, org').eq('user_id', user.id),
-          ])
-          if (stats) {
-            setTotalHours(Math.round(parseFloat(stats.total_hours) || 0))
-            setStreak(stats.streak_days || 0)
-          } else if (hours) {
+          // load stats from hours_log
+          const { data: hours } = await supabase.from('hours_log').select('hours, org').eq('user_id', user.id)
+          if (hours) {
             setTotalHours(Math.round(hours.reduce((s, r) => s + (r.hours || 0), 0)))
+            setOrgCount(new Set(hours.map(r => r.org).filter(Boolean)).size)
           }
-          if (hours) setOrgCount(new Set(hours.map(r => r.org).filter(Boolean)).size)
 
-          // load personalized feed
-          const { data: feed } = await supabase
+          // load personalized feed (view may not exist — handle 400 gracefully)
+          const { data: feed, error: feedErr } = await supabase
             .from('personalized_feed')
             .select('score, rank, clean_listings!inner(*)')
             .eq('user_id', user.id)
             .not('clean_listings.age_group', 'eq', '18+ Only')
             .order('rank')
             .limit(10)
-          if (feed && feed.length > 0) {
+          if (!feedErr && feed && feed.length > 0) {
             const rows = feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) }))
             setOpps(await attachOrgLogos(rows))
             setIsPersonalized(true)
