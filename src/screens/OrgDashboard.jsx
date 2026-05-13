@@ -68,7 +68,7 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, 
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
 
       {/* header */}
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '20px 40px' : '16px 20px' }}>
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '20px 40px' : '16px 20px', paddingRight: isDesktop ? 40 : 64 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 700, color: T.text }}>{user.name}</div>
