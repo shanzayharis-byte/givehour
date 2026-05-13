@@ -212,7 +212,17 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
 
   const topBar = (
     <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '12px 40px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
-      <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '6px 12px', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>←</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <button onClick={onBack} style={{ background: T.primaryLight, color: T.primary, borderRadius: 8, padding: '6px 12px', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer' }}>←</button>
+        {isGuest && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: '#fff', padding: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.1)', flexShrink: 0 }}>
+              <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+            </div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Give Hour</span>
+          </div>
+        )}
+      </div>
       {!isGuest && (
         <div style={{ display: 'flex', gap: 8 }}>
           {isOwner && onEdit && (
