@@ -39,7 +39,13 @@ export default function App() {
   const [dbUser, setDbUser]           = useState(null)
   const [activeScreen, setActiveScreen] = useState('landing')
   const [selectedOpp, setSelectedOpp] = useState(null)
-  const [selectedOrg, setSelectedOrg]   = useState(null) // { id, name }
+  const [selectedOrg, setSelectedOrgState] = useState(null) // { id, name }
+
+  const setSelectedOrg = (org) => {
+    setSelectedOrgState(org)
+    if (org) sessionStorage.setItem('gh_org', JSON.stringify(org))
+    else sessionStorage.removeItem('gh_org')
+  }
   const [isGuest, setIsGuest]         = useState(false)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [appLoading, setAppLoading]   = useState(true)
@@ -51,6 +57,13 @@ export default function App() {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
     window.addEventListener('resize', handle)
     return () => window.removeEventListener('resize', handle)
+  }, [])
+
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('gh_org')
+      if (saved) setSelectedOrgState(JSON.parse(saved))
+    } catch {}
   }, [])
 
   useEffect(() => {
