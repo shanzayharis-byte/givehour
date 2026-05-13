@@ -154,6 +154,10 @@ export default function LogHours({ user }) {
 
       <div style={{ padding: isDesktop ? '28px 40px' : '16px 20px', maxWidth: isDesktop ? 700 : 'none', margin: '0 auto' }}>
 
+        <div style={{ fontSize: 13, color: T.textSub, marginBottom: 14, lineHeight: 1.6 }}>
+          Every hour counts. Log your sessions below to build your volunteer record and track your progress over time.
+        </div>
+
         {/* inline form */}
         <div ref={formRef} style={{ background: T.card, border: `1.5px solid ${editEntry ? T.primary : T.border}`, borderRadius: 14, padding: '18px 20px', marginBottom: 24 }}>
           {editEntry && (
