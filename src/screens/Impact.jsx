@@ -119,7 +119,7 @@ export default function Impact({ user }) {
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
       <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px' }}>
-        <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>My Impact</div>
+        <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>{user?.name ? `${user.name.split(' ')[0]}'s Impact` : 'My Impact'}</div>
         <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Your volunteer story so far</div>
       </div>
 
