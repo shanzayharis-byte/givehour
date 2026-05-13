@@ -27,6 +27,7 @@ export default function Impact({ user }) {
   const [hoursGoal, setHoursGoal]     = useState(null)
   const [editingGoal, setEditingGoal] = useState(false)
   const [goalInput, setGoalInput]     = useState('')
+  const [selectedYear, setSelectedYear] = useState(null)
   const [showLetter, setShowLetter]   = useState(false)
   const [letter, setLetter]           = useState('')
   const [letterLoading, setLetterLoading] = useState(false)
@@ -190,16 +191,19 @@ export default function Impact({ user }) {
         {/* yearly chart */}
         {years.length > 0 && (
           <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 16 }}>📅 Hours by Year</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 4 }}>📅 Hours by Year</div>
+            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 14 }}>Tap a bar to see the breakdown</div>
             <div style={{ display: 'flex', gap: 10, height: 160, alignItems: 'stretch' }}>
               {years.map(year => {
                 const hrs  = byYear[year]
                 const barH = Math.max(Math.round((hrs / maxYearHours) * 100), 4)
                 return (
-                  <div key={year} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div key={year} onClick={() => setSelectedYear(year)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }}>
                     <div style={{ fontSize: 10, fontWeight: 700, color: T.primary, height: 18, lineHeight: '18px' }}>{Math.round(hrs)}h</div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                      <div style={{ width: '70%', height: barH, background: 'linear-gradient(180deg, #34C97A, #18A050)', borderRadius: '4px 4px 0 0' }} />
+                      <div style={{ width: '70%', height: barH, background: 'linear-gradient(180deg, #34C97A, #18A050)', borderRadius: '4px 4px 0 0', transition: 'opacity 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+                        onMouseLeave={e => e.currentTarget.style.opacity = '1'} />
                     </div>
                     <div style={{ fontSize: 11, color: T.textMuted, height: 18, lineHeight: '18px', marginTop: 4 }}>{year}</div>
                   </div>
@@ -208,6 +212,78 @@ export default function Impact({ user }) {
             </div>
           </div>
         )}
+
+        {/* year breakdown popup */}
+        {selectedYear && (() => {
+          const yearEntries = history
+            .filter(r => r.logged_at && new Date(r.logged_at).getFullYear() === parseInt(selectedYear))
+            .sort((a, b) => new Date(a.logged_at) - new Date(b.logged_at))
+          const yearTotal = yearEntries.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0)
+          const byCat = {}
+          for (const r of yearEntries) {
+            const cat = r.category || 'Uncategorized'
+            byCat[cat] = (byCat[cat] || 0) + (parseFloat(r.hours) || 0)
+          }
+          return (
+            <>
+              <div onClick={() => setSelectedYear(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 500 }} />
+              <div style={{
+                position: 'fixed',
+                ...(isDesktop
+                  ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 480, maxHeight: '82vh', borderRadius: 18 }
+                  : { bottom: 0, left: 0, right: 0, maxHeight: '88vh', borderRadius: '18px 18px 0 0' }),
+                background: '#fff', zIndex: 501, display: 'flex', flexDirection: 'column',
+                boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden',
+              }}>
+                {/* header */}
+                <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                  <div>
+                    <div style={{ fontSize: 17, fontWeight: 700, color: T.text }}>{selectedYear} Breakdown</div>
+                    <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>{Math.round(yearTotal)}h across {yearEntries.length} session{yearEntries.length !== 1 ? 's' : ''}</div>
+                  </div>
+                  <button onClick={() => setSelectedYear(null)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
+                </div>
+
+                <div style={{ overflowY: 'auto', padding: '16px 20px 24px', flex: 1 }}>
+                  {/* by category mini bars */}
+                  {Object.keys(byCat).length > 0 && (
+                    <div style={{ marginBottom: 18 }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textSub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 10 }}>By Category</div>
+                      {Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([cat, hrs]) => (
+                        <div key={cat} style={{ marginBottom: 9 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <span style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{cat}</span>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: T.primary }}>{fmtHours(hrs)}</span>
+                          </div>
+                          <div style={{ height: 6, background: T.bg, borderRadius: 4, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${yearTotal > 0 ? (hrs / yearTotal) * 100 : 0}%`, background: T.primary, borderRadius: 4 }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* individual sessions */}
+                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textSub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 10 }}>Sessions</div>
+                  {yearEntries.map(r => (
+                    <div key={r.id} style={{ background: T.bg, borderRadius: 10, padding: '10px 14px', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{r.org || 'Independent'}</div>
+                        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>
+                          {new Date(r.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          {r.category && ` · ${r.category}`}
+                          {r.location && ` · ${r.location}`}
+                        </div>
+                        {r.notes && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>{r.notes}</div>}
+                      </div>
+                      <span style={{ background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(r.hours)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )
+        })()}
 
         {/* hours by category */}
         {catEntries.length > 0 && (
