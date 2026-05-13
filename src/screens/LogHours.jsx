@@ -284,6 +284,25 @@ export default function LogHours({ user }) {
     </div>
   )
 
+  const totalCard = (
+    <div style={{ background: 'linear-gradient(135deg, #18A050, #0E7A3C)', borderRadius: 12, padding: 20, marginBottom: 16, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+      <div>
+        <div style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{totalHours || 0}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>total hours</div>
+      </div>
+      <div style={{ width: 1, background: 'rgba(255,255,255,0.2)' }} />
+      <div>
+        <div style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{new Set(history.map(r => r.org).filter(Boolean)).size}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>organizations</div>
+      </div>
+      <div style={{ width: 1, background: 'rgba(255,255,255,0.2)' }} />
+      <div>
+        <div style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{history.length}</div>
+        <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>sessions</div>
+      </div>
+    </div>
+  )
+
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 16, color: T.textMuted }}>Loading...</div>
 
   return (
