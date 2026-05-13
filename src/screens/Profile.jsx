@@ -260,7 +260,10 @@ function OrgProfile({ user, onSignOut, onNavigate }) {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px' }}>
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 9, background: '#fff', flexShrink: 0, padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+          <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+        </div>
         <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Organization Profile</div>
       </div>
       <div style={{ padding: isDesktop ? '32px 40px' : '20px' }}>
@@ -615,7 +618,10 @@ export default function Profile({ user, onSignOut, onNavigate }) {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px' }}>
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 9, background: '#fff', flexShrink: 0, padding: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.1)' }}>
+          <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+        </div>
         <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Profile</div>
       </div>
       <div style={{ padding: isDesktop ? '32px 40px' : '20px' }}>
