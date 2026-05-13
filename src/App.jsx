@@ -14,11 +14,13 @@ import PostListingForm from './screens/PostListingForm'
 import LegalPage from './screens/LegalPage'
 import OrgProfile from './screens/OrgProfile'
 import ApplicantsInbox from './screens/ApplicantsInbox'
+import Saved from './screens/Saved'
 import './App.css'
 
 const NAV = [
   { id: 'feed',     icon: '🏠', label: 'Feed' },
   { id: 'explore',  icon: '🔍', label: 'Explore' },
+  { id: 'saved',    icon: '🔖', label: 'Saved' },
   { id: 'loghours', icon: '⏱', label: 'Log Hours' },
   { id: 'impact',   icon: '⭐', label: 'Impact' },
   { id: 'profile',  icon: '👤', label: 'Profile' },
@@ -32,7 +34,7 @@ const ORG_NAV = [
   { id: 'profile',        icon: '👤', label: 'Profile' },
 ]
 
-const PROTECTED = ['feed', 'loghours', 'impact', 'profile', 'admin', 'orgDashboard', 'orgApplicants', 'orgPost']
+const PROTECTED = ['feed', 'saved', 'loghours', 'impact', 'profile', 'admin', 'orgDashboard', 'orgApplicants', 'orgPost']
 
 export default function App() {
   const [authUser, setAuthUser]       = useState(null)
@@ -188,6 +190,7 @@ export default function App() {
     }
     switch (activeScreen) {
       case 'feed':          return <Feed user={dbUser} onSelectOpp={setSelectedOpp} />
+      case 'saved':         return <Saved user={dbUser} onSelectOpp={setSelectedOpp} isDesktop={isDesktop} />
       case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
       case 'loghours':      return <LogHours user={dbUser} />
       case 'impact':        return <Impact user={dbUser} />

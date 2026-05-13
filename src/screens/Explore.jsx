@@ -220,8 +220,6 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [orgViewLoading, setOrgViewLoading]   = useState(false)
   const [orgListings, setOrgListings]     = useState([])
   const [idealistOpps, setIdealistOpps]   = useState([])
-  const [savedListings, setSavedListings] = useState([])
-  const [savedLoading, setSavedLoading]   = useState(false)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -348,18 +346,6 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
     return () => { cancelled = true }
   }, [])
 
-  useEffect(() => {
-    if (!user?.id || tab !== 'saved') return
-    setSavedLoading(true)
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) { setSavedLoading(false); return }
-      const res = await fetch('/api/saved-listings', { headers: { Authorization: `Bearer ${session.access_token}` } })
-      const data = res.ok ? await res.json() : []
-      setSavedListings(Array.isArray(data) ? data : [])
-      setSavedLoading(false)
-    })
-  }, [tab, user])
-
   const activeFilterCount = [filters.cause, filters.ageGroup, filters.remote].filter(Boolean).length
 
   const applyFilters = (o) => {
@@ -435,9 +421,9 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
       {/* tabs */}
       <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, display: 'flex', flexShrink: 0 }}>
-        {[['opportunities','Opportunities'],['organizations','Organizations'], ...(!isGuest && user ? [['saved','Saved']] : [])].map(([key, label]) => {
+        {[['opportunities','Opportunities'],['organizations','Organizations']].map(([key, label]) => {
           const active = tab === key
-          const count = key === 'organizations' ? orgDir.length : key === 'opportunities' ? filteredOpps.length : key === 'saved' ? savedListings.length : 0
+          const count = key === 'organizations' ? orgDir.length : key === 'opportunities' ? filteredOpps.length : 0
           const countText = count > 0 ? `${count}${key === 'opportunities' && hasMore ? '+' : ''}` : null
           return (
             <button key={key} onClick={() => setTab(key)} style={{ flex: 1, padding: '14px 0', fontSize: 14, fontWeight: active ? 700 : 500, color: active ? T.primary : T.textMuted, background: active ? T.primaryLight : '#F4F6F8', border: 'none', cursor: 'pointer', borderBottom: `2px solid ${active ? T.primary : 'transparent'}`, transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
@@ -450,8 +436,8 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
       <div style={{ padding: isDesktop ? '28px 40px' : '16px 20px', flex: 1 }}>
 
-        {/* search + filter row — hidden on saved tab */}
-        <div style={{ display: tab === 'saved' ? 'none' : 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
+        {/* search + filter row */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
           <div style={{ flex: 1, display: 'flex', background: '#F4F6F8', border: '1.5px solid #DCE0E5', borderRadius: 12, padding: '10px 14px', gap: 8, alignItems: 'center' }}>
             <span style={{ fontSize: 16, color: T.textMuted }}>🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder={tab === 'opportunities' ? 'Search opportunities…' : 'Search organizations…'} style={{ border: 'none', outline: 'none', flex: 1, fontSize: 13, fontFamily: 'inherit', background: 'transparent', color: T.text }} />
@@ -570,25 +556,6 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
                 })}
               </div>
             </>
-          )
-        )}
-
-        {/* saved tab */}
-        {tab === 'saved' && (
-          savedLoading ? (
-            <div style={{ textAlign: 'center', padding: 60, color: T.textMuted, fontSize: 14 }}>Loading…</div>
-          ) : savedListings.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: 60 }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🔖</div>
-              <div style={{ fontSize: 15, fontWeight: 600, color: T.text, marginBottom: 6 }}>No saved listings yet</div>
-              <div style={{ fontSize: 13, color: T.textMuted }}>Tap the 🔖 Save button on any opportunity to bookmark it here.</div>
-            </div>
-          ) : (
-            <div style={gridStyle}>
-              {savedListings.map((l, i) => (
-                <OppCard key={l.id} opp={{ id: l.id, title: l.title, org: l.org, org_id: l.org_id, cause: l.cause, location: l.location, hours: l.hours, date: l.date, source: l.source, externalUrl: l.external_url }} onSelect={onSelectOpp} alternate={i % 2 === 1} />
-              ))}
-            </div>
           )
         )}
 
