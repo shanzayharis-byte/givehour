@@ -131,7 +131,7 @@ export default function LogHours({ user }) {
     : pastOrgs.slice(0, 5)
 
   const inp  = { background: '#F4F6F8', border: '1.5px solid #DCE0E5', borderRadius: 10, padding: '11px 14px', fontSize: 15, color: T.text, outline: 'none', width: '100%', fontFamily: 'inherit', boxSizing: 'border-box' }
-  const lbl  = { fontSize: 11, fontWeight: 600, color: T.textSub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 5, display: 'block' }
+  const lbl  = { fontSize: 11, fontWeight: 700, color: T.text, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 6, display: 'block' }
   const ready = form.hours && parseFloat(form.hours) > 0
 
   // group history by org
@@ -183,6 +183,8 @@ export default function LogHours({ user }) {
             </div>
           </div>
 
+          <div style={{ borderTop: `1px solid ${T.border}`, margin: '16px 0' }} />
+
           {/* Organization */}
           <div style={{ marginBottom: 14, position: 'relative' }}>
             <label style={lbl}>Organization <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
@@ -202,6 +204,8 @@ export default function LogHours({ user }) {
               </div>
             )}
           </div>
+
+          <div style={{ borderTop: `1px solid ${T.border}`, margin: '16px 0' }} />
 
           {/* Date / Start / End — 3 cols on desktop, stacked on mobile */}
           <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr 1fr' : '1fr', gap: 12, marginBottom: 14 }}>
@@ -230,6 +234,8 @@ export default function LogHours({ user }) {
               <input value={form.location} onChange={e => setField('location', e.target.value)} style={inp} placeholder="e.g. Oakland, CA" />
             </div>
           </div>
+
+          <div style={{ borderTop: `1px solid ${T.border}`, margin: '16px 0' }} />
 
           {/* Activity */}
           <div style={{ marginBottom: 16 }}>
