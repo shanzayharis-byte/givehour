@@ -53,6 +53,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const [grade, setGrade]       = useState('')
   const [age, setAge]           = useState(null)
@@ -299,7 +300,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           {[[nameLbl, name, setName, 'text'], ['Email address', email, setEmail, 'email'], ['Password', password, setPassword, 'password']].map(([label, val, set, type]) => (
             <div key={label} style={{ marginBottom: 16 }}>
               <label style={lbl}>{label}</label>
-              <input type={type} value={val} onChange={e => set(e.target.value)} style={inp} placeholder={type === 'email' ? 'you@example.com' : type === 'password' ? 'Min. 6 characters' : ''} />
+              {type === 'password' ? (
+                <div style={{ position: 'relative' }}>
+                  <input type={showPassword ? 'text' : 'password'} value={val} onChange={e => set(e.target.value)} style={{ ...inp, paddingRight: 46 }} placeholder="Min. 6 characters" />
+                  <button type="button" onClick={() => setShowPassword(p => !p)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, color: T.textMuted, padding: 4, lineHeight: 1 }}>{showPassword ? '🙈' : '👁️'}</button>
+                </div>
+              ) : (
+                <input type={type} value={val} onChange={e => set(e.target.value)} style={inp} placeholder={type === 'email' ? 'you@example.com' : ''} />
+              )}
             </div>
           ))}
 
@@ -627,7 +635,10 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           </div>
           <div style={{ marginBottom: 8 }}>
             <label style={lbl}>Password</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={inp} placeholder="••••••••" />
+            <div style={{ position: 'relative' }}>
+              <input type={showPassword ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} style={{ ...inp, paddingRight: 46 }} placeholder="••••••••" />
+              <button type="button" onClick={() => setShowPassword(p => !p)} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 17, color: T.textMuted, padding: 4, lineHeight: 1 }}>{showPassword ? '🙈' : '👁️'}</button>
+            </div>
           </div>
           <div style={{ textAlign: 'right', marginBottom: 24 }}>
             <button onClick={handleForgotPassword} style={{ background: 'none', border: 'none', fontSize: 13, color: T.primary, cursor: 'pointer', fontWeight: 600 }}>{loading ? 'Sending...' : 'Forgot password?'}</button>
