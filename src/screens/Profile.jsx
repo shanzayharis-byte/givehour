@@ -419,6 +419,8 @@ export default function Profile({ user, onSignOut, onNavigate }) {
   const [showParent, setShowParent]         = useState(false)
 
   const [applications, setApplications] = useState([])
+  const [savedListings, setSavedListings] = useState([])
+  const [savedLoading, setSavedLoading] = useState(false)
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -461,6 +463,14 @@ export default function Profile({ user, onSignOut, onNavigate }) {
           .eq('teen_id', user?.id)
           .order('submitted_at', { ascending: false })
         setApplications(apps || [])
+
+        setSavedLoading(true)
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          const res = await fetch('/api/saved-listings', { headers: { Authorization: `Bearer ${session.access_token}` } })
+          if (res.ok) setSavedListings(await res.json())
+        }
+        setSavedLoading(false)
       } catch (e) { console.error(e) }
       setLoading(false)
     }
@@ -635,7 +645,7 @@ export default function Profile({ user, onSignOut, onNavigate }) {
         )}
 
         {applications.length > 0 && (
-          <div style={{ marginTop: 24, paddingBottom: 20 }}>
+          <div style={{ marginTop: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 12 }}>My Applications</div>
             {applications.map(a => {
               const statusColor = a.status === 'accepted' ? T.primary : a.status === 'declined' ? T.danger : T.textMuted
@@ -651,6 +661,32 @@ export default function Profile({ user, onSignOut, onNavigate }) {
             })}
           </div>
         )}
+
+        <div style={{ marginTop: 24, paddingBottom: 20 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 12 }}>🔖 Saved Listings</div>
+          {savedLoading ? (
+            <div style={{ fontSize: 13, color: T.textMuted }}>Loading…</div>
+          ) : savedListings.length === 0 ? (
+            <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 24, textAlign: 'center' }}>
+              <div style={{ fontSize: 13, color: T.textMuted }}>No saved listings yet. Tap 🔖 Save on any opportunity.</div>
+            </div>
+          ) : (
+            savedListings.map(l => {
+              const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
+              return (
+                <div key={l.id} style={{ background: T.card, borderRadius: 12, padding: 14, marginBottom: 10, border: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 3 }}>{l.org}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 8 }}>{l.title}</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, background: cause.bg, color: cause.text, fontWeight: 500 }}>{l.cause}</span>
+                    {l.location && <span style={{ fontSize: 11, color: T.textMuted }}>· {l.location}</span>}
+                    {l.hours && <span style={{ fontSize: 11, color: T.textMuted }}>· {l.hours}</span>}
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
       </div>
 
       {showCause && (
