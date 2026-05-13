@@ -148,7 +148,7 @@ export default function LogHours({ user }) {
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
       <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '16px 20px' }}>
-        <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.3px' }}>{user?.name ? `${user.name.split(' ')[0]}'s Hours` : 'Log Hours'}</div>
+        <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>{user?.name ? `${user.name.split(' ')[0]}'s Hours` : 'Log Hours'}</div>
         <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Track your volunteer time</div>
       </div>
 
