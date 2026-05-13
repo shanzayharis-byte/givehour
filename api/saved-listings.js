@@ -47,8 +47,8 @@ export default async function handler(req, res) {
 
     const savedAtMap = Object.fromEntries(saved.map(r => [r.listing_id, r.saved_at]))
 
-    const results = [
-      ...cleanRows.map(r => ({ ...r, saved_at: savedAtMap[r.id] })),
+    const combined = [
+      ...cleanRows.map(r => ({ ...r, saved_at: savedAtMap[r.id], _baseId: r.id.replace(/^org_/, '') })),
       ...orgRows.map(r => ({
         id: r.id,
         title: r.title,
@@ -61,8 +61,17 @@ export default async function handler(req, res) {
         source: 'org',
         external_url: r.external_url,
         saved_at: savedAtMap[r.id],
+        _baseId: r.id,
       })),
     ].sort((a, b) => new Date(b.saved_at) - new Date(a.saved_at))
+
+    // deduplicate: clean_listings (org_* prefixed) takes priority over org_listings plain UUID
+    const seen = new Set()
+    const results = combined.filter(r => {
+      if (seen.has(r._baseId)) return false
+      seen.add(r._baseId)
+      return true
+    }).map(({ _baseId, ...r }) => r)
 
     res.status(200).json(results)
   } catch (e) {
