@@ -200,6 +200,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [orgViewListings, setOrgViewListings] = useState([])
   const [orgViewLoading, setOrgViewLoading]   = useState(false)
   const [orgListings, setOrgListings]     = useState([])
+  const [idealistOpps, setIdealistOpps]   = useState([])
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -250,6 +251,31 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
         })))
       })
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    supabase
+      .from('clean_listings')
+      .select('*')
+      .eq('source', 'idealist')
+      .then(({ data }) => {
+        if (!data) return
+        setIdealistOpps(data.map(item => ({
+          id:          item.id,
+          title:       item.title,
+          org:         item.org || '',
+          org_id:      item.org_id || null,
+          cause:       item.cause,
+          ageGroup:    item.age_group,
+          hours:       item.hours || '',
+          location:    item.location || '',
+          date:        item.date || '',
+          description: item.description || '',
+          externalUrl: item.external_url || '',
+          remote:      !!item.remote,
+          source:      'idealist',
+        })))
+      })
   }, [])
 
   const fetchPage = useCallback(async (pageNum, replace = false) => {
