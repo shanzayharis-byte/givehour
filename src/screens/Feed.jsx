@@ -19,9 +19,14 @@ function MatchBadge({ score }) {
   return <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 20, fontWeight: 600, background: bg, color }}>{s}% match</span>
 }
 
+const ORG_COLORS = ['#0E7A3C','#C45A1F','#3458C3','#B23170','#6E3FB3','#9C7400','#0B7A75','#B23A3A','#5C7A2A','#4A4A8A']
+function orgColor(name) { let h = 0; for (let i = 0; i < (name||'').length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0; return ORG_COLORS[h % ORG_COLORS.length] }
+function orgInitial(name) { return (name || '?')[0].toUpperCase() }
+
 function OppCard({ opp, onSelect, isFirst, alternate }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
   const bg = alternate ? '#F9FAFC' : T.card
+  const color = orgColor(opp.org)
   return (
     <div
       onClick={() => onSelect(opp)}
@@ -31,10 +36,14 @@ function OppCard({ opp, onSelect, isFirst, alternate }) {
     >
       {isFirst && <span style={{ position: 'absolute', top: 14, right: 14, background: T.primaryLight, color: '#0A6830', fontSize: 10, borderRadius: 20, padding: '2px 8px', fontWeight: 600 }}>NEW</span>}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
-        {opp.org_logo_icon_url && (
+        {opp.org_logo_icon_url ? (
           <img src={opp.org_logo_icon_url} alt="" referrerPolicy="no-referrer"
             style={{ width: 22, height: 22, borderRadius: 6, objectFit: 'cover', flexShrink: 0, background: '#fff', border: `1px solid ${T.border}` }}
             onError={e => { e.currentTarget.style.display = 'none' }} />
+        ) : (
+          <div style={{ width: 22, height: 22, borderRadius: 6, background: color + '22', color, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${color}33` }}>
+            {orgInitial(opp.org)}
+          </div>
         )}
         <div style={{ fontSize: 12, color: T.textMuted }}>{opp.org}</div>
         {opp.source === 'org' && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, background: T.primaryLight, color: T.primary, fontWeight: 700, whiteSpace: 'nowrap' }}>✓ Give Hour Partner</span>}

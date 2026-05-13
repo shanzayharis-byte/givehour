@@ -550,11 +550,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
                   const alternate = Math.floor(i / cols) % 2 === 1
                   return (
                   <OrgDirCard key={org.org} org={org} alternate={alternate} onSelect={(o) => {
-                    if (o.org_id) {
-                      onSelectOrg(o.org_id, o.org)
-                    } else {
-                      setOrgView(o)
-                    }
+                    onSelectOrg(o.org_id || null, o.org)
                   }} />
                   )
                 })}

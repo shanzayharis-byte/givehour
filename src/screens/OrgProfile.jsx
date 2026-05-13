@@ -41,12 +41,17 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp, isGues
   useEffect(() => {
     async function load() {
       try {
-        const [orgRes, listRes] = await Promise.all([
-          fetch(`/api/orgs?id=${orgId}`).then(r => r.json()),
-          fetch(`/api/org-directory?org=__&org_id=${orgId}`).then(r => r.json()),
-        ])
-        setOrg(orgRes || null)
-        setListings(Array.isArray(listRes) ? listRes : [])
+        if (orgId) {
+          const [orgRes, listRes] = await Promise.all([
+            fetch(`/api/orgs?id=${orgId}`).then(r => r.json()),
+            fetch(`/api/org-directory?org=__&org_id=${orgId}`).then(r => r.json()),
+          ])
+          setOrg(orgRes || null)
+          setListings(Array.isArray(listRes) ? listRes : [])
+        } else {
+          const listRes = await fetch(`/api/org-directory?org=${encodeURIComponent(orgName || '')}`).then(r => r.json())
+          setListings(Array.isArray(listRes) ? listRes : [])
+        }
       } catch (e) {
         console.error(e)
         setError('Failed to load org profile')
@@ -55,7 +60,7 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp, isGues
       }
     }
     load()
-  }, [orgId])
+  }, [orgId, orgName])
 
   const name = org?.name || orgName || 'Organization'
   const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'
@@ -106,9 +111,11 @@ export default function OrgProfile({ orgId, orgName, onBack, onSelectOpp, isGues
 
               <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.15, margin: '0 0 10px', color: T.text, position: 'relative', letterSpacing: '-0.02em' }}>{name}</h1>
 
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fff', color: T.primary, fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, position: 'relative', border: `1px solid ${T.primary}33` }}>
-                ✓ Give Hour Partner
-              </div>
+              {orgId && org && (
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#fff', color: T.primary, fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, position: 'relative', border: `1px solid ${T.primary}33` }}>
+                  ✓ Give Hour Partner
+                </div>
+              )}
 
               {(org?.region || org?.org_type) && (
                 <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 6, marginTop: 12, position: 'relative' }}>
