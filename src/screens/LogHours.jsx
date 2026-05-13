@@ -147,9 +147,9 @@ export default function LogHours({ user }) {
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
-      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '14px 20px' }}>
-        <div style={{ fontSize: 17, fontWeight: 600, color: T.text }}>Log Hours</div>
-        <div style={{ fontSize: 11, color: T.textMuted, marginTop: 1 }}>Track your volunteer time</div>
+      <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: '16px 20px' }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: T.text, letterSpacing: '-0.3px' }}>Log Hours</div>
+        <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Track your volunteer time</div>
       </div>
 
       <div style={{ padding: isDesktop ? '28px 40px' : '16px 20px', maxWidth: isDesktop ? 700 : 'none', margin: '0 auto' }}>
