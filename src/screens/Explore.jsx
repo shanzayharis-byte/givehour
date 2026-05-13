@@ -57,6 +57,20 @@ function mapOpp(item) {
   }
 }
 
+function interleave(primary, secondary, every = 3) {
+  if (!secondary.length) return primary
+  const out = []
+  let sIdx = 0
+  primary.forEach((item, i) => {
+    out.push(item)
+    if ((i + 1) % every === 0) {
+      out.push(secondary[sIdx % secondary.length])
+      sIdx++
+    }
+  })
+  return out
+}
+
 // ---------- org directory card ----------
 // 12-color palette — gives every org a stable, distinctive color from its name
 const AVATAR_PALETTE = [
@@ -339,11 +353,12 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
 
   const filteredOrgListings = orgListings.filter(applyFilters)
   const filteredVolunteer   = opps.filter(applyFilters)
-  const filteredOpps        = [...filteredOrgListings, ...filteredVolunteer]
+  const filteredIdealist    = idealistOpps.filter(applyFilters)
+  const filteredOpps        = interleave([...filteredOrgListings, ...filteredVolunteer], filteredIdealist)
 
   // Count opps per cause (applying search + ageGroup only, not cause) for filter modal
   const causeCounts = {}
-  for (const o of [...orgListings, ...opps]) {
+  for (const o of [...orgListings, ...opps, ...idealistOpps]) {
     if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) continue
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) continue
     if (filters.remote   && !o.remote) continue
