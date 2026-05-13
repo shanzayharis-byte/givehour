@@ -49,6 +49,13 @@ export default function LogHours({ user }) {
   const [hoursGoal, setHoursGoal]   = useState(null)
   const [editingGoal, setEditingGoal] = useState(false)
   const [goalInput, setGoalInput]   = useState('')
+  const [expandedOrgs, setExpandedOrgs] = useState(new Set())
+
+  const toggleOrg = (key) => setExpandedOrgs(prev => {
+    const next = new Set(prev)
+    next.has(key) ? next.delete(key) : next.add(key)
+    return next
+  })
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -359,6 +366,18 @@ export default function LogHours({ user }) {
     </>
   )
 
+  // group history by org
+  const grouped = []
+  const seenOrgs = {}
+  for (const r of history) {
+    const key = r.org || 'Independent'
+    if (seenOrgs[key] == null) {
+      seenOrgs[key] = grouped.length
+      grouped.push({ key, rows: [] })
+    }
+    grouped[seenOrgs[key]].rows.push(r)
+  }
+
   const historySection = (
     <div>
       {history.length === 0 ? (
@@ -367,35 +386,66 @@ export default function LogHours({ user }) {
           <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 4 }}>No hours logged yet</div>
           <div style={{ fontSize: 12, color: T.textMuted }}>Tap the button above to log your first session.</div>
         </div>
-      ) : history.map(r => {
-        const isConfirming = confirmDelete === r.id
+      ) : grouped.map(({ key, rows: entries }) => {
+        const expanded   = expandedOrgs.has(key)
+        const groupHours = entries.reduce((s, r) => s + (parseFloat(r.hours) || 0), 0)
+        const categories = [...new Set(entries.map(r => r.category).filter(Boolean))]
+
         return (
-          <div key={r.id} style={{ background: T.card, border: `1px solid ${isConfirming ? '#E05252' : T.border}`, borderRadius: 10, padding: '12px 16px', marginBottom: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <div key={key} style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 10, overflow: 'hidden' }}>
+            {/* group header — click to expand */}
+            <div
+              onClick={() => toggleOrg(key)}
+              style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+              onMouseEnter={e => e.currentTarget.style.background = T.bg}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{r.org || 'Independent'}</div>
-                  {r.category && <span style={{ fontSize: 10, fontWeight: 700, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '2px 8px' }}>{r.category}</span>}
+                <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>{key}</div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  {categories.map(c => (
+                    <span key={c} style={{ fontSize: 10, fontWeight: 700, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '2px 8px' }}>{c}</span>
+                  ))}
+                  <span style={{ fontSize: 11, color: T.textMuted }}>{entries.length} session{entries.length !== 1 ? 's' : ''}</span>
                 </div>
-                <div style={{ fontSize: 11, color: T.textMuted }}>
-                  {r.logged_at ? new Date(r.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                  {r.start_time && r.end_time && ` · ${r.start_time} – ${r.end_time}`}
-                </div>
-                {r.location && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>📍 {r.location}</div>}
-                {r.notes && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>{r.notes}</div>}
               </div>
-              <span style={{ background: T.primaryLight, color: T.primary, fontSize: 14, fontWeight: 700, padding: '4px 12px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(r.hours)}</span>
+              <span style={{ background: T.primaryLight, color: T.primary, fontSize: 13, fontWeight: 700, padding: '4px 12px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(groupHours)}</span>
+              <span style={{ fontSize: 12, color: T.textMuted, flexShrink: 0, transition: 'transform 0.2s', display: 'inline-block', transform: expanded ? 'rotate(180deg)' : 'none' }}>▼</span>
             </div>
-            {isConfirming ? (
-              <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 13, color: '#E05252', fontWeight: 600, flex: 1 }}>Delete this entry?</span>
-                <button onClick={() => setConfirmDelete(null)} style={{ padding: '6px 12px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 13, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={() => handleDelete(r.id)} disabled={deleting} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>{deleting ? '...' : 'Delete'}</button>
-              </div>
-            ) : (
-              <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
-                <button onClick={() => openEdit(r)} style={{ background: T.primaryLight, border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
-                <button onClick={() => setConfirmDelete(r.id)} style={{ background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
+
+            {/* individual entries */}
+            {expanded && (
+              <div style={{ borderTop: `1px solid ${T.border}` }}>
+                {entries.map((r, i) => {
+                  const isConfirming = confirmDelete === r.id
+                  return (
+                    <div key={r.id} style={{ padding: '12px 16px', borderBottom: i < entries.length - 1 ? `1px solid ${T.border}` : 'none', background: isConfirming ? '#FFF5F5' : 'transparent' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, color: T.textMuted }}>
+                            {r.logged_at ? new Date(r.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                            {r.start_time && r.end_time && ` · ${r.start_time} – ${r.end_time}`}
+                          </div>
+                          {r.location && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>📍 {r.location}</div>}
+                          {r.notes && <div style={{ fontSize: 11, color: T.textSub, marginTop: 2 }}>{r.notes}</div>}
+                        </div>
+                        <span style={{ background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>{fmtHours(r.hours)}</span>
+                      </div>
+                      {isConfirming ? (
+                        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 12, color: '#E05252', fontWeight: 600, flex: 1 }}>Delete this entry?</span>
+                          <button onClick={() => setConfirmDelete(null)} style={{ padding: '5px 10px', borderRadius: 8, border: `1px solid ${T.border}`, background: '#fff', fontSize: 12, fontWeight: 600, color: T.text, cursor: 'pointer' }}>Cancel</button>
+                          <button onClick={() => handleDelete(r.id)} disabled={deleting} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: '#E05252', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>{deleting ? '...' : 'Delete'}</button>
+                        </div>
+                      ) : (
+                        <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
+                          <button onClick={() => openEdit(r)} style={{ background: T.primaryLight, border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>✏️ Edit</button>
+                          <button onClick={() => setConfirmDelete(r.id)} style={{ background: '#FFF0F0', border: 'none', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 600, color: '#E05252', cursor: 'pointer' }}>🗑 Delete</button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </div>
