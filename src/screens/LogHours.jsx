@@ -4,6 +4,16 @@ import { T } from '../lib/theme'
 
 const CATEGORIES = ['Community', 'Sr. Community', 'Fund Raising', 'Environmental', 'Educational', 'Religious', 'Healthcare', 'Arts', 'Others']
 
+const BADGES = [
+  { icon: '🌱', label: 'First Step',      threshold: 1 },
+  { icon: '👟', label: 'Getting Started', threshold: 5 },
+  { icon: '🔥', label: 'On Fire',         threshold: 10 },
+  { icon: '⭐', label: 'Committed',       threshold: 25 },
+  { icon: '💯', label: 'Century Club',    threshold: 50 },
+  { icon: '🚀', label: 'Superstar',       threshold: 100 },
+  { icon: '🏆', label: 'Legend',          threshold: 250 },
+]
+
 function calcHours(start, end) {
   if (!start || !end) return ''
   const [sh, sm] = start.split(':').map(Number)
@@ -36,6 +46,9 @@ export default function LogHours({ user }) {
   const [loading, setLoading]       = useState(true)
   const [isDesktop, setIsDesktop]   = useState(window.innerWidth >= 1024)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [hoursGoal, setHoursGoal]   = useState(null)
+  const [editingGoal, setEditingGoal] = useState(false)
+  const [goalInput, setGoalInput]   = useState('')
 
   useEffect(() => {
     const handle = () => setIsDesktop(window.innerWidth >= 1024)
@@ -53,9 +66,29 @@ export default function LogHours({ user }) {
   }
 
   useEffect(() => {
-    async function load() { await loadHistory(); setLoading(false) }
+    async function load() {
+      await loadHistory()
+      try {
+        const { data: prof } = await supabase.from('users').select('hours_goal').eq('id', user?.id).maybeSingle()
+        if (prof?.hours_goal) {
+          setHoursGoal(prof.hours_goal)
+          setGoalInput(String(prof.hours_goal))
+        }
+      } catch (e) { console.error(e) }
+      setLoading(false)
+    }
     load()
   }, [user])
+
+  const saveGoal = async () => {
+    const g = parseFloat(goalInput)
+    if (!g || g <= 0) return
+    try {
+      await supabase.from('users').update({ hours_goal: g }).eq('id', user?.id)
+      setHoursGoal(g)
+      setEditingGoal(false)
+    } catch (e) { console.error(e) }
+  }
 
   const setField = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
@@ -133,6 +166,93 @@ export default function LogHours({ user }) {
   const inp  = { background: '#F4F6F8', border: '1.5px solid #DCE0E5', borderRadius: 10, padding: '11px 14px', fontSize: 15, color: T.text, outline: 'none', width: '100%', fontFamily: 'inherit', boxSizing: 'border-box' }
   const lbl  = { fontSize: 11, fontWeight: 600, color: T.textSub, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 5, display: 'block' }
   const ready = form.hours && parseFloat(form.hours) > 0
+
+  // goal + progress section
+  const pct = hoursGoal ? Math.min(100, Math.round((totalHours / hoursGoal) * 100)) : 0
+  const earnedBadges = BADGES.filter(b => totalHours >= b.threshold)
+  const nextBadge    = BADGES.find(b => totalHours < b.threshold)
+
+  const goalSection = (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: '16px 18px', marginBottom: 14 }}>
+      {/* goal header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: hoursGoal ? 12 : 0 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>🎯 Hours Goal</div>
+        {!editingGoal && (
+          <button
+            onClick={() => { setEditingGoal(true); setGoalInput(hoursGoal ? String(hoursGoal) : '') }}
+            style={{ background: T.primaryLight, border: 'none', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 600, color: T.primary, cursor: 'pointer' }}>
+            {hoursGoal ? '✏️ Edit' : '+ Set goal'}
+          </button>
+        )}
+      </div>
+
+      {/* inline goal editor */}
+      {editingGoal && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
+          <input
+            type="number" min="1" step="1" value={goalInput}
+            onChange={e => setGoalInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && saveGoal()}
+            placeholder="e.g. 50"
+            autoFocus
+            style={{ ...inp, width: 110, flexShrink: 0 }}
+          />
+          <span style={{ fontSize: 13, color: T.textSub, flexShrink: 0 }}>hours</span>
+          <button onClick={saveGoal} style={{ background: T.primary, border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', flexShrink: 0 }}>Save</button>
+          <button onClick={() => setEditingGoal(false)} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', flexShrink: 0 }}>Cancel</button>
+        </div>
+      )}
+
+      {/* progress bar */}
+      {hoursGoal && !editingGoal && (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
+            <span style={{ fontSize: 13, color: T.textSub }}>{fmtHours(totalHours) || '0h'} of {hoursGoal}h goal</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: pct >= 100 ? T.primary : T.text }}>{pct}%</span>
+          </div>
+          <div style={{ height: 10, background: '#E8EAED', borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${pct}%`,
+              background: pct >= 100 ? T.primary : `linear-gradient(90deg, #18A050, #34C97A)`,
+              borderRadius: 20,
+              transition: 'width 0.5s ease',
+            }} />
+          </div>
+          {pct >= 100 && <div style={{ marginTop: 7, fontSize: 12, color: T.primary, fontWeight: 600 }}>🎉 Goal reached! Keep going!</div>}
+          {nextBadge && pct < 100 && (
+            <div style={{ marginTop: 6, fontSize: 11, color: T.textMuted }}>Next badge: {nextBadge.icon} {nextBadge.label} at {nextBadge.threshold}h</div>
+          )}
+        </>
+      )}
+    </div>
+  )
+
+  // badges section
+  const badgesSection = (
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 10 }}>🏅 Badges</div>
+      <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
+        {BADGES.map(b => {
+          const earned = totalHours >= b.threshold
+          return (
+            <div key={b.label} style={{
+              flexShrink: 0,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+              background: earned ? T.primaryLight : '#F4F6F8',
+              border: `1.5px solid ${earned ? T.primary : '#DCE0E5'}`,
+              borderRadius: 12, padding: '12px 14px', minWidth: 70,
+              opacity: earned ? 1 : 0.5,
+            }}>
+              <span style={{ fontSize: 24, filter: earned ? 'none' : 'grayscale(1)' }}>{b.icon}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: earned ? T.primary : T.textMuted, textAlign: 'center', lineHeight: 1.3 }}>{b.label}</span>
+              <span style={{ fontSize: 9, color: earned ? T.primary : T.textMuted }}>{b.threshold}h</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   const modal = showModal && (
     <>
@@ -285,7 +405,7 @@ export default function LogHours({ user }) {
   )
 
   const totalCard = (
-    <div style={{ background: 'linear-gradient(135deg, #18A050, #0E7A3C)', borderRadius: 12, padding: 20, marginBottom: 16, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+    <div style={{ background: 'linear-gradient(135deg, #18A050, #0E7A3C)', borderRadius: 12, padding: 20, marginBottom: 14, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
       <div>
         <div style={{ fontSize: 36, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{totalHours || 0}</div>
         <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>total hours</div>
@@ -320,6 +440,8 @@ export default function LogHours({ user }) {
       </div>
       <div style={{ padding: isDesktop ? '32px 40px' : '16px 20px', maxWidth: isDesktop ? 700 : 'none', margin: '0 auto' }}>
         {totalCard}
+        {goalSection}
+        {badgesSection}
         <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 10 }}>Recent history</div>
         {historySection}
       </div>
