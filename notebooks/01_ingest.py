@@ -9,7 +9,7 @@
 #   AZURE_STORAGE_KEY   — Access key for the givehourdata storage account
 #   SUPABASE_URL        — https://your-project.supabase.co
 #   SUPABASE_KEY        — service_role key from Supabase → Settings → API
-#   IDEALIST_API_KEY    — API key for Idealist.org API
+#   (Idealist API key is hardcoded directly in the notebook below)
 
 %pip install azure-storage-blob supabase
 
@@ -79,7 +79,7 @@ print(f"Saved {len(org_listings)} org listings → raw/{org_blob_name}")
 idealist_results = []
 
 try:
-    IDEALIST_KEY = os.environ["IDEALIST_API_KEY"]
+    IDEALIST_KEY = "66355e8e431709c2444478cc2e1198b0"
     IDEALIST_URL = "https://www.idealist.org/api/v1/listings/volops"
     PAGE_SIZE = 100
 
