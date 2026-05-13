@@ -9,7 +9,7 @@ async function attachOrgLogos(rows) {
   const { data: orgs } = await supabase.from('users').select('id, logo_url, logo_icon_url').in('id', orgIds)
   const map = {}
   for (const o of orgs || []) map[o.id] = o.logo_icon_url || o.logo_url || null
-  return rows.map(r => ({ ...r, org_logo_icon_url: r.source === 'org' && r.org_id ? map[r.org_id] || null : null }))
+  return rows.map(r => ({ ...r, org_logo_icon_url: (r.source === 'org' && r.org_id ? map[r.org_id] : null) || r.org_logo_icon_url || r.org_logo_url || null }))
 }
 
 function MatchBadge({ score }) {
