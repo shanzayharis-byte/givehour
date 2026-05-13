@@ -126,11 +126,9 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, 
                 const isConfirming = confirmDelete === l.id
                 return (
                   <div key={l.id} style={{ background: T.card, borderRadius: 14, border: `1px solid ${isConfirming ? '#E05252' : T.border}`, transition: 'border-color 0.15s, box-shadow 0.15s', overflow: 'hidden' }}>
-                    <div
+                    <button
                       onClick={() => onSelectOpp && onSelectOpp({ id: `org_${l.id}`, title: l.title, org: user.name, org_id: l.org_id || user.id, cause: l.cause, location: l.location, hours: l.hours, date: l.date, description: l.description, externalUrl: l.external_url, remote: !!l.remote, source: 'org' })}
-                      onMouseEnter={e => { e.currentTarget.style.background = '#F9FAFC' }}
-                      onMouseLeave={e => { e.currentTarget.style.background = T.card }}
-                      style={{ padding: 16, cursor: 'pointer' }}
+                      style={{ width: '100%', textAlign: 'left', padding: 16, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', display: 'block' }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -143,11 +141,12 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, 
                             {l.remote && <span style={{ background: T.primaryLight, color: T.primary, fontSize: 11, fontWeight: 500, padding: '2px 8px', borderRadius: 20 }}>Remote</span>}
                           </div>
                         </div>
+                        <span style={{ fontSize: 12, color: T.primary, fontWeight: 600, flexShrink: 0 }}>View →</span>
                       </div>
                       <div style={{ fontSize: 12, color: T.textMuted }}>
                         {[l.remote ? 'Remote' : l.location, l.date, l.hours ? `${l.hours}h` : null].filter(Boolean).join(' · ')}
                       </div>
-                    </div>
+                    </button>
 
                     {isConfirming ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 16px', borderTop: `1px solid #FEE2E2` }}>
