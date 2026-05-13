@@ -83,10 +83,10 @@ export default function Feed({ user, onSelectOpp, onSignOut }) {
             supabase.from('hours_log').select('hours, org').eq('user_id', user.id),
           ])
           if (stats) {
-            setTotalHours(parseFloat(stats.total_hours) || 0)
+            setTotalHours(Math.round(parseFloat(stats.total_hours) || 0))
             setStreak(stats.streak_days || 0)
           } else if (hours) {
-            setTotalHours(hours.reduce((s, r) => s + (r.hours || 0), 0))
+            setTotalHours(Math.round(hours.reduce((s, r) => s + (r.hours || 0), 0)))
           }
           if (hours) setOrgCount(new Set(hours.map(r => r.org).filter(Boolean)).size)
 
