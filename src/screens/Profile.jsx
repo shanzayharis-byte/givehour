@@ -14,8 +14,8 @@ const lbl = { fontSize: 12, color: T.textMuted, marginBottom: 6, display: 'block
 
 function Modal({ title, subtitle, onClose, children }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 1000 }}>
-      <div style={{ background: '#fff', borderRadius: '16px 16px 0 0', padding: 24, width: '100%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 24, width: '90%', maxWidth: 480, maxHeight: '80vh', overflowY: 'auto' }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: T.text, marginBottom: 4 }}>{title}</div>
         {subtitle && <div style={{ fontSize: 12, color: T.textMuted, marginBottom: 16 }}>{subtitle}</div>}
         {children}
