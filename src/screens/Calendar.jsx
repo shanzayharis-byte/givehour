@@ -15,6 +15,9 @@ function parseFutureDate(str) {
   return d >= today ? d : null
 }
 
+function isHtml(str) { return /<[a-z][\s\S]*>/i.test(str || '') }
+function sanitize(html) { return (html || '').replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<iframe[\s\S]*?<\/iframe>/gi, '') }
+
 // Format a Date as "Weekday, Month Day" e.g. "Sun, May 18"
 function fmtDateHeader(d) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -46,10 +49,17 @@ function OppCard({ l, expanded, onToggle, saved, onSave, user, isGuest }) {
             <div style={{ fontSize: 12, color: T.textMuted, marginTop: 10, marginBottom: 6 }}>⏱ {l.hours} hrs</div>
           )}
           {l.description && (
-            <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6, marginBottom: 12,
-              display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-              {l.description}
-            </div>
+            isHtml(l.description) ? (
+              <div
+                dangerouslySetInnerHTML={{ __html: sanitize(l.description) }}
+                style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6, marginBottom: 12,
+                  display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} />
+            ) : (
+              <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6, marginBottom: 12,
+                display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                {l.description}
+              </div>
+            )
           )}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {l.external_url && (
