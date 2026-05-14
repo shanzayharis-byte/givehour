@@ -233,7 +233,12 @@ export default function App() {
             <button onClick={handleSignOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: '#E05252', fontWeight: 500, fontSize: 14, fontFamily: 'inherit' }}>
               <span style={{ fontSize: 16 }}>🚪</span>Sign out
             </button>
-            <div style={{ padding: '8px 12px 0', fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
+            <div style={{ display: 'flex', gap: 10, padding: '6px 12px 2px', flexWrap: 'wrap' }}>
+              {[['Privacy', 'privacy'], ['Terms', 'terms'], ['Contact', 'contact']].map(([label, slug]) => (
+                <button key={slug} onClick={() => setActiveScreen(slug)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: T.textSub, cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
+              ))}
+            </div>
+            <div style={{ padding: '2px 12px 8px', fontSize: 11, color: T.textMuted, lineHeight: 1.5 }}>
               Built by <span style={{ fontWeight: 600, color: T.text }}>Shanzay Haris</span>
             </div>
           </div>
@@ -311,6 +316,11 @@ export default function App() {
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: '#E05252', fontWeight: 500, fontSize: 15, fontFamily: 'inherit' }}>
                 <span style={{ fontSize: 20 }}>🚪</span> Sign out
               </button>
+              <div style={{ display: 'flex', gap: 12, padding: '4px 14px 0', flexWrap: 'wrap' }}>
+                {[['Privacy', 'privacy'], ['Terms', 'terms'], ['Contact', 'contact']].map(([label, slug]) => (
+                  <button key={slug} onClick={() => { setDrawerOpen(false); setActiveScreen(slug) }} style={{ background: 'none', border: 'none', padding: 0, fontSize: 11, color: T.textSub, cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
+                ))}
+              </div>
             </div>
           </div>
 
