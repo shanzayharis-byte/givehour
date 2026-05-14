@@ -389,7 +389,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const orgActiveFilterCount = [orgFilters.cause, orgFilters.ageGroup, orgFilters.remote].filter(Boolean).length
 
   const gridStyle = isDesktop
-    ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }
+    ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, alignItems: 'start' }
     : { display: 'flex', flexDirection: 'column', gap: 10 }
 
   const orgGridStyle = isDesktop
