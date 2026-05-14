@@ -18,15 +18,20 @@ import Saved from './screens/Saved'
 import Calendar from './screens/Calendar'
 import './App.css'
 
-const NAV = [
-  { id: 'feed',     icon: '🏠', label: 'Feed' },
-  { id: 'explore',  icon: '🔍', label: 'Explore' },
-  { id: 'saved',    icon: '🔖', label: 'Saved' },
-  { id: 'loghours', icon: '⏱', label: 'Log Hours' },
-  { id: 'calendar', icon: '📅', label: 'Calendar' },
-  { id: 'impact',   icon: '⭐', label: 'Impact' },
-  { id: 'profile',  icon: '👤', label: 'Profile' },
+const NAV_GROUPS = [
+  { label: 'Listings', items: [
+    { id: 'feed',     icon: '🏠', label: 'Feed' },
+    { id: 'explore',  icon: '🔍', label: 'Explore' },
+    { id: 'saved',    icon: '🔖', label: 'Saved' },
+    { id: 'calendar', icon: '📅', label: 'Calendar' },
+  ]},
+  { label: 'Logging', items: [
+    { id: 'loghours', icon: '⏱', label: 'Log Hours' },
+    { id: 'impact',   icon: '⭐', label: 'Impact' },
+  ]},
 ]
+
+const NAV = [...NAV_GROUPS.flatMap(g => g.items), { id: 'profile', icon: '👤', label: 'Profile' }]
 
 const ORG_NAV = [
   { id: 'orgDashboard',   icon: '📋', label: 'Listings' },
@@ -224,15 +229,36 @@ export default function App() {
               <div style={{ fontSize: 11, color: T.textMuted }}>{isOrg ? 'Org Portal' : 'Teen Portal'}</div>
             </div>
           </button>
-          <nav style={{ padding: '14px 12px', flex: 1 }}>
-            {visibleNav.map(({ id, icon, label }) => (
+          <nav style={{ padding: '10px 12px', flex: 1, overflowY: 'auto' }}>
+            {isOrg ? visibleNav.map(({ id, icon, label }) => (
               <button key={id} onClick={() => navigate(id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D', fontWeight: activeScreen === id ? 600 : 400, fontSize: 14, fontFamily: 'inherit', marginBottom: 4 }}>
-                {id === 'profile' && dbUser?.avatar_url
-                  ? <img src={dbUser.avatar_url} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === id ? T.primary : T.border}` }} />
-                  : <span style={{ fontSize: 16 }}>{icon}</span>}
+                {id === 'profile' && dbUser?.avatar_url ? <img src={dbUser.avatar_url} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === id ? T.primary : T.border}` }} /> : <span style={{ fontSize: 16 }}>{icon}</span>}
                 {label}
               </button>
-            ))}
+            )) : (
+              <>
+                {NAV_GROUPS.map((group, gi) => (
+                  <div key={group.label} style={{ marginBottom: 4 }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', padding: `${gi === 0 ? 2 : 10}px 12px 4px` }}>{group.label}</div>
+                    {group.items.map(({ id, icon, label }) => (
+                      <button key={id} onClick={() => navigate(id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D', fontWeight: activeScreen === id ? 600 : 400, fontSize: 14, fontFamily: 'inherit', marginBottom: 2 }}>
+                        <span style={{ fontSize: 15 }}>{icon}</span>{label}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+                <div style={{ height: 1, background: T.border, margin: '8px 12px' }} />
+                <button onClick={() => navigate('profile')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: activeScreen === 'profile' ? T.primaryLight : 'transparent', color: activeScreen === 'profile' ? T.primary : '#60666D', fontWeight: activeScreen === 'profile' ? 600 : 400, fontSize: 14, fontFamily: 'inherit', marginBottom: 2 }}>
+                  {dbUser?.avatar_url ? <img src={dbUser.avatar_url} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === 'profile' ? T.primary : T.border}` }} /> : <span style={{ fontSize: 15 }}>👤</span>}
+                  Profile
+                </button>
+                {dbUser?.is_admin && (
+                  <button onClick={() => navigate('admin')} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: activeScreen === 'admin' ? T.primaryLight : 'transparent', color: activeScreen === 'admin' ? T.primary : '#60666D', fontWeight: activeScreen === 'admin' ? 600 : 400, fontSize: 14, fontFamily: 'inherit', marginBottom: 2 }}>
+                    <span style={{ fontSize: 15 }}>⚙️</span>Admin
+                  </button>
+                )}
+              </>
+            )}
           </nav>
           <div style={{ padding: '12px', borderTop: `1px solid ${T.border}` }}>
             <button onClick={handleSignOut} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'transparent', color: '#E05252', fontWeight: 500, fontSize: 14, fontFamily: 'inherit' }}>
@@ -305,16 +331,40 @@ export default function App() {
             </div>
 
             {/* nav items */}
-            <nav style={{ padding: '10px 12px', flex: 1 }}>
-              {visibleNav.map(({ id, icon, label }) => (
+            <nav style={{ padding: '10px 12px', flex: 1, overflowY: 'auto' }}>
+              {isOrg ? visibleNav.map(({ id, icon, label }) => (
                 <button key={id} onClick={() => navigate(id)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 4, fontFamily: 'inherit', fontSize: 15, fontWeight: activeScreen === id ? 600 : 400, background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D' }}>
-                  {id === 'profile' && dbUser?.avatar_url
-                    ? <img src={dbUser.avatar_url} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === id ? T.primary : T.border}` }} />
-                    : <span style={{ fontSize: 20 }}>{icon}</span>}
+                  {id === 'profile' && dbUser?.avatar_url ? <img src={dbUser.avatar_url} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === id ? T.primary : T.border}` }} /> : <span style={{ fontSize: 20 }}>{icon}</span>}
                   {label}
                 </button>
-              ))}
+              )) : (
+                <>
+                  {NAV_GROUPS.map((group, gi) => (
+                    <div key={group.label} style={{ marginBottom: 4 }}>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em', padding: `${gi === 0 ? 2 : 10}px 14px 4px` }}>{group.label}</div>
+                      {group.items.map(({ id, icon, label }) => (
+                        <button key={id} onClick={() => navigate(id)}
+                          style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 2, fontFamily: 'inherit', fontSize: 15, fontWeight: activeScreen === id ? 600 : 400, background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D' }}>
+                          <span style={{ fontSize: 18 }}>{icon}</span>{label}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                  <div style={{ height: 1, background: T.border, margin: '8px 14px' }} />
+                  <button onClick={() => navigate('profile')}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 2, fontFamily: 'inherit', fontSize: 15, fontWeight: activeScreen === 'profile' ? 600 : 400, background: activeScreen === 'profile' ? T.primaryLight : 'transparent', color: activeScreen === 'profile' ? T.primary : '#60666D' }}>
+                    {dbUser?.avatar_url ? <img src={dbUser.avatar_url} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === 'profile' ? T.primary : T.border}` }} /> : <span style={{ fontSize: 18 }}>👤</span>}
+                    Profile
+                  </button>
+                  {dbUser?.is_admin && (
+                    <button onClick={() => navigate('admin')}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 2, fontFamily: 'inherit', fontSize: 15, fontWeight: activeScreen === 'admin' ? 600 : 400, background: activeScreen === 'admin' ? T.primaryLight : 'transparent', color: activeScreen === 'admin' ? T.primary : '#60666D' }}>
+                      <span style={{ fontSize: 18 }}>⚙️</span>Admin
+                    </button>
+                  )}
+                </>
+              )}
             </nav>
 
             {/* sign out */}
