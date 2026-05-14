@@ -170,7 +170,7 @@ function OppCard({ opp, onSelect, alternate }) {
       onClick={() => onSelect(opp)}
       onMouseEnter={e => { e.currentTarget.style.borderColor = T.primary; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.06)' }}
       onMouseLeave={e => { e.currentTarget.style.borderColor = opp.source === 'org' ? T.primary : T.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
-      style={{ background: bg, border: `1px solid ${opp.source === 'org' ? T.primary : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s' }}
+      style={{ background: bg, border: `1px solid ${opp.source === 'org' ? T.primary : T.border}`, borderRadius: 14, padding: 16, cursor: 'pointer', transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s', minWidth: 0 }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3, gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
@@ -389,7 +389,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const orgActiveFilterCount = [orgFilters.cause, orgFilters.ageGroup, orgFilters.remote].filter(Boolean).length
 
   const gridStyle = isDesktop
-    ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, alignItems: 'start' }
+    ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }
     : { display: 'flex', flexDirection: 'column', gap: 10 }
 
   const orgGridStyle = isDesktop
