@@ -3,30 +3,32 @@ import { T, CAUSE } from '../lib/theme'
 
 const CAUSES = ['Education','Environment','Animals','Food Security','Health','Housing','Arts','Seniors']
 const CAUSE_EMOJI = { Education:'📚', Environment:'🌿', Animals:'🐾', 'Food Security':'🍎', Health:'❤️', Housing:'🏠', Arts:'🎨', Seniors:'🤝' }
+const US_STATES = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
 
 // shared filter modal — used on Feed, Explore (opportunities tab), and Explore (organizations tab)
-// `sections` = array of which to show: 'cause', 'location', 'ageGroup'
+// `sections` = array of which to show: 'cause', 'location', 'ageGroup', 'state'
 export default function FilterModal({
   filters,
   onChange,
   onClose,
   isDesktop,
   causeCounts = {},
-  sections = ['cause', 'location', 'ageGroup'],
+  sections = ['cause', 'location', 'ageGroup', 'state'],
   title = 'Filter opportunities',
 }) {
   const [local, setLocal] = useState(filters)
   const set = (key, val) => setLocal(p => ({ ...p, [key]: val }))
 
   const has = (s) => sections.includes(s)
-  const activeCount = [has('cause') && local.cause, has('ageGroup') && local.ageGroup, has('location') && local.remote].filter(Boolean).length
+  const activeCount = [has('cause') && local.cause, has('ageGroup') && local.ageGroup, has('location') && local.remote, has('state') && local.state && local.state !== 'California'].filter(Boolean).length
 
   const clearAll = () => {
     const cleared = {}
-    if (has('cause')) cleared.cause = ''
+    if (has('cause'))    cleared.cause    = ''
     if (has('ageGroup')) cleared.ageGroup = ''
-    if (has('location')) cleared.remote = false
-    setLocal(cleared)
+    if (has('location')) cleared.remote   = false
+    if (has('state'))    cleared.state    = 'California'
+    setLocal(p => ({ ...p, ...cleared }))
   }
 
   return (
@@ -78,6 +80,20 @@ export default function FilterModal({
                 <button key={key} onClick={() => set('ageGroup', local.ageGroup === key ? '' : key)} style={{ padding: '7px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: `1.5px solid ${local.ageGroup === key ? T.primary : T.border}`, background: local.ageGroup === key ? T.primaryLight : '#fff', color: local.ageGroup === key ? T.primary : T.textSub }}>{lbl}</button>
               ))}
             </div>
+          </>
+        )}
+
+        {has('state') && (
+          <>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>State</div>
+            <select
+              value={local.state || ''}
+              onChange={e => set('state', e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${local.state ? T.primary : T.border}`, fontSize: 13, color: T.text, background: '#fff', marginBottom: 20, fontFamily: 'inherit', cursor: 'pointer' }}
+            >
+              <option value=''>All states (+ remote)</option>
+              {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
           </>
         )}
 

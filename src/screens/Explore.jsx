@@ -7,6 +7,18 @@ import FilterModal from '../components/FilterModal'
 const CAUSES = ['Education','Environment','Animals','Food Security','Health','Housing','Arts','Seniors']
 const CAUSE_EMOJI = { Education:'📚', Environment:'🌿', Animals:'🐾', 'Food Security':'🍎', Health:'❤️', Housing:'🏠', Arts:'🎨', Seniors:'🤝' }
 
+const US_STATES = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
+const STATE_ABBR = { Alabama:'AL',Alaska:'AK',Arizona:'AZ',Arkansas:'AR',California:'CA',Colorado:'CO',Connecticut:'CT',Delaware:'DE',Florida:'FL',Georgia:'GA',Hawaii:'HI',Idaho:'ID',Illinois:'IL',Indiana:'IN',Iowa:'IA',Kansas:'KS',Kentucky:'KY',Louisiana:'LA',Maine:'ME',Maryland:'MD',Massachusetts:'MA',Michigan:'MI',Minnesota:'MN',Mississippi:'MS',Missouri:'MO',Montana:'MT',Nebraska:'NE',Nevada:'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND',Ohio:'OH',Oklahoma:'OK',Oregon:'OR',Pennsylvania:'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD',Tennessee:'TN',Texas:'TX',Utah:'UT',Vermont:'VT',Virginia:'VA',Washington:'WA','West Virginia':'WV',Wisconsin:'WI',Wyoming:'WY' }
+
+function matchesState(location, state) {
+  if (!state) return true
+  if (!location || location === 'Remote / Online' || location === 'In-Person') return true
+  const abbr = (STATE_ABBR[state] || '').toLowerCase()
+  const loc  = location.toLowerCase()
+  const name = state.toLowerCase()
+  return loc.includes(name) || (abbr && (loc.includes(', ' + abbr) || loc.endsWith(' ' + abbr)))
+}
+
 const CA_PROVINCES = new Set(['Alberta','British Columbia','Manitoba','New Brunswick','Newfoundland and Labrador','Northwest Territories','Nova Scotia','Nunavut','Ontario','Prince Edward Island','Quebec','Saskatchewan','Yukon','BC','AB','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'])
 
 function isUS(item) {
@@ -208,7 +220,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [error, setError]             = useState(null)
   const [search, setSearch]           = useState('')
   const [showFilter, setShowFilter]   = useState(false)
-  const [filters, setFilters]         = useState({ cause: '', ageGroup: '', remote: false })
+  const [filters, setFilters]         = useState({ cause: '', ageGroup: '', remote: false, state: 'California' })
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [orgDir, setOrgDir]               = useState([])
   const [orgDirLoading, setOrgDirLoading] = useState(true)
@@ -346,13 +358,14 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
     return () => { cancelled = true }
   }, [])
 
-  const activeFilterCount = [filters.cause, filters.ageGroup, filters.remote].filter(Boolean).length
+  const activeFilterCount = [filters.cause, filters.ageGroup, filters.remote, filters.state && filters.state !== 'California'].filter(Boolean).length
 
   const applyFilters = (o) => {
     if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) return false
     if (filters.cause    && o.cause !== filters.cause) return false
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) return false
     if (filters.remote   && !o.remote) return false
+    if (!matchesState(o.location, filters.state)) return false
     return true
   }
 
@@ -455,6 +468,22 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
             )
           })()}
         </div>
+
+        {/* state filter chip */}
+        {tab === 'opportunities' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: T.textMuted, fontWeight: 500 }}>📍 State:</span>
+            {filters.state ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: T.primaryLight, color: T.primary, border: `1.5px solid ${T.primary}33`, borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>
+                {filters.state}
+                <button onClick={() => setFilters(f => ({ ...f, state: '' }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.primary, fontSize: 15, padding: 0, lineHeight: 1, marginLeft: 2 }}>×</button>
+              </span>
+            ) : (
+              <span style={{ fontSize: 12, color: T.textMuted }}>All states</span>
+            )}
+            <button onClick={() => setShowFilter(true)} style={{ fontSize: 12, color: T.primary, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>Change</button>
+          </div>
+        )}
 
         {/* opportunities tab */}
         {tab === 'opportunities' && (
