@@ -282,62 +282,87 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             }}>
               <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>⏱ Your Hours Log</div>
-                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Everything in one place, grouped by org</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>⏱ Your Impact Dashboard</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Everything tracked, visualized for college apps</div>
                 </div>
                 <button onClick={() => setShowTracking(false)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px' }}>
+
                 {/* stat chips */}
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                  {[['33h', 'total hours', T.primary, T.primaryLight], ['5', 'organizations', '#3458C3', '#E8EFFC'], ['19', 'sessions', '#C45A1F', '#FEF0E7']].map(([val, lbl, color, bg]) => (
-                    <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 12, padding: '10px 6px', textAlign: 'center' }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, color, lineHeight: 1 }}>{val}</div>
-                      <div style={{ fontSize: 10, color, opacity: 0.8, marginTop: 3 }}>{lbl}</div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                  {[['33', 'total hours', T.primary, T.primaryLight], ['5', 'organizations', '#3458C3', '#E8EFFC'], ['20', 'sessions', '#C45A1F', '#FEF0E7']].map(([val, lbl, color, bg]) => (
+                    <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 14, padding: '14px 6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: 26, fontWeight: 700, color, lineHeight: 1 }}>{val}</div>
+                      <div style={{ fontSize: 10, color, opacity: 0.8, marginTop: 4 }}>{lbl}</div>
                     </div>
                   ))}
                 </div>
 
-                {/* sample org groups */}
-                {[
-                  { org: 'Bay Area Rescue Mission', hours: '12h 45m', sessions: 6, cats: ['Community', 'Sr. Community'], entries: [
-                    { date: 'May 10, 2026', time: '9:00 – 12:45', note: 'Helped sort and pack food donations', hours: '3h 45m' },
-                    { date: 'Apr 26, 2026', time: '9:00 – 12:00', note: 'Served meals at the shelter', hours: '3h' },
-                  ]},
-                  { org: 'Citizen Foundation', hours: '8h', sessions: 4, cats: ['Educational'], entries: [
-                    { date: 'Mar 15, 2026', time: null, note: 'After-school tutoring — math & reading', hours: '2h' },
-                  ]},
-                  { org: 'Piedmont Garden Music', hours: '5h', sessions: 3, cats: ['Fund Raising'], entries: [] },
-                ].map((g, gi) => (
-                  <div key={g.org} style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 10, overflow: 'hidden' }}>
-                    <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 4 }}>{g.org}</div>
-                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                          {g.cats.map(c => <span key={c} style={{ fontSize: 10, fontWeight: 700, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '2px 7px' }}>{c}</span>)}
-                          <span style={{ fontSize: 10, color: T.textMuted }}>{g.sessions} sessions</span>
-                        </div>
-                      </div>
-                      <span style={{ background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>{g.hours}</span>
-                    </div>
-                    {g.entries.length > 0 && (
-                      <div style={{ borderTop: `1px solid ${T.border}` }}>
-                        {g.entries.map((e, i) => (
-                          <div key={i} style={{ padding: '10px 14px', borderBottom: i < g.entries.length - 1 ? `1px solid ${T.border}` : 'none', background: '#fff' }}>
-                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
-                              {e.date}{e.time ? ` · ${e.time}` : ''}
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                              <div style={{ fontSize: 12, color: T.textSub }}>{e.note}</div>
-                              <span style={{ background: T.primaryLight, color: T.primary, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>{e.hours}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                {/* hours goal */}
+                <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, padding: '12px 14px', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.text }}>🎯 Hours Goal</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: T.text }}>7%</span>
                   </div>
-                ))}
+                  <div style={{ fontSize: 12, color: T.textSub, marginBottom: 6 }}>32h 55m of 500h goal</div>
+                  <div style={{ height: 8, background: '#E8EAED', borderRadius: 20, overflow: 'hidden', marginBottom: 6 }}>
+                    <div style={{ height: '100%', width: '7%', background: 'linear-gradient(90deg, #18A050, #34C97A)', borderRadius: 20 }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: T.textMuted }}>Next badge: 💯 Century Club at 50h</div>
+                </div>
+
+                {/* badges */}
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: 8 }}>🏅 Badges</div>
+                  <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 2 }}>
+                    {[
+                      { icon: '🌱', label: 'First Step',      earned: true  },
+                      { icon: '👟', label: 'Getting Started', earned: true  },
+                      { icon: '🔥', label: 'On Fire',         earned: true  },
+                      { icon: '⭐', label: 'Committed',       earned: true  },
+                      { icon: '💯', label: 'Century Club',    earned: false },
+                      { icon: '🚀', label: 'Superstar',       earned: false },
+                      { icon: '🏆', label: 'Legend',          earned: false },
+                    ].map(b => (
+                      <div key={b.label} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: b.earned ? T.primaryLight : '#F4F6F8', border: `1.5px solid ${b.earned ? T.primary : '#DCE0E5'}`, borderRadius: 10, padding: '8px 10px', minWidth: 58, opacity: b.earned ? 1 : 0.45 }}>
+                        <span style={{ fontSize: 20, filter: b.earned ? 'none' : 'grayscale(1)' }}>{b.icon}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: b.earned ? T.primary : T.textMuted, textAlign: 'center', lineHeight: 1.2 }}>{b.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* hours by year mini chart */}
+                <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, padding: '12px 14px', marginBottom: 12 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: 10 }}>📅 Hours by Year</div>
+                  <div style={{ display: 'flex', gap: 8, height: 80, alignItems: 'flex-end' }}>
+                    {[['2023', 28, 100], ['2024', 1, 4], ['2025', 0, 0], ['2026', 4, 14]].map(([yr, hrs, pct]) => (
+                      <div key={yr} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <div style={{ fontSize: 9, fontWeight: 700, color: T.primary }}>{hrs > 0 ? `${hrs}h` : ''}</div>
+                        <div style={{ width: '70%', height: Math.max(pct * 0.56, hrs > 0 ? 4 : 0), background: 'linear-gradient(180deg,#34C97A,#18A050)', borderRadius: '3px 3px 0 0' }} />
+                        <div style={{ fontSize: 9, color: T.textMuted }}>{yr}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* hours by category */}
+                <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, padding: '12px 14px', marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: 10 }}>Hours by Category</div>
+                  {[['Community', 12.75, 33], ['Sr. Community', 11.17, 29], ['Fund Raising', 5, 13], ['Uncategorized', 4, 11]].map(([cat, hrs, pct]) => (
+                    <div key={cat} style={{ marginBottom: 9 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, color: T.text }}>{cat}</span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: T.primary }}>{hrs % 1 === 0 ? `${hrs}h` : `${Math.floor(hrs)}h ${Math.round((hrs % 1) * 60)}m`}</span>
+                      </div>
+                      <div style={{ height: 6, background: '#E8EAED', borderRadius: 4, overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: T.primary, borderRadius: 4 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div style={{ padding: '14px 16px 20px', borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
