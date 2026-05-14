@@ -13,23 +13,26 @@ export default async function handler(req, res) {
     const { name, totalHours, orgs, categories, dateRange, addressedTo } = req.body
     if (!name || !totalHours) return res.status(400).json({ error: 'Missing required fields' })
 
-    const prompt = `You are Give Hour, a community service tracking platform. Write a third-person verification letter on behalf of Give Hour confirming a student's volunteer service. The letter is addressed to "${addressedTo || 'To Whom It May Concern'}".
+    const { highlight, notes } = req.body
+    const firstName = (name || 'I').split(' ')[0]
 
-Student: ${name}
-Total verified hours: ${totalHours}
-Service period: ${dateRange}
-Organizations: ${orgs}
-Service categories: ${categories}
+    const prompt = `You are helping ${firstName}, a high school student, draft a response to UC Personal Insight Question #7: "What have you done to make your school or your community a better place?"
 
-Rules:
-- Write entirely in third person — never use "I" or "my" (you are the platform, not the student)
-- 2–3 short paragraphs, professional and warm tone
-- Paragraph 1: verify ${name}'s total hours and service period
-- Paragraph 2: describe the nature of their work across the organizations and causes listed
-- Paragraph 3: brief endorsement of the student
-- Do NOT include a salutation, date, or address block — just the body paragraphs
-- Under 180 words
-- Output only the letter body, nothing else`
+Their volunteer data:
+- Total hours: ${totalHours} hours over ${dateRange}
+- Organizations: ${orgs}
+- Types of service: ${categories}
+${notes ? `- Activity notes (what they actually did):\n${notes}` : ''}
+${highlight ? `- Student wants to highlight: ${highlight}` : ''}
+
+Write a ~350-word first-person essay response as if ${firstName} is writing it. Follow these UC guidelines:
+- Focus on SPECIFIC actions ${firstName} took, not the organization's mission
+- Reflect on what they learned and how it shaped their values
+- Emphasize their individual role and responsibilities
+- Show personal growth and genuine motivation
+- Warm, authentic teen voice — not overly formal
+- Do NOT use a title or heading
+- Output only the essay text, nothing else`
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {

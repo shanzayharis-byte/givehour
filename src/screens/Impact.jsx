@@ -31,8 +31,7 @@ export default function Impact({ user, onNavigate }) {
   const [showLetter, setShowLetter]   = useState(false)
   const [letter, setLetter]           = useState('')
   const [letterLoading, setLetterLoading] = useState(false)
-  const [addressedTo, setAddressedTo] = useState('To Whom It May Concern')
-  const [letterRows, setLetterRows]   = useState([])
+  const [highlight, setHighlight]     = useState('')
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [loading, setLoading]         = useState(true)
 
@@ -94,86 +93,32 @@ export default function Impact({ user, onNavigate }) {
 
   const openLetterModal = () => {
     setLetter('')
-    setLetterRows([])
     setShowLetter(true)
   }
 
   const generateLetter = async () => {
     setLetterLoading(true)
     try {
-      const orgBreakdown = {}
-      for (const r of history) {
-        const key = r.org || 'Independent'
-        if (!orgBreakdown[key]) orgBreakdown[key] = { hours: 0, dates: [], categories: new Set() }
-        orgBreakdown[key].hours += parseFloat(r.hours) || 0
-        if (r.logged_at) orgBreakdown[key].dates.push(new Date(r.logged_at))
-        if (r.category) orgBreakdown[key].categories.add(r.category)
-      }
-      const rows = Object.entries(orgBreakdown).map(([org, d]) => {
-        const sorted = [...d.dates].sort((a, b) => a - b)
-        const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-        return {
-          org,
-          hours: d.hours,
-          dateRange: sorted.length >= 2 ? `${fmt(sorted[0])} – ${fmt(sorted[sorted.length - 1])}` : sorted.length === 1 ? fmt(sorted[0]) : '',
-          categories: [...d.categories].join(', '),
-        }
-      })
-      setLetterRows(rows)
-
-      const topCats  = catEntries.slice(0, 3).map(([c]) => c).join(', ') || 'community service'
-      const orgNames = rows.map(r => r.org).join(', ') || 'various organizations'
-      const allDates = history.map(r => r.logged_at).filter(Boolean).map(d => new Date(d)).sort((a, b) => a - b)
+      const topCats   = catEntries.slice(0, 3).map(([c]) => c).join(', ') || 'community service'
+      const orgNames  = [...new Set(history.map(r => r.org).filter(Boolean))].join(', ') || 'various organizations'
+      const allDates  = history.map(r => r.logged_at).filter(Boolean).map(d => new Date(d)).sort((a, b) => a - b)
       const dateRange = allDates.length >= 2
         ? `${allDates[0].toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} to ${allDates[allDates.length - 1].toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
         : 'the past year'
+      const activityNotes = history.filter(r => r.notes).slice(0, 8).map(r => `- ${r.org || 'Independent'}: ${r.notes}`).join('\n')
 
       const res  = await fetch('/api/stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: user?.name || 'this student', totalHours: Math.round(totalHours), orgs: orgNames, categories: topCats, dateRange, addressedTo }),
+        body: JSON.stringify({ name: user?.name || 'Student', totalHours: Math.round(totalHours), orgs: orgNames, categories: topCats, dateRange, highlight, notes: activityNotes }),
       })
       const data = await res.json()
-      setLetter(data.letter || 'Could not generate letter.')
-    } catch (e) { setLetter('Could not generate letter at this time.') }
+      setLetter(data.letter || 'Could not generate draft.')
+    } catch (e) { setLetter('Could not generate draft at this time.') }
     setLetterLoading(false)
   }
 
-  const copyLetter = () => {
-    const tableText = letterRows.map(r => `  ${r.org}: ${fmtHours(r.hours)}${r.dateRange ? ` (${r.dateRange})` : ''}`).join('\n')
-    const full = `${addressedTo}\n\n${letter}\n\nService Record:\n${tableText}\n\nTotal: ${fmtHours(totalHours)}\n\nSincerely,\nGive Hour\ngivehour.app`
-    navigator.clipboard.writeText(full).catch(() => {})
-  }
-
-  const printLetter = () => {
-    const date  = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-    const tRows = letterRows.map(r => `<tr><td>${r.org}</td><td>${fmtHours(r.hours)}</td><td>${r.dateRange || '—'}</td><td>${r.categories || '—'}</td></tr>`).join('')
-    const win   = window.open('', '_blank')
-    win.document.write(`<!DOCTYPE html><html><head><title>Community Service Letter – ${user?.name || ''}</title>
-<style>
-  body { font-family: Georgia, serif; max-width: 680px; margin: 60px auto; padding: 0 40px; color: #1a1a1a; line-height: 1.75; }
-  .date { color: #666; margin-bottom: 32px; font-size: 14px; }
-  p { margin: 0 0 16px; font-size: 15px; }
-  table { width: 100%; border-collapse: collapse; margin: 24px 0; font-family: Arial, sans-serif; font-size: 13px; }
-  th { background: #f0f8f4; padding: 9px 12px; text-align: left; border-bottom: 2px solid #18A050; font-weight: 600; }
-  td { padding: 8px 12px; border-bottom: 1px solid #e5e5e5; }
-  .total { font-weight: bold; font-size: 14px; margin-top: 4px; }
-  .sig { margin-top: 44px; font-size: 15px; }
-  .footer-note { margin-top: 6px; color: #888; font-size: 12px; font-family: Arial, sans-serif; }
-</style></head><body>
-  <div class="date">${date}</div>
-  <p><strong>${addressedTo}</strong></p>
-  ${letter.split(/\n\n+/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')}
-  <table>
-    <thead><tr><th>Organization</th><th>Hours</th><th>Dates</th><th>Category</th></tr></thead>
-    <tbody>${tRows}</tbody>
-  </table>
-  <div class="total">Total volunteer hours: ${fmtHours(totalHours)}</div>
-  <div class="sig">Sincerely,<br><strong>Give Hour</strong><br><div class="footer-note">givehour.app — verified community service tracking</div></div>
-</body></html>`)
-    win.document.close()
-    win.print()
-  }
+  const copyEssay = () => navigator.clipboard.writeText(letter).catch(() => {})
 
   const inp = { background: '#F4F6F8', border: '1.5px solid #DCE0E5', borderRadius: 10, padding: '9px 14px', fontSize: 15, color: T.text, outline: 'none', fontFamily: 'inherit' }
 
@@ -368,15 +313,16 @@ export default function Impact({ user, onNavigate }) {
           </div>
         )}
 
-        {/* college letter */}
+        {/* UC PIQ #7 draft */}
         <div style={{ border: `1.5px solid rgba(24,160,80,0.4)`, borderRadius: 12, padding: 16 }}>
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ fontSize: 28 }}>🎓</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 4 }}>College letter generator</div>
-              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.6, marginBottom: 12 }}>Generate a personalized community service letter for your college applications based on your Give Hour activity.</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>UC PIQ #7 Draft</div>
+              <div style={{ fontSize: 11, color: T.primary, fontWeight: 600, marginBottom: 6 }}>"What have you done to make your community a better place?"</div>
+              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.6, marginBottom: 12 }}>AI drafts a ~350-word first-person response based on your actual volunteer hours and activities.</div>
               <button onClick={openLetterModal} disabled={totalHours === 0} style={{ width: '100%', padding: 12, background: totalHours === 0 ? '#B8D8C8' : T.primary, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', cursor: totalHours === 0 ? 'default' : 'pointer' }}>
-                {totalHours === 0 ? 'Log some hours first' : 'Generate letter →'}
+                {totalHours === 0 ? 'Log some hours first' : 'Draft my PIQ →'}
               </button>
             </div>
           </div>
@@ -389,16 +335,16 @@ export default function Impact({ user, onNavigate }) {
           <div style={{
             position: 'fixed',
             ...(isDesktop
-              ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 560, maxHeight: '88vh', borderRadius: 18 }
-              : { bottom: 0, left: 0, right: 0, maxHeight: '92vh', borderRadius: '18px 18px 0 0' }),
+              ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 580, maxHeight: '90vh', borderRadius: 18 }
+              : { bottom: 0, left: 0, right: 0, maxHeight: '94vh', borderRadius: '18px 18px 0 0' }),
             background: '#fff', zIndex: 901, display: 'flex', flexDirection: 'column',
             boxShadow: '0 8px 40px rgba(0,0,0,0.18)', overflow: 'hidden',
           }}>
             {/* header */}
-            <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>🎓 Service Letter</div>
-                <div style={{ fontSize: 12, color: T.textMuted, marginTop: 2 }}>Ready for college & scholarship apps</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>🎓 UC PIQ #7 Draft</div>
+                <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>"What have you done to make your community a better place?"</div>
               </div>
               <button onClick={() => setShowLetter(false)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
             </div>
@@ -406,78 +352,54 @@ export default function Impact({ user, onNavigate }) {
             {/* body */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 8px' }}>
 
-              {/* setup: addressed-to + generate */}
+              {/* setup */}
               {!letter && !letterLoading && (
-                <div style={{ marginBottom: 20 }}>
-                  <label style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Addressed to</label>
-                  <input
-                    value={addressedTo}
-                    onChange={e => setAddressedTo(e.target.value)}
-                    placeholder="e.g. Scholarship Committee, Harvard Admissions"
-                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', color: T.text, background: '#F4F6F8', outline: 'none', boxSizing: 'border-box', marginBottom: 16 }}
+                <div>
+                  <div style={{ background: T.bg, borderRadius: 10, padding: '12px 14px', marginBottom: 16, fontSize: 12, color: T.textSub, lineHeight: 1.6 }}>
+                    The AI will use your logged hours, organizations, and activity notes to write a first-person draft. Edit it before submitting — it's a starting point, not a final answer.
+                  </div>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: T.textMuted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Anything specific to highlight? <span style={{ fontWeight: 400, textTransform: 'none' }}>(optional)</span></label>
+                  <textarea
+                    value={highlight}
+                    onChange={e => setHighlight(e.target.value)}
+                    placeholder="e.g. I started an after-school tutoring program, or I want to focus on my work at Bay Area Food Bank"
+                    rows={3}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', color: T.text, background: '#F4F6F8', outline: 'none', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.5, marginBottom: 16 }}
                   />
                   <button onClick={generateLetter} style={{ width: '100%', padding: 13, background: T.primary, border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                    Generate with AI →
+                    Draft my PIQ →
                   </button>
                 </div>
               )}
 
               {/* loading */}
               {letterLoading && (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: T.textMuted, fontSize: 14 }}>
-                  <div style={{ fontSize: 28, marginBottom: 12 }}>✍️</div>
-                  Writing your letter…
+                <div style={{ textAlign: 'center', padding: '48px 0', color: T.textMuted, fontSize: 14 }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>✍️</div>
+                  Writing your draft…
                 </div>
               )}
 
-              {/* letter content */}
+              {/* essay */}
               {letter && !letterLoading && (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: T.textSub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Addressed to</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 18 }}>{addressedTo}</div>
-
-                  <div style={{ fontSize: 14, lineHeight: 1.8, color: T.text, whiteSpace: 'pre-wrap', marginBottom: 22 }}>{letter}</div>
-
-                  {/* breakdown table */}
-                  {letterRows.length > 0 && (
-                    <>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: T.textSub, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Service Record</div>
-                      <div style={{ border: `1px solid ${T.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 16 }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr', background: T.primaryLight, padding: '8px 12px' }}>
-                          {['Organization', 'Hours', 'Dates'].map(h => (
-                            <div key={h} style={{ fontSize: 11, fontWeight: 700, color: T.primary }}>{h}</div>
-                          ))}
-                        </div>
-                        {letterRows.map((r, i) => (
-                          <div key={r.org} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr', padding: '9px 12px', borderTop: i === 0 ? 'none' : `1px solid ${T.border}`, background: i % 2 === 0 ? '#fff' : T.bg }}>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{r.org}</div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: T.primary }}>{fmtHours(r.hours)}</div>
-                            <div style={{ fontSize: 11, color: T.textMuted }}>{r.dateRange || '—'}</div>
-                          </div>
-                        ))}
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 2fr', padding: '9px 12px', borderTop: `1.5px solid ${T.border}`, background: T.primaryLight }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: T.text }}>Total</div>
-                          <div style={{ fontSize: 13, fontWeight: 800, color: T.primary }}>{fmtHours(totalHours)}</div>
-                          <div />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  <div style={{ fontSize: 13, color: T.textSub, marginBottom: 8 }}>
-                    Sincerely,<br /><strong style={{ color: T.text }}>Give Hour</strong><br />
-                    <span style={{ fontSize: 11, color: T.textMuted }}>givehour.app</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: T.textSub, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Your Draft</div>
+                    <div style={{ fontSize: 11, color: letter.trim().split(/\s+/).length >= 300 ? T.primary : T.textMuted, fontWeight: 600 }}>
+                      {letter.trim().split(/\s+/).length} / 350 words
+                    </div>
                   </div>
+                  <div style={{ fontSize: 14, lineHeight: 1.85, color: T.text, whiteSpace: 'pre-wrap', marginBottom: 8 }}>{letter}</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 8, marginBottom: 4 }}>This is an AI draft — review, personalize, and make it your own before submitting.</div>
                 </>
               )}
             </div>
 
-            {/* footer actions */}
+            {/* footer */}
             {letter && !letterLoading && (
               <div style={{ padding: '12px 20px 20px', borderTop: `1px solid ${T.border}`, display: 'flex', gap: 8, flexShrink: 0 }}>
-                <button onClick={copyLetter} style={{ flex: 1, padding: '10px 0', background: T.primaryLight, border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, color: T.primary, cursor: 'pointer' }}>📋 Copy</button>
-                <button onClick={printLetter} style={{ flex: 1, padding: '10px 0', background: T.primary, border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>🖨️ Print / Save PDF</button>
-                <button onClick={() => { setLetter(''); setLetterRows([]) }} style={{ padding: '10px 14px', background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 13, color: T.textMuted, cursor: 'pointer' }}>↺</button>
+                <button onClick={copyEssay} style={{ flex: 1, padding: '10px 0', background: T.primaryLight, border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 700, color: T.primary, cursor: 'pointer' }}>📋 Copy draft</button>
+                <button onClick={() => setLetter('')} style={{ padding: '10px 14px', background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, fontSize: 13, color: T.textMuted, cursor: 'pointer' }}>↺ Redo</button>
               </div>
             )}
           </div>
