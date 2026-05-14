@@ -193,7 +193,7 @@ export default function App() {
       case 'saved':         return <Saved user={dbUser} onSelectOpp={setSelectedOpp} isDesktop={isDesktop} />
       case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
       case 'loghours':      return <LogHours user={dbUser} />
-      case 'impact':        return <Impact user={dbUser} />
+      case 'impact':        return <Impact user={dbUser} onNavigate={navigate} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} onNavigate={setActiveScreen} />
       case 'admin':         return <Admin authUser={authUser} />
       case 'orgDashboard':  return <OrgDashboard user={dbUser} editTargetId={editTargetId} onConsumeEditTarget={() => setEditTargetId(null)} onSelectOpp={setSelectedOpp} />
