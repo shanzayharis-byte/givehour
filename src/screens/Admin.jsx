@@ -24,6 +24,7 @@ export default function Admin({ authUser }) {
   const [loading, setLoading]         = useState(true)
   const [loadError, setLoadError]     = useState(null)
   const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteName, setInviteName]   = useState('')
   const [inviteStatus, setInviteStatus] = useState(null)
   const [inviteError, setInviteError] = useState(null)
   const [confirmId, setConfirmId]     = useState(null)
@@ -59,19 +60,20 @@ export default function Admin({ authUser }) {
   }
 
   async function handleInvite() {
-    if (!inviteEmail.includes('@') || !token) return
+    if (!inviteEmail.includes('@') || !inviteName.trim() || !token) return
     setInviteStatus('sending')
     setInviteError(null)
     try {
       const r = await fetch('/api/admin/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ email: inviteEmail }),
+        body: JSON.stringify({ email: inviteEmail, name: inviteName.trim() }),
       })
       const data = await r.json()
       if (!r.ok) throw new Error(data.error || 'Invite failed')
       setInviteStatus('sent')
       setInviteEmail('')
+      setInviteName('')
       setTimeout(() => setInviteStatus(null), 3000)
     } catch (e) {
       setInviteStatus('error')
@@ -107,22 +109,31 @@ export default function Admin({ authUser }) {
           <div style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
             Invite User
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <input
-              type="email"
-              placeholder="someone@email.com"
-              value={inviteEmail}
-              onChange={e => setInviteEmail(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleInvite()}
-              style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', outline: 'none', color: T.text, background: T.bg }}
+              type="text"
+              placeholder="First name"
+              value={inviteName}
+              onChange={e => setInviteName(e.target.value)}
+              style={{ padding: '9px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', outline: 'none', color: T.text, background: T.bg }}
             />
-            <button
-              onClick={handleInvite}
-              disabled={!inviteEmail.includes('@') || inviteStatus === 'sending'}
-              style={{ padding: '9px 18px', borderRadius: 8, background: T.primary, color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', opacity: !inviteEmail.includes('@') ? 0.5 : 1 }}
-            >
-              {inviteStatus === 'sending' ? '…' : 'Send Invite'}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="email"
+                placeholder="someone@email.com"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleInvite()}
+                style={{ flex: 1, padding: '9px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', outline: 'none', color: T.text, background: T.bg }}
+              />
+              <button
+                onClick={handleInvite}
+                disabled={!inviteEmail.includes('@') || !inviteName.trim() || inviteStatus === 'sending'}
+                style={{ padding: '9px 18px', borderRadius: 8, background: T.primary, color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', opacity: (!inviteEmail.includes('@') || !inviteName.trim()) ? 0.5 : 1 }}
+              >
+                {inviteStatus === 'sending' ? '…' : 'Send Invite'}
+              </button>
+            </div>
           </div>
           {inviteStatus === 'sent' && (
             <div style={{ marginTop: 8, fontSize: 13, color: T.primary, fontWeight: 500 }}>✓ Invite sent!</div>

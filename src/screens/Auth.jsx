@@ -204,7 +204,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   // ── landing ───────────────────────────────────────────────────────────────
 
   if (screen === 'landing') {
-    return wrapCard(
+    return (
+      <>
+      {wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', flex: isDesktop ? 'none' : 1, minHeight: 0, overflowY: isDesktop ? 'visible' : 'auto', background: T.card, height: isDesktop ? 'auto' : '100%' }}>
         <div style={{ background: 'linear-gradient(150deg, #0E7A3C 0%, #18A050 55%, #25C068 100%)', padding: '20px 24px 22px', textAlign: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
           <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
@@ -268,6 +270,9 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           ))}
         </div>
 
+      </div>
+      )}
+
         {/* sample tracking modal */}
         {showTracking && (
           <>
@@ -285,7 +290,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
                   <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>⏱ Your Impact Dashboard</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Everything tracked, visualized for college apps</div>
                 </div>
-                <button onClick={() => setShowTracking(false)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
+                <button onClick={() => setShowTracking(false)} style={{ background: '#F0F0F0', border: 'none', borderRadius: 10, width: 38, height: 38, fontSize: 20, cursor: 'pointer', color: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>✕</button>
               </div>
 
               <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px' }}>
@@ -391,7 +396,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
                   <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>🎓 Sample Community PIQ Draft</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AI-generated from a student's real volunteer data</div>
                 </div>
-                <button onClick={() => setShowSample(false)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
+                <button onClick={() => setShowSample(false)} style={{ background: '#F0F0F0', border: 'none', borderRadius: 10, width: 38, height: 38, fontSize: 20, cursor: 'pointer', color: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>✕</button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 4px' }}>
                 <div style={{ background: T.primaryLight, borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: T.primary, fontWeight: 600 }}>
@@ -407,7 +412,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
             </div>
           </>
         )}
-      </div>
+      </>
     )
   }
 
