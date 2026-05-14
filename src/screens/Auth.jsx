@@ -49,18 +49,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
   const [stats, setStats] = useState({ orgs: null, hours: null })
 
   useEffect(() => {
-    async function loadStats() {
-      const [orgsRes, hoursRes] = await Promise.all([
-        supabase.from('clean_listings').select('org', { count: 'exact', head: false }).not('org', 'is', null).neq('org', ''),
-        supabase.from('hours_log').select('hours'),
-      ])
-      const orgCount  = new Set((orgsRes.data || []).map(r => r.org).filter(Boolean)).size
-      const hoursTotal = (hoursRes.data || []).reduce((s, r) => s + (r.hours || 0), 0)
-      const fmtOrgs  = orgCount  >= 1000 ? `${(orgCount/1000).toFixed(1)}k+`  : orgCount  > 0 ? `${orgCount}+`  : '—'
-      const fmtHours = hoursTotal >= 1000 ? `${Math.floor(hoursTotal/1000)}k+` : hoursTotal > 0 ? `${Math.round(hoursTotal)}+` : '—'
-      setStats({ orgs: fmtOrgs, hours: fmtHours })
-    }
-    loadStats()
+    fetch('/api/stats')
+      .then(r => r.json())
+      .then(({ orgCount, hoursTotal }) => {
+        const fmtOrgs  = orgCount   >= 1000 ? `${(orgCount/1000).toFixed(1)}k+`   : orgCount   > 0 ? `${orgCount}+`            : '—'
+        const fmtHours = hoursTotal >= 1000 ? `${Math.floor(hoursTotal/1000)}k+`  : hoursTotal > 0 ? `${Math.round(hoursTotal)}+` : '—'
+        setStats({ orgs: fmtOrgs, hours: fmtHours })
+      })
+      .catch(() => {})
   }, [])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
