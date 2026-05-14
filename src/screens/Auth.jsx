@@ -44,9 +44,22 @@ const StepHeader = ({ step, total, title, onBack }) => (
   </div>
 )
 
+const SAMPLE_PIQ = `Volunteering has always been part of my life, but it wasn't until I started logging my hours that I truly understood the impact of what I was doing. Over three years, I dedicated 33 hours across five organizations in the Bay Area — and each one taught me something I couldn't have learned in a classroom.
+
+My most consistent work was at the Bay Area Rescue Mission, where I helped prepare and distribute care packages for unhoused individuals. At first, I thought showing up was enough. But week after week, I started learning names and hearing stories. I realized homelessness isn't a single experience — it's a thousand different ones. I began writing personal notes to put inside the packages. Something small, but something I hoped made a difference.
+
+Through Piedmont Garden Music, I helped fundraise to bring live music programming to underserved schools. I organized the silent auction, managed donor check-in, and stayed late to break everything down. That night, watching elementary students light up at their first concert, I understood what "community" really means — not a place, but a feeling of belonging you can help create.
+
+What I didn't expect was how much these experiences would change how I think. I came in wanting to help others. I left realizing how much I was learning from them. The woman at the rescue mission who taught me her arroz con leche recipe. The third-grader at the concert who told me she wanted to be a violinist.
+
+I've logged every hour — not for a number on a college application, but because tracking it forced me to be intentional. Each entry is a reminder of a moment I chose to show up. That habit, more than any single project, is what I want to carry forward: the practice of showing up consistently, not just when it's convenient.
+
+My community made me. Volunteering is my way of giving some of that back.`
+
 export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) {
   const [screen, setScreen] = useState(initialScreen || 'landing')
   const [stats, setStats] = useState({ orgs: null, hours: null })
+  const [showSample, setShowSample] = useState(false)
 
   useEffect(() => {
     fetch('/api/stats')
@@ -230,19 +243,58 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         <div style={{ padding: '16px 24px 28px', borderTop: `1px solid ${T.border}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 14 }}>How it works</div>
           {[
-            { n: '1', icon: '🔍', title: 'Find teen-friendly opportunities', sub: 'Most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens.' },
-            { n: '2', icon: '⏱', title: 'Track every hour in one place', sub: 'School events, religious org, family thing, opportunities you found here. Log it all so nothing gets lost when college apps come around.' },
-            { n: '3', icon: '📜', title: 'Generate a service letter', sub: 'Turn your logged hours into a clean, ready-to-send letter for college and scholarship apps.' },
+            { icon: '🔍', title: 'Find teen-friendly opportunities', sub: 'Most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens.' },
+            { icon: '⏱', title: 'Track every hour in one place', sub: 'School events, religious org, family thing, opportunities you found here. Log it all so nothing gets lost when college apps come around.' },
+            { icon: '🎓', title: 'Draft my Community PIQ', sub: 'Turn your logged hours into a ~350-word UC PIQ #7 draft — "What have you done to make your community a better place?"', cta: true },
           ].map(s => (
-            <div key={s.n} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 14 }}>
+            <div key={s.icon} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 14 }}>
               <div style={{ width: 34, height: 34, borderRadius: '50%', background: T.primaryLight, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{s.icon}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 3 }}>{s.title}</div>
                 <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>{s.sub}</div>
+                {s.cta && (
+                  <button onClick={() => setShowSample(true)} style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 700, color: T.primary, cursor: 'pointer' }}>
+                    See a sample draft →
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
+
+        {/* sample PIQ modal */}
+        {showSample && (
+          <>
+            <div onClick={() => setShowSample(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 900 }} />
+            <div style={{
+              position: 'fixed',
+              ...(isDesktop
+                ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 560, maxHeight: '88vh', borderRadius: 18 }
+                : { bottom: 0, left: 0, right: 0, maxHeight: '92vh', borderRadius: '18px 18px 0 0' }),
+              background: '#fff', zIndex: 901, display: 'flex', flexDirection: 'column',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.2)', overflow: 'hidden',
+            }}>
+              <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>🎓 Sample Community PIQ Draft</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AI-generated from a student's real volunteer data</div>
+                </div>
+                <button onClick={() => setShowSample(false)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
+              </div>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 4px' }}>
+                <div style={{ background: T.primaryLight, borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: T.primary, fontWeight: 600 }}>
+                  UC PIQ #7 · "What have you done to make your community a better place?" · ~320 words
+                </div>
+                <div style={{ fontSize: 14, lineHeight: 1.85, color: T.text, whiteSpace: 'pre-wrap' }}>{SAMPLE_PIQ}</div>
+              </div>
+              <div style={{ padding: '14px 20px 20px', borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+                <button onClick={() => { setShowSample(false); setScreen('userType') }} style={{ width: '100%', padding: 13, background: T.primary, border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(24,160,80,0.25)' }}>
+                  Sign up to draft yours →
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     )
   }
