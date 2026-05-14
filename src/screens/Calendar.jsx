@@ -81,7 +81,7 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
   const [savedIds, setSavedIds]   = useState(new Set())
   const [loading, setLoading]     = useState(true)
   const [savedOnly, setSavedOnly] = useState(false)
-  const [selectedKey, setSelectedKey] = useState(null) // 'YYYY-MM-DD'
+  const [selectedKey, setSelectedKey] = useState(localKey(today)) // default to today
   const [expanded, setExpanded]   = useState(null)
   const [noDateOpen, setNoDateOpen] = useState(false)
 
@@ -216,7 +216,7 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
                         setExpanded(null)
                       }}
                       style={{
-                        aspectRatio: '1',
+                        height: 36,
                         borderRadius: 7,
                         border: isSelected ? `2px solid ${T.primary}` : isToday ? `2px solid ${T.accent}` : '2px solid transparent',
                         background: isSelected ? T.primaryLight : group ? '#F2FBF5' : 'transparent',
