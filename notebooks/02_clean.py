@@ -217,9 +217,7 @@ def clean_idealist_item(item):
     external_url = (url_field.get("en") or next(iter(url_field.values()), "")) if isinstance(url_field, dict) else str(url_field)
     title        = item.get("name") or item.get("title") or ""
 
-    raw_desc    = item.get("description") or ""
-    description = re.sub(r"<[^>]+>", " ", raw_desc).strip()
-    description = re.sub(r"\s+", " ", description)
+    description = item.get("description") or ""
 
     age_req = item.get("ageRequirement") or 0
     if age_req >= 18:
