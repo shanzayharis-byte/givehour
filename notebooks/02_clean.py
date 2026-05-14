@@ -197,6 +197,7 @@ else:
             "external_url": item.get("external_url","") or "", "source": "org",
             "fetched_at": datetime.now(timezone.utc).isoformat(),
         })
+    db.table("clean_listings").delete().eq("source", "org").execute()
     for i in range(0, len(org_records), 100):
         db.table("clean_listings").upsert(org_records[i:i+100]).execute()
     print(f"Done. {len(org_records)} org listings written.")

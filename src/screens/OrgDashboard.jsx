@@ -58,6 +58,8 @@ export default function OrgDashboard({ user, editTargetId, onConsumeEditTarget, 
     try {
       const { error: err } = await supabase.from('org_listings').delete().eq('id', id).eq('org_id', user.id)
       if (err) throw err
+      // remove from clean_listings so it stops showing in Feed and Explore immediately
+      await supabase.from('clean_listings').delete().eq('id', `org_${id}`)
       setListings(prev => prev.filter(l => l.id !== id))
       setConfirmDelete(null)
     } catch (e) {
