@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
@@ -49,25 +49,28 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
   }, [user?.id])
 
   // Partition into future-dated groups and dateless
-  const dated = []   // [{ dateObj, dateStr, items }]
-  const dateless = []
+  const { dated, dateless } = useMemo(() => {
+    const dated = []   // [{ dateObj, dateStr, items }]
+    const dateless = []
 
-  const dateMap = {}
-  for (const l of listings) {
-    if (savedOnly && !savedIds.has(String(l.id))) continue
-    const d = parseFutureDate(l.date)
-    if (d) {
-      const key = d.toISOString().split('T')[0]
-      if (!dateMap[key]) {
-        dateMap[key] = { dateObj: d, dateStr: fmtDateHeader(d), items: [] }
-        dated.push(dateMap[key])
+    const dateMap = {}
+    for (const l of listings) {
+      if (savedOnly && !savedIds.has(String(l.id))) continue
+      const d = parseFutureDate(l.date)
+      if (d) {
+        const key = d.toISOString().split('T')[0]
+        if (!dateMap[key]) {
+          dateMap[key] = { dateObj: d, dateStr: fmtDateHeader(d), items: [] }
+          dated.push(dateMap[key])
+        }
+        dateMap[key].items.push(l)
+      } else {
+        dateless.push(l)
       }
-      dateMap[key].items.push(l)
-    } else {
-      dateless.push(l)
     }
-  }
-  dated.sort((a, b) => a.dateObj - b.dateObj)
+    dated.sort((a, b) => a.dateObj - b.dateObj)
+    return { dated, dateless }
+  }, [listings, savedIds, savedOnly])
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
