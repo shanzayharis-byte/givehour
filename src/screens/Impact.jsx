@@ -127,11 +127,11 @@ export default function Impact({ user }) {
       <div style={{ padding: isDesktop ? '28px 40px' : '16px 20px', maxWidth: isDesktop ? 800 : 'none', margin: '0 auto' }}>
 
         {/* stats card */}
-        <div style={{ background: 'linear-gradient(135deg, #18A050, #0E7A3C)', borderRadius: 14, padding: 20, marginBottom: 14, display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-          {[[Math.round(totalHours), 'total hours'], [orgCount, 'organizations'], [sessions, 'sessions']].map(([val, lbl]) => (
-            <div key={lbl}>
-              <div style={{ fontSize: 34, fontWeight: 700, color: '#fff', lineHeight: 1 }}>{val}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.85)', marginTop: 4 }}>{lbl}</div>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+          {[[Math.round(totalHours), 'total hours', T.primary, T.primaryLight], [orgCount, 'organizations', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
+            <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 14, padding: '16px 10px', textAlign: 'center' }}>
+              <div style={{ fontSize: 30, fontWeight: 700, color, lineHeight: 1 }}>{val}</div>
+              <div style={{ fontSize: 11, color, opacity: 0.8, marginTop: 4 }}>{lbl}</div>
             </div>
           ))}
         </div>
