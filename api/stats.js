@@ -13,16 +13,23 @@ export default async function handler(req, res) {
     const { name, totalHours, orgs, categories, dateRange, addressedTo } = req.body
     if (!name || !totalHours) return res.status(400).json({ error: 'Missing required fields' })
 
-    const prompt = `Write a professional community service letter for ${name}, a high school student.
+    const prompt = `You are Give Hour, a community service tracking platform. Write a third-person verification letter on behalf of Give Hour confirming a student's volunteer service. The letter is addressed to "${addressedTo || 'To Whom It May Concern'}".
 
-Key facts:
-- Total volunteer hours: ${totalHours} hours
-- Service period: ${dateRange}
-- Organizations served: ${orgs}
-- Categories of service: ${categories}
-- Recipient: ${addressedTo || 'To Whom It May Concern'}
+Student: ${name}
+Total verified hours: ${totalHours}
+Service period: ${dateRange}
+Organizations: ${orgs}
+Service categories: ${categories}
 
-Write 2–3 short paragraphs in a warm but professional tone suitable for college and scholarship applications. The first paragraph should confirm the hours and commitment. The second should describe the nature of their work across causes. The third should be a brief endorsement. Sign off as "Give Hour" with no specific person's name. Do NOT include a date or address block. Keep it under 200 words. Output only the letter body — no subject line, no extra commentary.`
+Rules:
+- Write entirely in third person — never use "I" or "my" (you are the platform, not the student)
+- 2–3 short paragraphs, professional and warm tone
+- Paragraph 1: verify ${name}'s total hours and service period
+- Paragraph 2: describe the nature of their work across the organizations and causes listed
+- Paragraph 3: brief endorsement of the student
+- Do NOT include a salutation, date, or address block — just the body paragraphs
+- Under 180 words
+- Output only the letter body, nothing else`
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
