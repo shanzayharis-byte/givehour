@@ -224,7 +224,9 @@ export default function App() {
           <nav style={{ padding: '14px 12px', flex: 1 }}>
             {visibleNav.map(({ id, icon, label }) => (
               <button key={id} onClick={() => navigate(id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: 'none', cursor: 'pointer', background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D', fontWeight: activeScreen === id ? 600 : 400, fontSize: 14, fontFamily: 'inherit', marginBottom: 4 }}>
-                <span style={{ fontSize: 16 }}>{icon}</span>
+                {id === 'profile' && dbUser?.avatar_url
+                  ? <img src={dbUser.avatar_url} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === id ? T.primary : T.border}` }} />
+                  : <span style={{ fontSize: 16 }}>{icon}</span>}
                 {label}
               </button>
             ))}
@@ -304,7 +306,9 @@ export default function App() {
               {visibleNav.map(({ id, icon, label }) => (
                 <button key={id} onClick={() => navigate(id)}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', marginBottom: 4, fontFamily: 'inherit', fontSize: 15, fontWeight: activeScreen === id ? 600 : 400, background: activeScreen === id ? T.primaryLight : 'transparent', color: activeScreen === id ? T.primary : '#60666D' }}>
-                  <span style={{ fontSize: 20 }}>{icon}</span>
+                  {id === 'profile' && dbUser?.avatar_url
+                    ? <img src={dbUser.avatar_url} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: `1.5px solid ${activeScreen === id ? T.primary : T.border}` }} />
+                    : <span style={{ fontSize: 20 }}>{icon}</span>}
                   {label}
                 </button>
               ))}
