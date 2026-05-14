@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react'
 import { T } from '../lib/theme'
 
 const PAGES = {
@@ -35,6 +36,85 @@ const PAGES = {
   },
 }
 
+function ContactForm() {
+  const [name, setName]       = useState('')
+  const [email, setEmail]     = useState('')
+  const [subject, setSubject] = useState('')
+  const [message, setMessage] = useState('')
+  const [captcha, setCaptcha] = useState('')
+  const [status, setStatus]   = useState(null) // null | 'sending' | 'sent' | 'error'
+  const [errMsg, setErrMsg]   = useState('')
+
+  // generate a simple math question once per mount
+  const [a, b] = useMemo(() => [Math.floor(Math.random() * 9) + 1, Math.floor(Math.random() * 9) + 1], [])
+
+  const inp = { width: '100%', padding: '10px 12px', borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', color: T.text, background: '#fff', boxSizing: 'border-box', outline: 'none', marginBottom: 12 }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (parseInt(captcha) !== a + b) {
+      setErrMsg('Incorrect answer — please try the math question again.')
+      return
+    }
+    setStatus('sending')
+    setErrMsg('')
+    try {
+      const r = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, subject, message }),
+      })
+      const data = await r.json()
+      if (!r.ok) { setErrMsg(data.error || 'Something went wrong.'); setStatus('error'); return }
+      setStatus('sent')
+    } catch {
+      setErrMsg('Network error. Please try again.')
+      setStatus('error')
+    }
+  }
+
+  if (status === 'sent') {
+    return (
+      <div style={{ background: T.primaryLight, border: `1px solid ${T.primary}33`, borderRadius: 12, padding: 20, textAlign: 'center', marginTop: 8 }}>
+        <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: T.primary, marginBottom: 4 }}>Message sent!</div>
+        <div style={{ fontSize: 13, color: T.textSub }}>Thanks for reaching out. You'll hear back at {email}.</div>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ marginTop: 8 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, display: 'block', marginBottom: 4 }}>Your name</label>
+      <input value={name} onChange={e => setName(e.target.value)} placeholder="Shanzay H" required style={inp} />
+
+      <label style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, display: 'block', marginBottom: 4 }}>Your email</label>
+      <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com" required style={inp} />
+
+      <label style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, display: 'block', marginBottom: 4 }}>Subject</label>
+      <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Bug report / Feature request / Question…" required style={inp} />
+
+      <label style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, display: 'block', marginBottom: 4 }}>Message</label>
+      <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Tell us what's on your mind…" required rows={5}
+        style={{ ...inp, resize: 'vertical', lineHeight: 1.5 }} />
+
+      {/* math CAPTCHA */}
+      <div style={{ background: '#F4F6F8', borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, marginBottom: 6 }}>Quick check — what is {a} + {b}?</div>
+        <input type="number" value={captcha} onChange={e => setCaptcha(e.target.value)} placeholder="Answer" required
+          style={{ ...inp, marginBottom: 0, width: 100 }} />
+      </div>
+
+      {errMsg && <div style={{ fontSize: 13, color: '#C0392B', marginBottom: 10 }}>{errMsg}</div>}
+
+      <button type="submit" disabled={status === 'sending'}
+        style={{ width: '100%', padding: 14, background: T.primary, border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, color: '#fff', cursor: status === 'sending' ? 'default' : 'pointer', opacity: status === 'sending' ? 0.7 : 1 }}>
+        {status === 'sending' ? 'Sending…' : 'Send message'}
+      </button>
+    </form>
+  )
+}
+
 export default function LegalPage({ slug, onBack }) {
   const page = PAGES[slug] || PAGES.privacy
   return (
@@ -56,6 +136,7 @@ export default function LegalPage({ slug, onBack }) {
             <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.65 }}>{s.p}</div>
           </div>
         ))}
+        {slug === 'contact' && <ContactForm />}
       </div>
     </div>
   )
