@@ -129,7 +129,7 @@ export default function Impact({ user, onNavigate }) {
         {/* stats card */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
           {[[Math.round(totalHours), 'total hours', T.primary, T.primaryLight], [orgCount, 'organizations', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
-            <div key={lbl} onClick={() => onNavigate('loghours')} style={{ flex: 1, background: bg, borderRadius: 14, padding: '16px 10px', textAlign: 'center', cursor: 'pointer' }}>
+            <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 14, padding: '16px 10px', textAlign: 'center' }}>
               <div style={{ fontSize: 30, fontWeight: 700, color, lineHeight: 1 }}>{val}</div>
               <div style={{ fontSize: 11, color, opacity: 0.8, marginTop: 4 }}>{lbl}</div>
             </div>

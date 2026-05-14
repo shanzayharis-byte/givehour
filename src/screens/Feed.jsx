@@ -154,7 +154,7 @@ export default function Feed({ user, onSelectOpp, onNavigate }) {
               <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>Hi, {user?.name || 'there'}</div>
               {!isDesktop && (
                 <button
-                  onClick={() => onNavigate('loghours')}
+                  onClick={() => onNavigate('impact')}
                   style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, border: `1.5px solid ${T.primary}`, background: 'transparent', color: T.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
                 >
                   ⏱ Log Hours
@@ -165,7 +165,7 @@ export default function Feed({ user, onSelectOpp, onNavigate }) {
           {isDesktop ? (
             <div style={{ display: 'flex', gap: 12 }}>
               {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
-                <div key={lbl} onClick={() => onNavigate('loghours')} style={{ minWidth: 80, textAlign: 'center', background: bg, borderRadius: 10, padding: '12px 16px', cursor: 'pointer' }}>
+                <div key={lbl} onClick={() => onNavigate('impact')} style={{ minWidth: 80, textAlign: 'center', background: bg, borderRadius: 10, padding: '12px 16px', cursor: 'pointer' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color }}>{val}</div>
                   <div style={{ fontSize: 12, color, opacity: 0.75 }}>{lbl}</div>
                 </div>
@@ -176,7 +176,7 @@ export default function Feed({ user, onSelectOpp, onNavigate }) {
         {!isDesktop && (
           <div style={{ display: 'flex', gap: 8 }}>
             {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
-              <div key={lbl} onClick={() => onNavigate('loghours')} style={{ flex: 1, background: bg, borderRadius: 10, padding: '10px 8px', textAlign: 'center', cursor: 'pointer' }}>
+              <div key={lbl} onClick={() => onNavigate('impact')} style={{ flex: 1, background: bg, borderRadius: 10, padding: '10px 8px', textAlign: 'center', cursor: 'pointer' }}>
                 <div style={{ fontSize: 18, fontWeight: 700, color }}>{val}</div>
                 <div style={{ fontSize: 10, color, opacity: 0.75 }}>{lbl}</div>
               </div>
