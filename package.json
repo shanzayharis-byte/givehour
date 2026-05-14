@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.96.0",
     "@supabase/supabase-js": "^2.105.3",
     "nodemailer": "^8.0.7",
     "react": "^19.2.5",
