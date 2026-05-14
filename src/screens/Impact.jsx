@@ -128,7 +128,7 @@ export default function Impact({ user, onNavigate }) {
         ? `${allDates[0].toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} to ${allDates[allDates.length - 1].toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
         : 'the past year'
 
-      const res  = await fetch('/api/generate-letter', {
+      const res  = await fetch('/api/stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: user?.name || 'this student', totalHours: Math.round(totalHours), orgs: orgNames, categories: topCats, dateRange, addressedTo }),
