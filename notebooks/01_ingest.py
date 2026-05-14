@@ -80,36 +80,46 @@ idealist_results = []
 
 try:
     IDEALIST_KEY = "66355e8e431709c2444478cc2e1198b0"
-    IDEALIST_URL = "https://www.idealist.org/api/v1/listings/volops"
-    PAGE_SIZE = 100
+    IDEALIST_URL = "https://api-sandbox.idealist.org/api/v1/listings/volops"
+    PAGE_SIZE    = 100
 
     print("Fetching Idealist listings...")
     since = None
     while True:
-        url = IDEALIST_URL if not since else f"{IDEALIST_URL}?since={since}"
+        # Build URL manually so `since` colons aren't percent-encoded by requests
+        url = IDEALIST_URL if not since else f"{IDEALIST_URL}?since={since}&page_size={PAGE_SIZE}"
         r = requests.get(
-            url,
-            params={"page_size": PAGE_SIZE},
+            url if since else IDEALIST_URL,
+            params=({"page_size": PAGE_SIZE} if not since else None),
             auth=(IDEALIST_KEY, ""),
             headers={"Accept": "application/json"},
             timeout=30
         )
+        # Sandbox key has a time-window limit — 400 at boundary means we have all available data
+        if r.status_code == 400:
+            print(f"  Reached sandbox window boundary — stopping with {len(idealist_results)} listings")
+            break
         r.raise_for_status()
         page_data = r.json()
-        # API may return a list or a dict with results/data key
-        items = page_data if isinstance(page_data, list) else page_data.get("results", page_data.get("data", []))
+
+        items = page_data.get("volops", []) if isinstance(page_data, dict) else page_data
         if not items:
+            print("  No items returned — done")
             break
-        # Idealist's `since` pagination is inclusive — skip the last item from previous page
+
         batch = items[1:] if since else items
         idealist_results.extend(batch)
         print(f"  Fetched {len(batch)} items (total: {len(idealist_results)})")
-        if len(items) < PAGE_SIZE:
+
+        has_more = page_data.get("hasMore", False) if isinstance(page_data, dict) else False
+        if not has_more:
             break
-        since = items[-1].get("updated")
-        if not since:
-            print(f"⚠️  Idealist pagination stopped early — 'updated' field missing on item {items[-1].get('id')}")
+
+        last_updated = items[-1].get("updated") or items[-1].get("updatedAt")
+        if not last_updated:
+            print(f"⚠️  Pagination stopped — 'updated' field missing")
             break
+        since = last_updated
         time.sleep(0.25)
 
     idealist_blob_name = f"idealist/{timestamp}.json"
