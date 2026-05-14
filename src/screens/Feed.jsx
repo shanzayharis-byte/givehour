@@ -100,11 +100,13 @@ export default function Feed({ user, onSelectOpp, onNavigate }) {
             .from('personalized_feed')
             .select('score, rank, clean_listings!inner(*)')
             .eq('user_id', user.id)
-            .not('clean_listings.age_group', 'eq', '18+ Only')
             .order('rank')
-            .limit(10)
+            .limit(20)
           if (!feedErr && feed && feed.length > 0) {
-            const rows = feed.map(r => ({ ...r.clean_listings, score: Math.round(r.score) }))
+            const rows = feed
+              .map(r => ({ ...r.clean_listings, score: Math.round(r.score) }))
+              .filter(r => r.age_group !== '18+ Only')
+              .slice(0, 10)
             setOpps(await attachOrgLogos(rows))
             setIsPersonalized(true)
             setLoading(false)
