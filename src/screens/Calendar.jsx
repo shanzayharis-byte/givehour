@@ -184,21 +184,21 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
             {/* calendar grid */}
             <div style={{ background: T.card, borderRadius: 18, border: `1px solid ${T.border}`, overflow: 'hidden', marginBottom: 16 }}>
               {/* month nav */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: `1px solid ${T.border}` }}>
-                <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: T.textSub, padding: '2px 8px', borderRadius: 8 }}>‹</button>
-                <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{MONTHS[month]} {year}</div>
-                <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: T.textSub, padding: '2px 8px', borderRadius: 8 }}>›</button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderBottom: `1px solid ${T.border}` }}>
+                <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: T.textSub, padding: '2px 6px', borderRadius: 6 }}>‹</button>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{MONTHS[month]} {year}</div>
+                <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: T.textSub, padding: '2px 6px', borderRadius: 6 }}>›</button>
               </div>
 
               {/* weekday headers */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '8px 8px 2px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '5px 6px 1px' }}>
                 {WEEKDAYS.map(d => (
-                  <div key={d} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: T.textMuted, paddingBottom: 4 }}>{d}</div>
+                  <div key={d} style={{ textAlign: 'center', fontSize: 10, fontWeight: 600, color: T.textMuted, paddingBottom: 2 }}>{d[0]}</div>
                 ))}
               </div>
 
               {/* day cells */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 8px 10px', gap: 2 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 6px 6px', gap: 1 }}>
                 {Array.from({ length: firstDayOfWeek }).map((_, i) => <div key={`e${i}`} />)}
                 {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(day => {
                   const key = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -217,24 +217,19 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
                       }}
                       style={{
                         aspectRatio: '1',
-                        borderRadius: 10,
+                        borderRadius: 7,
                         border: isSelected ? `2px solid ${T.primary}` : isToday ? `2px solid ${T.accent}` : '2px solid transparent',
                         background: isSelected ? T.primaryLight : group ? '#F2FBF5' : 'transparent',
                         cursor: group ? 'pointer' : 'default',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        padding: '2px', gap: 1, transition: 'background 0.15s',
+                        padding: '1px', gap: 0, transition: 'background 0.15s',
                       }}
                     >
-                      <span style={{ fontSize: 13, fontWeight: isToday || isSelected ? 700 : 400, color: isSelected ? T.primary : isToday ? T.accent : T.text, lineHeight: 1 }}>
+                      <span style={{ fontSize: 11, fontWeight: isToday || isSelected ? 700 : 400, color: isSelected ? T.primary : isToday ? T.accent : T.text, lineHeight: 1 }}>
                         {day}
                       </span>
                       {count > 0 && (
-                        <span style={{ fontSize: 9, fontWeight: 700, color: isSelected ? T.primary : T.primaryDark, lineHeight: 1 }}>
-                          {count}
-                        </span>
-                      )}
-                      {count > 0 && (
-                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: isSelected ? T.primary : T.primary }} />
+                        <div style={{ width: 3, height: 3, borderRadius: '50%', background: isSelected ? T.primary : T.primary, marginTop: 1 }} />
                       )}
                     </button>
                   )
