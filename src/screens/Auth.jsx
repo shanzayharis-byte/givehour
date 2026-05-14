@@ -59,7 +59,8 @@ My community made me. Volunteering is my way of giving some of that back.`
 export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) {
   const [screen, setScreen] = useState(initialScreen || 'landing')
   const [stats, setStats] = useState({ orgs: null, hours: null })
-  const [showSample, setShowSample] = useState(false)
+  const [showSample, setShowSample]     = useState(false)
+  const [showTracking, setShowTracking] = useState(false)
 
   useEffect(() => {
     fetch('/api/stats')
@@ -244,7 +245,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
           <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center', marginBottom: 14 }}>How it works</div>
           {[
             { icon: '🔍', title: 'Find teen-friendly opportunities', sub: 'Most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens.' },
-            { icon: '⏱', title: 'Track every hour in one place', sub: 'School events, religious org, family thing, opportunities you found here. Log it all so nothing gets lost when college apps come around.' },
+            { icon: '⏱', title: 'Track every hour in one place', sub: 'School events, religious org, family thing, opportunities you found here. Log it all so nothing gets lost when college apps come around.', track: true },
             { icon: '🎓', title: 'Draft my Community PIQ', sub: 'Turn your logged hours into a ~350-word UC PIQ #7 draft — "What have you done to make your community a better place?"', cta: true },
           ].map(s => (
             <div key={s.icon} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 14 }}>
@@ -257,10 +258,96 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
                     See a sample draft →
                   </button>
                 )}
+                {s.track && (
+                  <button onClick={() => setShowTracking(true)} style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, fontSize: 12, fontWeight: 700, color: T.primary, cursor: 'pointer' }}>
+                    See how it looks →
+                  </button>
+                )}
               </div>
             </div>
           ))}
         </div>
+
+        {/* sample tracking modal */}
+        {showTracking && (
+          <>
+            <div onClick={() => setShowTracking(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 900 }} />
+            <div style={{
+              position: 'fixed',
+              ...(isDesktop
+                ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 420, maxHeight: '88vh', borderRadius: 18 }
+                : { bottom: 0, left: 0, right: 0, maxHeight: '92vh', borderRadius: '18px 18px 0 0' }),
+              background: '#fff', zIndex: 901, display: 'flex', flexDirection: 'column',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.2)', overflow: 'hidden',
+            }}>
+              <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>⏱ Your Hours Log</div>
+                  <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>Everything in one place, grouped by org</div>
+                </div>
+                <button onClick={() => setShowTracking(false)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px' }}>
+                {/* stat chips */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                  {[['33h', 'total hours', T.primary, T.primaryLight], ['5', 'organizations', '#3458C3', '#E8EFFC'], ['19', 'sessions', '#C45A1F', '#FEF0E7']].map(([val, lbl, color, bg]) => (
+                    <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 12, padding: '10px 6px', textAlign: 'center' }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color, lineHeight: 1 }}>{val}</div>
+                      <div style={{ fontSize: 10, color, opacity: 0.8, marginTop: 3 }}>{lbl}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* sample org groups */}
+                {[
+                  { org: 'Bay Area Rescue Mission', hours: '12h 45m', sessions: 6, cats: ['Community', 'Sr. Community'], entries: [
+                    { date: 'May 10, 2026', time: '9:00 – 12:45', note: 'Helped sort and pack food donations', hours: '3h 45m' },
+                    { date: 'Apr 26, 2026', time: '9:00 – 12:00', note: 'Served meals at the shelter', hours: '3h' },
+                  ]},
+                  { org: 'Citizen Foundation', hours: '8h', sessions: 4, cats: ['Educational'], entries: [
+                    { date: 'Mar 15, 2026', time: null, note: 'After-school tutoring — math & reading', hours: '2h' },
+                  ]},
+                  { org: 'Piedmont Garden Music', hours: '5h', sessions: 3, cats: ['Fund Raising'], entries: [] },
+                ].map((g, gi) => (
+                  <div key={g.org} style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 12, marginBottom: 10, overflow: 'hidden' }}>
+                    <div style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 4 }}>{g.org}</div>
+                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                          {g.cats.map(c => <span key={c} style={{ fontSize: 10, fontWeight: 700, background: T.primaryLight, color: T.primary, borderRadius: 20, padding: '2px 7px' }}>{c}</span>)}
+                          <span style={{ fontSize: 10, color: T.textMuted }}>{g.sessions} sessions</span>
+                        </div>
+                      </div>
+                      <span style={{ background: T.primaryLight, color: T.primary, fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 20 }}>{g.hours}</span>
+                    </div>
+                    {g.entries.length > 0 && (
+                      <div style={{ borderTop: `1px solid ${T.border}` }}>
+                        {g.entries.map((e, i) => (
+                          <div key={i} style={{ padding: '10px 14px', borderBottom: i < g.entries.length - 1 ? `1px solid ${T.border}` : 'none', background: '#fff' }}>
+                            <div style={{ fontSize: 11, color: T.textMuted, marginBottom: 3 }}>
+                              {e.date}{e.time ? ` · ${e.time}` : ''}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                              <div style={{ fontSize: 12, color: T.textSub }}>{e.note}</div>
+                              <span style={{ background: T.primaryLight, color: T.primary, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>{e.hours}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ padding: '14px 16px 20px', borderTop: `1px solid ${T.border}`, flexShrink: 0 }}>
+                <button onClick={() => { setShowTracking(false); setScreen('userType') }} style={{ width: '100%', padding: 13, background: T.primary, border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer', boxShadow: '0 4px 14px rgba(24,160,80,0.25)' }}>
+                  Start tracking yours →
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* sample PIQ modal */}
         {showSample && (
