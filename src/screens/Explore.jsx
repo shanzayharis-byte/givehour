@@ -361,6 +361,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const activeFilterCount = [filters.cause, filters.ageGroup, filters.remote, filters.state && filters.state !== 'California'].filter(Boolean).length
 
   const applyFilters = (o) => {
+    if (o.ageGroup === '18+ Only') return false
     if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) return false
     if (filters.cause    && o.cause !== filters.cause) return false
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) return false

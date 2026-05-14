@@ -8,11 +8,7 @@
 #   +20  listing is remote / online
 #   +10  listing location matches user's region
 #
-# Setup: set the following environment variables in your Databricks cluster
-# (Compute → your cluster → Edit → Advanced → Environment variables):
-#
-#   SUPABASE_URL   — https://your-project.supabase.co
-#   SUPABASE_KEY   — service_role key from Supabase → Settings → API
+# Age group filter: listings tagged "18+ Only" are excluded from teen users' feeds.
 
 %pip install supabase
 
@@ -20,8 +16,8 @@ import os
 from supabase import create_client
 
 # ── credentials ───────────────────────────────────────────────────────────────
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+SUPABASE_URL = "https://cmiwwlfazbnrfsvakvhh.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtaXd3bGZhemJucmZzdmFrdmhoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzk0NTYyMywiZXhwIjoyMDkzNTIxNjIzfQ.l0naZsiK-AL6r7kB1EZL9W4mW5GfdQ0aCMy6BOp7bNg"
 FEED_SIZE    = 20   # top N listings stored per user in personalized_feed
 
 # ── scoring ───────────────────────────────────────────────────────────────────
@@ -33,12 +29,17 @@ AGE_GROUP_OK = {
 }
 
 def score(listing, user):
-    points = 0
-    preferred_cause  = (user.get("preferred_cause") or "").strip()
-    if preferred_cause and listing["cause"] == preferred_cause:
-        points += 40
     user_age         = user.get("age") or 0
     min_age, max_age = AGE_GROUP_OK.get(listing["age_group"], (0, 999))
+
+    # Hard exclude — 18+ listings never show to users under 18
+    if user_age < 18 and listing["age_group"] == "18+ Only":
+        return -1
+
+    points = 0
+    preferred_cause = (user.get("preferred_cause") or "").strip()
+    if preferred_cause and listing["cause"] == preferred_cause:
+        points += 40
     if min_age <= user_age <= max_age:
         points += 30
     if listing["remote"]:
@@ -60,12 +61,13 @@ for user in users:
     scored = []
     for listing in listings:
         s = score(listing, user)
-        all_scores.append({"user_id": user["id"], "listing_id": listing["id"], "score": s})
-        scored.append((s, listing["id"]))
+        if s >= 0:  # skip hard-excluded listings
+            all_scores.append({"user_id": user["id"], "listing_id": listing["id"], "score": s})
+            scored.append((s, listing["id"]))
     scored.sort(reverse=True)
     for rank, (s, listing_id) in enumerate(scored[:FEED_SIZE]):
         feed_rows.append({"user_id": user["id"], "listing_id": listing_id, "score": s, "rank": rank + 1})
-    print(f"  User {user['id'][:8]}... — top score: {scored[0][0] if scored else 0}")
+    print(f"  User {user['id'][:8]}... — {len(scored)} eligible listings, top score: {scored[0][0] if scored else 0}")
 
 for i in range(0, len(all_scores), 100):
     db.table("match_scores").upsert(all_scores[i:i+100]).execute()
