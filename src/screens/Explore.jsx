@@ -10,6 +10,11 @@ const CAUSE_EMOJI = { Education:'📚', Environment:'🌿', Animals:'🐾', 'Foo
 const US_STATES = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana','Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan','Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire','New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming']
 const STATE_ABBR = { Alabama:'AL',Alaska:'AK',Arizona:'AZ',Arkansas:'AR',California:'CA',Colorado:'CO',Connecticut:'CT',Delaware:'DE',Florida:'FL',Georgia:'GA',Hawaii:'HI',Idaho:'ID',Illinois:'IL',Indiana:'IN',Iowa:'IA',Kansas:'KS',Kentucky:'KY',Louisiana:'LA',Maine:'ME',Maryland:'MD',Massachusetts:'MA',Michigan:'MI',Minnesota:'MN',Mississippi:'MS',Missouri:'MO',Montana:'MT',Nebraska:'NE',Nevada:'NV','New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND',Ohio:'OH',Oklahoma:'OK',Oregon:'OR',Pennsylvania:'PA','Rhode Island':'RI','South Carolina':'SC','South Dakota':'SD',Tennessee:'TN',Texas:'TX',Utah:'UT',Vermont:'VT',Virginia:'VA',Washington:'WA','West Virginia':'WV',Wisconsin:'WI',Wyoming:'WY' }
 
+function isProfessionalTitle(title) {
+  const t = (title || '').toLowerCase()
+  return /\bdirector\b|\bpresident\b|\bceo\b|\bcfo\b|\bcto\b|\bcoo\b|vice president|board member|executive director|department head|general manager|senior manager|committee chair|advisory board|trustee|secretary of/.test(t)
+}
+
 function matchesState(location, state) {
   if (!state) return true
   if (!location || location === 'Remote / Online' || location === 'In-Person') return true
@@ -361,7 +366,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const activeFilterCount = [filters.cause, filters.ageGroup, filters.remote, filters.state && filters.state !== 'California'].filter(Boolean).length
 
   const applyFilters = (o) => {
-    if (o.ageGroup === '18+ Only') return false
+    if (o.ageGroup === '18+ Only' || isProfessionalTitle(o.title)) return false
     if (search && !o.title.toLowerCase().includes(search.toLowerCase()) && !(o.org||'').toLowerCase().includes(search.toLowerCase())) return false
     if (filters.cause    && o.cause !== filters.cause) return false
     if (filters.ageGroup && o.ageGroup !== filters.ageGroup) return false
