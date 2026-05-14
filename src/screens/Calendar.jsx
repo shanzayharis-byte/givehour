@@ -48,6 +48,27 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
     load()
   }, [user?.id])
 
+  // Partition into future-dated groups and dateless
+  const dated = []   // [{ dateObj, dateStr, items }]
+  const dateless = []
+
+  const dateMap = {}
+  for (const l of listings) {
+    if (savedOnly && !savedIds.has(String(l.id))) continue
+    const d = parseFutureDate(l.date)
+    if (d) {
+      const key = d.toISOString().split('T')[0]
+      if (!dateMap[key]) {
+        dateMap[key] = { dateObj: d, dateStr: fmtDateHeader(d), items: [] }
+        dated.push(dateMap[key])
+      }
+      dateMap[key].items.push(l)
+    } else {
+      dateless.push(l)
+    }
+  }
+  dated.sort((a, b) => a.dateObj - b.dateObj)
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', background: T.bg }}>
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px 16px 40px' }}>
