@@ -50,13 +50,14 @@ export default async function handler(req, res) {
     // All orgs from clean_listings — group by name
     const { data, error } = await db
       .from('clean_listings')
-      .select('org, source, org_id, cause, age_group, remote')
+      .select('org, source, org_id, cause, age_group, remote, location')
       .not('org', 'is', null)
       .neq('org', '')
 
     if (error) return res.status(500).json({ error: error.message })
 
     const map = {}
+    const locationCounts = {}
     for (const row of data || []) {
       if (!row.org) continue
       if (!map[row.org]) map[row.org] = { org: row.org, count: 0, org_id: null, isGiveHour: false, causes: new Set(), ageGroups: new Set(), hasRemote: false }
@@ -67,6 +68,17 @@ export default async function handler(req, res) {
       if (row.source === 'org') {
         map[row.org].org_id = row.org_id
         map[row.org].isGiveHour = true
+      }
+      // track most common non-remote location per org
+      if (row.location && row.location !== 'Remote / Online' && row.location !== 'In-Person') {
+        if (!locationCounts[row.org]) locationCounts[row.org] = {}
+        locationCounts[row.org][row.location] = (locationCounts[row.org][row.location] || 0) + 1
+      }
+    }
+    // assign derived region to orgs that don't already have one
+    for (const [name, counts] of Object.entries(locationCounts)) {
+      if (map[name] && !map[name].region) {
+        map[name].region = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || null
       }
     }
 

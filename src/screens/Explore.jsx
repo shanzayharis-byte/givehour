@@ -230,7 +230,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const [orgDir, setOrgDir]               = useState([])
   const [orgDirLoading, setOrgDirLoading] = useState(true)
   const [activeOrgLetter, setActiveOrgLetter] = useState('')
-  const [orgFilters, setOrgFilters] = useState({ cause: '', ageGroup: '', remote: false })
+  const [orgFilters, setOrgFilters] = useState({ cause: '', ageGroup: '', remote: false, state: '' })
   const [showOrgFilter, setShowOrgFilter] = useState(false)
   const [orgView, setOrgView]             = useState(null)
   const [orgViewListings, setOrgViewListings] = useState([])
@@ -398,6 +398,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
     if (orgFilters.cause && !(o.causes || []).includes(orgFilters.cause)) return false
     if (orgFilters.ageGroup && !(o.ageGroups || []).includes(orgFilters.ageGroup)) return false
     if (orgFilters.remote && !o.hasRemote) return false
+    if (orgFilters.state && !matchesState(o.region || '', orgFilters.state)) return false
     return true
   })
 
@@ -405,7 +406,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
   const orgCauseCounts = {}
   for (const o of orgDir) for (const c of (o.causes || [])) orgCauseCounts[c] = (orgCauseCounts[c] || 0) + 1
 
-  const orgActiveFilterCount = [orgFilters.cause, orgFilters.ageGroup, orgFilters.remote].filter(Boolean).length
+  const orgActiveFilterCount = [orgFilters.cause, orgFilters.ageGroup, orgFilters.remote, orgFilters.state].filter(Boolean).length
 
   const gridStyle = isDesktop
     ? { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }
@@ -564,6 +565,17 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
             </div>
           ) : (
             <>
+              {/* state chip */}
+              {orgFilters.state && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ fontSize: 12, color: T.textMuted }}>📍 State:</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: T.primaryLight, color: T.primary, border: `1.5px solid ${T.primary}33`, borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 600 }}>
+                    {orgFilters.state}
+                    <button onClick={() => setOrgFilters(f => ({ ...f, state: '' }))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.primary, fontSize: 15, padding: 0, lineHeight: 1, marginLeft: 2 }}>×</button>
+                  </span>
+                </div>
+              )}
+
               {/* A–Z strip */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginBottom: 16, alignItems: 'center' }}>
                 <button onClick={() => setActiveOrgLetter('')} style={{ flexShrink: 0, padding: '4px 12px', borderRadius: 16, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none', background: !activeOrgLetter ? T.primary : 'transparent', color: !activeOrgLetter ? '#fff' : T.textSub, transition: 'all 0.15s' }}>All</button>
@@ -597,7 +609,7 @@ export default function Explore({ user, onSelectOpp, onSelectOrg, isGuest, onSig
       </div>
 
       {showFilter && <FilterModal filters={filters} onChange={setFilters} onClose={() => setShowFilter(false)} isDesktop={isDesktop} causeCounts={causeCounts} />}
-      {showOrgFilter && <FilterModal filters={orgFilters} onChange={setOrgFilters} onClose={() => setShowOrgFilter(false)} isDesktop={isDesktop} causeCounts={orgCauseCounts} title="Filter organizations" />}
+      {showOrgFilter && <FilterModal filters={orgFilters} onChange={setOrgFilters} onClose={() => setShowOrgFilter(false)} isDesktop={isDesktop} causeCounts={orgCauseCounts} title="Filter organizations" sections={['cause', 'state']} />}
     </div>
   )
 }
