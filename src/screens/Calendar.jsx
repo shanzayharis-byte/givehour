@@ -17,6 +17,63 @@ function fmtDateHeader(d) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
 }
 
+function OppCard({ l, expanded, onToggle, saved, onSave, user, isGuest }) {
+  const cause = CAUSE[l.cause] || { bg: '#F2F2F2', text: '#666' }
+  return (
+    <div style={{ background: T.card, border: `1px solid ${expanded ? T.primary : T.border}`, borderRadius: 14, overflow: 'hidden', transition: 'border-color 0.15s' }}>
+      {/* compact row */}
+      <button
+        onClick={onToggle}
+        style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+      >
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.title}</div>
+          <div style={{ fontSize: 12, color: T.textSub, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {l.org}{l.location ? ` · ${l.location}` : ''}
+          </div>
+        </div>
+        <div style={{ background: cause.bg, color: cause.text, fontSize: 10, fontWeight: 700, borderRadius: 6, padding: '3px 8px', flexShrink: 0 }}>{l.cause || 'General'}</div>
+        <span style={{ fontSize: 14, color: T.textMuted, flexShrink: 0, transform: expanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', display: 'inline-block' }}>▾</span>
+      </button>
+
+      {/* expanded preview */}
+      {expanded && (
+        <div style={{ padding: '0 14px 14px', borderTop: `1px solid ${T.border}` }}>
+          {l.hours && (
+            <div style={{ fontSize: 12, color: T.textMuted, marginTop: 10, marginBottom: 6 }}>⏱ {l.hours} hrs</div>
+          )}
+          {l.description && (
+            <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.6, marginBottom: 12,
+              display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {l.description}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {l.external_url && (
+              <a
+                href={l.external_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ background: T.primary, color: '#fff', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 600, textDecoration: 'none', display: 'inline-block' }}
+              >
+                Visit site →
+              </a>
+            )}
+            {(user || isGuest) && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onSave() }}
+                style={{ background: saved ? T.primaryLight : T.bg, color: saved ? T.primary : T.textSub, border: `1px solid ${saved ? T.primary : T.border}`, borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              >
+                {saved ? '✓ Saved' : '🔖 Save'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
   const [listings, setListings]       = useState([])
   const [savedIds, setSavedIds]       = useState(new Set())
