@@ -5,7 +5,10 @@ import { T, CAUSE } from '../lib/theme'
 // Returns a Date if str parses to a valid future date, null otherwise.
 function parseFutureDate(str) {
   if (!str || typeof str !== 'string') return null
-  const d = new Date(str)
+  const parts = str.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  const d = parts
+    ? new Date(+parts[1], +parts[2] - 1, +parts[3], 12, 0, 0)
+    : new Date(str)
   if (isNaN(d.getTime())) return null
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -115,15 +118,16 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
       if (savedOnly && !savedIds.has(String(l.id))) continue
       const d = parseFutureDate(l.date)
       if (d) {
-        const key = d.toISOString().split('T')[0]
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
         if (!dateMap[key]) {
           dateMap[key] = { dateObj: d, dateStr: fmtDateHeader(d), items: [] }
           dated.push(dateMap[key])
         }
         dateMap[key].items.push(l)
-      } else {
+      } else if (!l.date) {
         dateless.push(l)
       }
+      // past-dated rows are silently skipped
     }
     dated.sort((a, b) => a.dateObj - b.dateObj)
     return { dated, dateless }
