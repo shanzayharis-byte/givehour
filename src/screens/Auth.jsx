@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { T, CAUSE } from '../lib/theme'
 
@@ -46,6 +46,22 @@ const StepHeader = ({ step, total, title, onBack }) => (
 
 export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) {
   const [screen, setScreen] = useState(initialScreen || 'landing')
+  const [stats, setStats] = useState({ orgs: null, hours: null })
+
+  useEffect(() => {
+    async function loadStats() {
+      const [orgsRes, hoursRes] = await Promise.all([
+        supabase.from('clean_listings').select('org', { count: 'exact', head: false }).not('org', 'is', null).neq('org', ''),
+        supabase.from('hours_log').select('hours'),
+      ])
+      const orgCount  = new Set((orgsRes.data || []).map(r => r.org).filter(Boolean)).size
+      const hoursTotal = (hoursRes.data || []).reduce((s, r) => s + (r.hours || 0), 0)
+      const fmtOrgs  = orgCount  >= 1000 ? `${(orgCount/1000).toFixed(1)}k+`  : orgCount  > 0 ? `${orgCount}+`  : '—'
+      const fmtHours = hoursTotal >= 1000 ? `${Math.floor(hoursTotal/1000)}k+` : hoursTotal > 0 ? `${Math.round(hoursTotal)}+` : '—'
+      setStats({ orgs: fmtOrgs, hours: fmtHours })
+    }
+    loadStats()
+  }, [])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -199,7 +215,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
         </div>
 
         <div style={{ display: 'flex', borderBottom: `1px solid ${T.border}` }}>
-          {[['2,400+', 'teens active'], ['180+', 'orgs listed'], ['12k+', 'hours logged']].map(([val, lbl], i) => (
+          {[['TBD', 'teens active'], [stats.orgs ?? '…', 'orgs listed'], [stats.hours ?? '…', 'hours logged']].map(([val, lbl], i) => (
             <div key={lbl} style={{ flex: 1, textAlign: 'center', padding: '12px 6px', borderRight: i < 2 ? `1px solid ${T.border}` : 'none' }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: T.primary }}>{val}</div>
               <div style={{ fontSize: 10, color: T.textMuted, marginTop: 1 }}>{lbl}</div>
