@@ -321,9 +321,24 @@ export default function Impact({ user, onNavigate }) {
               <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>Draft my Community PIQ</div>
               <div style={{ fontSize: 11, color: T.primary, fontWeight: 600, marginBottom: 6 }}>"What have you done to make your community a better place?"</div>
               <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.6, marginBottom: 12 }}>AI drafts a ~350-word first-person response based on your actual volunteer hours and activities.</div>
-              <button onClick={openLetterModal} disabled={totalHours === 0} style={{ width: '100%', padding: 12, background: totalHours === 0 ? '#B8D8C8' : T.primary, border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', cursor: totalHours === 0 ? 'default' : 'pointer' }}>
-                {totalHours === 0 ? 'Log some hours first' : 'Draft my Community PIQ →'}
-              </button>
+              {(() => {
+                const ready = totalHours >= 25 && orgCount >= 2
+                const missing = []
+                if (totalHours < 25) missing.push(`${Math.ceil(25 - totalHours)}h to go`)
+                if (orgCount < 2)    missing.push(`${2 - orgCount} more org`)
+                return (
+                  <>
+                    <button onClick={openLetterModal} disabled={!ready} style={{ width: '100%', padding: 12, background: ready ? T.primary : '#B8D8C8', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', cursor: ready ? 'pointer' : 'default' }}>
+                      {ready ? 'Draft my Community PIQ →' : 'Draft my Community PIQ'}
+                    </button>
+                    {!ready && (
+                      <div style={{ fontSize: 11, color: T.textMuted, marginTop: 7, textAlign: 'center' }}>
+                        Unlocks at 25h + 2 orgs · {missing.join(' · ')}
+                      </div>
+                    )}
+                  </>
+                )
+              })()}
             </div>
           </div>
         </div>
