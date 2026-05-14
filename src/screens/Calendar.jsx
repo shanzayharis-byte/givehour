@@ -134,10 +134,12 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
     if (isGuest || !user) { onSignUp?.(); return }
     const idStr = String(l.id)
     if (savedIds.has(idStr)) {
-      await supabase.from('saved_opportunities').delete().eq('user_id', user.id).eq('listing_id', idStr)
+      const { error } = await supabase.from('saved_opportunities').delete().eq('user_id', user.id).eq('listing_id', idStr)
+      if (error) { console.error('Failed to unsave:', error); return }
       setSavedIds(prev => { const s = new Set(prev); s.delete(idStr); return s })
     } else {
-      await supabase.from('saved_opportunities').insert({ user_id: user.id, listing_id: idStr })
+      const { error } = await supabase.from('saved_opportunities').insert({ user_id: user.id, listing_id: idStr })
+      if (error) { console.error('Failed to save:', error); return }
       setSavedIds(prev => new Set([...prev, idStr]))
     }
   }
@@ -154,7 +156,7 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
           </div>
           {user && (
             <button
-              onClick={() => { setSavedOnly(v => !v); setExpanded(null) }}
+              onClick={() => { setSavedOnly(v => !v); setExpanded(null); setNoDateOpen(false) }}
               style={{ background: savedOnly ? T.primary : T.card, color: savedOnly ? '#fff' : T.textSub, border: `1px solid ${savedOnly ? T.primary : T.border}`, borderRadius: 20, padding: '7px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
             >
               🔖 Saved
