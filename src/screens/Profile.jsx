@@ -519,7 +519,10 @@ export default function Profile({ user, onSignOut, onNavigate }) {
     const ext  = file.name.split('.').pop()
     const path = `${user.id}.${ext}`
     const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (!error) {
+    if (error) {
+      console.error('Avatar upload error:', error)
+      alert(`Upload failed: ${error.message}`)
+    } else {
       const { data } = supabase.storage.from('avatars').getPublicUrl(path)
       await save({ avatar_url: data.publicUrl })
       setAvatarUrl(data.publicUrl)
