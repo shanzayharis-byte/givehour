@@ -165,7 +165,7 @@ export default function Feed({ user, onSelectOpp, onNavigate }) {
           {isDesktop ? (
             <div style={{ display: 'flex', gap: 12 }}>
               {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
-                <div key={lbl} style={{ minWidth: 80, textAlign: 'center', background: bg, borderRadius: 10, padding: '12px 16px' }}>
+                <div key={lbl} onClick={() => onNavigate('loghours')} style={{ minWidth: 80, textAlign: 'center', background: bg, borderRadius: 10, padding: '12px 16px', cursor: 'pointer' }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color }}>{val}</div>
                   <div style={{ fontSize: 12, color, opacity: 0.75 }}>{lbl}</div>
                 </div>
@@ -176,7 +176,7 @@ export default function Feed({ user, onSelectOpp, onNavigate }) {
         {!isDesktop && (
           <div style={{ display: 'flex', gap: 8 }}>
             {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
-              <div key={lbl} style={{ flex: 1, background: bg, borderRadius: 10, padding: '10px 8px', textAlign: 'center' }}>
+              <div key={lbl} onClick={() => onNavigate('loghours')} style={{ flex: 1, background: bg, borderRadius: 10, padding: '10px 8px', textAlign: 'center', cursor: 'pointer' }}>
                 <div style={{ fontSize: 18, fontWeight: 700, color }}>{val}</div>
                 <div style={{ fontSize: 10, color, opacity: 0.75 }}>{lbl}</div>
               </div>
