@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from './lib/supabase'
 import { T } from './lib/theme'
 import Auth from './screens/Auth'
@@ -50,10 +50,33 @@ export default function App() {
   const [selectedOpp, setSelectedOpp] = useState(null)
   const [selectedOrg, setSelectedOrgState] = useState(null) // { id, name }
 
+  const selectedOppRef = useRef(null)
+  const selectedOrgRef = useRef(null)
+  useEffect(() => { selectedOppRef.current = selectedOpp }, [selectedOpp])
+  useEffect(() => { selectedOrgRef.current = selectedOrg }, [selectedOrg])
+
+  // Browser back/forward support
+  useEffect(() => {
+    window.history.replaceState({ screen: 'landing' }, '')
+    const handler = () => {
+      if (selectedOppRef.current) { setSelectedOpp(null); return }
+      if (selectedOrgRef.current) { setSelectedOrgState(null); sessionStorage.removeItem('gh_org'); return }
+      const { screen } = window.history.state || {}
+      setActiveScreen(screen || 'landing')
+      setDrawerOpen(false)
+    }
+    window.addEventListener('popstate', handler)
+    return () => window.removeEventListener('popstate', handler)
+  }, [])
+
   const setSelectedOrg = (org) => {
     setSelectedOrgState(org)
-    if (org) sessionStorage.setItem('gh_org', JSON.stringify(org))
-    else sessionStorage.removeItem('gh_org')
+    if (org) {
+      sessionStorage.setItem('gh_org', JSON.stringify(org))
+      window.history.pushState({ screen: activeScreen, overlay: 'org' }, '')
+    } else {
+      sessionStorage.removeItem('gh_org')
+    }
   }
   const [isGuest, setIsGuest]         = useState(false)
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
@@ -129,6 +152,12 @@ export default function App() {
     setSelectedOrg(null)
     setActiveScreen(screen)
     setDrawerOpen(false)
+    window.history.pushState({ screen }, '')
+  }
+
+  const openOpp = (opp) => {
+    if (opp) window.history.pushState({ screen: activeScreen, overlay: 'opp' }, '')
+    setSelectedOpp(opp)
   }
 
   const handleLoggedIn = (user, db) => {
@@ -187,7 +216,7 @@ export default function App() {
         onLogin={() => { setSelectedOpp(null); setIsGuest(false); setActiveScreen('auth-login') }} />
     }
     if (selectedOrg) {
-      return <OrgProfile orgId={selectedOrg.id} orgName={selectedOrg.name} onBack={() => setSelectedOrg(null)} onSelectOpp={setSelectedOpp} isGuest={isGuest} onLogin={() => { setSelectedOrg(null); setIsGuest(false); setActiveScreen('auth-login') }} onSignUp={() => { setSelectedOrg(null); setIsGuest(false); setActiveScreen('auth-signup') }} />
+      return <OrgProfile orgId={selectedOrg.id} orgName={selectedOrg.name} onBack={() => setSelectedOrg(null)} onSelectOpp={openOpp} isGuest={isGuest} onLogin={() => { setSelectedOrg(null); setIsGuest(false); setActiveScreen('auth-login') }} onSignUp={() => { setSelectedOrg(null); setIsGuest(false); setActiveScreen('auth-signup') }} />
     }
     if (activeScreen === 'privacy' || activeScreen === 'terms' || activeScreen === 'contact') {
       return <LegalPage slug={activeScreen} onBack={() => setActiveScreen(authUser ? (isOrg ? 'orgDashboard' : 'feed') : 'landing')} />
@@ -196,15 +225,15 @@ export default function App() {
       return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
     }
     switch (activeScreen) {
-      case 'feed':          return <Feed user={dbUser} onSelectOpp={setSelectedOpp} onNavigate={navigate} />
-      case 'saved':         return <Saved user={dbUser} onSelectOpp={setSelectedOpp} isDesktop={isDesktop} />
-      case 'explore':       return <Explore user={dbUser} onSelectOpp={setSelectedOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
+      case 'feed':          return <Feed user={dbUser} onSelectOpp={openOpp} onNavigate={navigate} />
+      case 'saved':         return <Saved user={dbUser} onSelectOpp={openOpp} isDesktop={isDesktop} />
+      case 'explore':       return <Explore user={dbUser} onSelectOpp={openOpp} onSelectOrg={(id, name) => setSelectedOrg({ id, name })} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} onHome={() => setActiveScreen('landing')} />
       case 'loghours':      return <LogHours user={dbUser} />
       case 'calendar':      return <Calendar user={dbUser} isGuest={isGuest} onSignUp={() => { setIsGuest(false); setActiveScreen('auth-signup') }} onLogin={() => { setIsGuest(false); setActiveScreen('auth-login') }} />
       case 'impact':        return <Impact user={dbUser} onNavigate={navigate} />
       case 'profile':       return <Profile user={dbUser} onSignOut={handleSignOut} onNavigate={setActiveScreen} />
       case 'admin':         return <Admin authUser={authUser} />
-      case 'orgDashboard':  return <OrgDashboard user={dbUser} editTargetId={editTargetId} onConsumeEditTarget={() => setEditTargetId(null)} onSelectOpp={setSelectedOpp} />
+      case 'orgDashboard':  return <OrgDashboard user={dbUser} editTargetId={editTargetId} onConsumeEditTarget={() => setEditTargetId(null)} onSelectOpp={openOpp} />
       case 'orgPost':       return <PostListingForm user={dbUser} onBack={() => navigate('orgDashboard')} />
       case 'privacy':
       case 'terms':
