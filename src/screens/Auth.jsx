@@ -281,7 +281,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               position: 'fixed',
               ...(isDesktop
                 ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 420, maxHeight: '88vh', borderRadius: 18 }
-                : { bottom: 0, left: 0, right: 0, maxHeight: '92vh', borderRadius: '18px 18px 0 0' }),
+                : { bottom: 0, left: 0, right: 0, maxHeight: '65vh', borderRadius: '18px 18px 0 0' }),
               background: '#fff', zIndex: 901, display: 'flex', flexDirection: 'column',
               boxShadow: '0 8px 40px rgba(0,0,0,0.2)', overflow: 'hidden',
             }}>
@@ -387,7 +387,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen }) 
               position: 'fixed',
               ...(isDesktop
                 ? { top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 560, maxHeight: '88vh', borderRadius: 18 }
-                : { bottom: 0, left: 0, right: 0, maxHeight: '92vh', borderRadius: '18px 18px 0 0' }),
+                : { bottom: 0, left: 0, right: 0, maxHeight: '65vh', borderRadius: '18px 18px 0 0' }),
               background: '#fff', zIndex: 901, display: 'flex', flexDirection: 'column',
               boxShadow: '0 8px 40px rgba(0,0,0,0.2)', overflow: 'hidden',
             }}>
