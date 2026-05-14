@@ -27,20 +27,23 @@ export default function Calendar({ user, onSignUp, onLogin, isGuest }) {
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('clean_listings')
-        .select('id, title, org, org_id, cause, location, hours, date, description, external_url, source')
-        .order('date', { ascending: true })
-      setListings(data || [])
+      try {
+        const { data } = await supabase
+          .from('clean_listings')
+          .select('id, title, org, org_id, cause, location, hours, date, description, external_url, source')
+          .order('date', { ascending: true })
+        setListings(data || [])
 
-      if (user?.id) {
-        const { data: saved } = await supabase
-          .from('saved_opportunities')
-          .select('listing_id')
-          .eq('user_id', user.id)
-        setSavedIds(new Set((saved || []).map(r => String(r.listing_id))))
+        if (user?.id) {
+          const { data: saved } = await supabase
+            .from('saved_opportunities')
+            .select('listing_id')
+            .eq('user_id', user.id)
+          setSavedIds(new Set((saved || []).map(r => String(r.listing_id))))
+        }
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
     load()
   }, [user?.id])
