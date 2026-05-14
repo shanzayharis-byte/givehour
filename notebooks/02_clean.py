@@ -202,9 +202,9 @@ else:
 
 # ── process Idealist listings ─────────────────────────────────────────────────
 def clean_idealist_item(item):
-    org  = item.get("organization") or {}
-    addr = item.get("address") or {}
-    is_remote = bool(item.get("remote") or item.get("isRemote"))
+    org      = item.get("org") or item.get("organization") or {}
+    addr     = item.get("address") or {}
+    is_remote = bool(item.get("remoteOk") or item.get("remote") or item.get("isRemote"))
     if is_remote:
         location = "Remote / Online"
     else:
@@ -212,22 +212,45 @@ def clean_idealist_item(item):
         state = addr.get("state", "")
         parts = [p for p in [city, state] if p]
         location = ", ".join(parts) if parts else "In-Person"
+
     url_field    = item.get("url") or {}
     external_url = (url_field.get("en") or next(iter(url_field.values()), "")) if isinstance(url_field, dict) else str(url_field)
     title        = item.get("name") or item.get("title") or ""
-    description  = item.get("description") or ""
+
+    raw_desc    = item.get("description") or ""
+    description = re.sub(r"<[^>]+>", " ", raw_desc).strip()
+    description = re.sub(r"\s+", " ", description)
+
+    age_req = item.get("ageRequirement") or 0
+    if age_req >= 18:
+        age_group = "18+ Only"
+    elif item.get("welcomeTeens"):
+        age_group = "Teens (13-17)"
+    else:
+        age_group = derive_age_group(description, title, "")
+
+    areas = [a.lower() for a in (item.get("areasOfFocus") or [])]
+    if any("animal" in a or "wildlife" in a for a in areas):              cause = "Animals"
+    elif any("food" in a or "hunger" in a for a in areas):                cause = "Food Security"
+    elif any("hous" in a or "shelter" in a for a in areas):               cause = "Housing"
+    elif any("senior" in a or "elder" in a for a in areas):               cause = "Seniors"
+    elif any("environ" in a or "climate" in a for a in areas):            cause = "Environment"
+    elif any("health" in a or "medical" in a for a in areas):             cause = "Health"
+    elif any("art" in a or "music" in a or "culture" in a for a in areas): cause = "Arts"
+    else:                                                                   cause = derive_cause_text(title + " " + description)
+
     return {
         "id":           f"idealist_{item['id']}",
         "title":        title,
         "org":          org.get("name") or org.get("organizationName") or "",
         "org_id":       None,
-        "cause":        derive_cause_text(title + " " + description),
-        "age_group":    derive_age_group(description, title, ""),
+        "cause":        cause,
+        "age_group":    age_group,
         "location":     location,
         "remote":       is_remote,
         "description":  description,
-        "hours":        str(item.get("hours") or item.get("commitment") or ""),
-        "date":         str(item.get("dates") or item.get("startDate") or ""),
+        "hours":        str(item.get("expectedTime") or item.get("commitmentDetails") or item.get("hours") or ""),
+        "date":         str(item.get("startDate") or item.get("dates") or ""),
         "external_url": external_url,
         "source":       "idealist",
         "fetched_at":   datetime.now(timezone.utc).isoformat(),
