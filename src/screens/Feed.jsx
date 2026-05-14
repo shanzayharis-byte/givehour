@@ -21,7 +21,7 @@ function MatchBadge({ score }) {
 
 const ORG_COLORS = ['#0E7A3C','#C45A1F','#3458C3','#B23170','#6E3FB3','#9C7400','#0B7A75','#B23A3A','#5C7A2A','#4A4A8A']
 function orgColor(name) { let h = 0; for (let i = 0; i < (name||'').length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0; return ORG_COLORS[h % ORG_COLORS.length] }
-function orgInitial(name) { return (name || '?')[0].toUpperCase() }
+function orgInitial(name, title) { return (name || title || '?')[0].toUpperCase() }
 
 function OppCard({ opp, onSelect, isFirst, alternate }) {
   const cause = CAUSE[opp.cause] || { bg: '#F2F2F2', text: '#666' }
@@ -42,7 +42,7 @@ function OppCard({ opp, onSelect, isFirst, alternate }) {
             onError={e => { e.currentTarget.style.display = 'none' }} />
         ) : (
           <div style={{ width: 22, height: 22, borderRadius: 6, background: color + '22', color, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${color}33` }}>
-            {orgInitial(opp.org)}
+            {orgInitial(opp.org, opp.title)}
           </div>
         )}
         <div style={{ fontSize: 12, color: T.textMuted }}>{opp.org}</div>
