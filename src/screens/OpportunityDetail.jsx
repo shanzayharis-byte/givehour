@@ -4,9 +4,8 @@ import { T, CAUSE } from '../lib/theme'
 
 const CAUSE_EMOJI = { Education: '📚', Environment: '🌿', Animals: '🐾', 'Food Security': '🍎', Health: '❤️', Housing: '🏠', Arts: '🎨', Seniors: '🤝' }
 
-function stripHtml(html) {
-  return (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-}
+function isHtml(str) { return /<[a-z][\s\S]*>/i.test(str || '') }
+function sanitize(html) { return (html || '').replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<iframe[\s\S]*?<\/iframe>/gi, '') }
 
 export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp, onLogin, onSelectOrg, onEdit }) {
   const [saved, setSaved]       = useState(false)
@@ -157,9 +156,14 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
   const aboutCard = (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, marginBottom: 14 }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: T.textMuted, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>About this opportunity</div>
-      <div style={{ fontSize: 15, color: T.text, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-        {stripHtml(opp.description) || <span style={{ color: T.textMuted, fontStyle: 'italic' }}>The organization hasn't added a description yet. Reach out to learn more.</span>}
-      </div>
+      {isHtml(opp.description) ? (
+        <div style={{ fontSize: 15, color: T.text, lineHeight: 1.7 }}
+          dangerouslySetInnerHTML={{ __html: sanitize(opp.description) }} />
+      ) : (
+        <div style={{ fontSize: 15, color: T.text, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+          {opp.description || <span style={{ color: T.textMuted, fontStyle: 'italic' }}>The organization hasn't added a description yet. Reach out to learn more.</span>}
+        </div>
+      )}
     </div>
   )
 
