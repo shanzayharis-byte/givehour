@@ -150,16 +150,18 @@ export default function Feed({ user, onSelectOpp, onNavigate }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
           <div>
             <div style={{ fontSize: 13, color: T.textMuted }}>{greeting}</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>Hi, {user?.name || 'there'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>Hi, {user?.name || 'there'}</div>
+              {!isDesktop && (
+                <button
+                  onClick={() => onNavigate('loghours')}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 20, border: `1.5px solid ${T.primary}`, background: 'transparent', color: T.primary, fontSize: 12, fontWeight: 600, cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
+                >
+                  ⏱ Log Hours
+                </button>
+              )}
+            </div>
           </div>
-          {!isDesktop && (
-            <button
-              onClick={() => onNavigate('loghours')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: `1.5px solid ${T.primary}`, background: 'transparent', color: T.primary, fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0, fontFamily: 'inherit' }}
-            >
-              ⏱ Log
-            </button>
-          )}
           {isDesktop ? (
             <div style={{ display: 'flex', gap: 12 }}>
               {[[totalHours, 'hours', T.primary, T.primaryLight], [orgCount, 'orgs', T.accent, T.accentLight], [sessions, 'sessions', T.warning, T.warningLight]].map(([val, lbl, color, bg]) => (
