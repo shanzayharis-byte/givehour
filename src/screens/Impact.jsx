@@ -313,14 +313,14 @@ export default function Impact({ user, onNavigate }) {
           </div>
         )}
 
-        {/* UC PIQ #7 draft */}
+        {/* Draft my College Community Essay */}
         <div style={{ border: `1.5px solid rgba(24,160,80,0.4)`, borderRadius: 12, padding: 16 }}>
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ fontSize: 28 }}>🎓</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>Draft my Community PIQ</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>Draft my College Community Essay</div>
               <div style={{ fontSize: 11, color: T.primary, fontWeight: 600, marginBottom: 6 }}>"What have you done to make your community a better place?"</div>
-              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.6, marginBottom: 12 }}>AI drafts a ~350-word first-person response based on your actual volunteer hours and activities.</div>
+              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.6, marginBottom: 12 }}>Log your hours and we'll write your first draft — answering one of the most common college application essay questions about community service.</div>
               {(() => {
                 const ready = totalHours >= 25 && orgCount >= 2
                 const missing = []
@@ -329,7 +329,7 @@ export default function Impact({ user, onNavigate }) {
                 return (
                   <>
                     <button onClick={openLetterModal} disabled={!ready} style={{ width: '100%', padding: 12, background: ready ? T.primary : '#B8D8C8', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, color: '#fff', cursor: ready ? 'pointer' : 'default' }}>
-                      {ready ? 'Draft my Community PIQ →' : 'Draft my Community PIQ'}
+                      {ready ? 'Draft my College Community Essay →' : 'Draft my College Community Essay'}
                     </button>
                     {!ready && (
                       <div style={{ fontSize: 11, color: T.textMuted, marginTop: 7, textAlign: 'center' }}>
@@ -358,7 +358,7 @@ export default function Impact({ user, onNavigate }) {
             {/* header */}
             <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>🎓 Draft my Community PIQ</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>🎓 Draft my College Community Essay</div>
                 <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>"What have you done to make your community a better place?"</div>
               </div>
               <button onClick={() => setShowLetter(false)} style={{ background: T.bg, border: 'none', borderRadius: 8, width: 30, height: 30, fontSize: 16, cursor: 'pointer', color: T.textSub }}>✕</button>
@@ -382,7 +382,7 @@ export default function Impact({ user, onNavigate }) {
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 10, border: `1.5px solid ${T.border}`, fontSize: 13, fontFamily: 'inherit', color: T.text, background: '#F4F6F8', outline: 'none', boxSizing: 'border-box', resize: 'vertical', lineHeight: 1.5, marginBottom: 16 }}
                   />
                   <button onClick={generateLetter} style={{ width: '100%', padding: 13, background: T.primary, border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
-                    Draft my Community PIQ →
+                    Draft my College Community Essay →
                   </button>
                 </div>
               )}

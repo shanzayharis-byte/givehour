@@ -304,7 +304,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
           {[
             { icon: '🔍', title: 'Find teen-friendly opportunities', sub: 'Most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens.' },
             { icon: '⏱', title: 'Track every hour in one place', sub: 'School events, religious org, family thing, opportunities you found here. Log it all so nothing gets lost when college apps come around.', track: true },
-            { icon: '🎓', title: 'Draft my Community PIQ', sub: 'Turn your logged hours into a ~350-word UC PIQ #7 draft — "What have you done to make your community a better place?"', cta: true },
+            { icon: '🎓', title: 'Draft my College Community Essay', sub: 'Log your hours and we\'ll write your first draft — answering one of the most common college application essay questions about community service.', cta: true },
           ].map(s => (
             <div key={s.icon} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 14 }}>
               <div style={{ width: 34, height: 34, borderRadius: '50%', background: T.primaryLight, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{s.icon}</div>
@@ -449,14 +449,14 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
             }}>
               <div style={{ padding: '16px 20px 14px', borderBottom: `1px solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>🎓 Sample Community PIQ Draft</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>🎓 Sample College Community Essay Draft</div>
                   <div style={{ fontSize: 11, color: T.textMuted, marginTop: 2 }}>AI-generated from a student's real volunteer data</div>
                 </div>
                 <button onClick={() => setShowSample(false)} style={{ background: '#F0F0F0', border: 'none', borderRadius: 10, width: 38, height: 38, fontSize: 20, cursor: 'pointer', color: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>✕</button>
               </div>
               <div style={{ flex: 1, overflowY: 'auto', padding: '20px 20px 4px' }}>
                 <div style={{ background: T.primaryLight, borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: T.primary, fontWeight: 600 }}>
-                  UC PIQ #7 · "What have you done to make your community a better place?" · ~320 words
+                  UC Personal Insight Question · "What have you done to make your community a better place?" · ~320 words
                 </div>
                 <div style={{ fontSize: 14, lineHeight: 1.85, color: T.text, whiteSpace: 'pre-wrap' }}>{SAMPLE_PIQ}</div>
               </div>
