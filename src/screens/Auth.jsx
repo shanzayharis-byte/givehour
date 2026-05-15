@@ -880,7 +880,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
             <div style={{ flex: 1, height: 1, background: T.border }} />
           </div>
 
-          <button onClick={handleGoogleSignIn} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 14, border: `1.5px solid ${T.border}`, background: '#fff', color: T.text, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
+          <button onClick={handleGoogleSignIn} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 14, border: `1.5px solid ${T.primary}`, background: '#f0fdf4', color: '#15803d', fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
             <GoogleIcon />
             {loading ? 'Redirecting...' : 'Continue with Google'}
           </button>
