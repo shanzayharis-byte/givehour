@@ -294,12 +294,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
         {/* primary CTAs — kept above the fold */}
         <div style={{ padding: '16px 24px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={() => setScreen('userType')} style={{ background: T.primary, color: '#fff', padding: '14px', borderRadius: 14, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)', letterSpacing: '-0.01em' }}>Get started, it's free</button>
-          <button onClick={handleGoogleSignIn} disabled={loading} style={{ background: '#fff', border: `1.5px solid ${T.border}`, color: T.text, padding: '13px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            <GoogleIcon />
-            {loading ? 'Redirecting...' : 'Continue with Google'}
-          </button>
+          <button onClick={() => setScreen('login')} style={{ background: '#fff', border: `2px solid ${T.border}`, color: T.text, padding: '13px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>I already have an account</button>
           <button onClick={onGuest} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', padding: '2px 0', marginTop: 2 }}>Browse without signing up →</button>
-          <button onClick={() => setScreen('login')} style={{ background: 'none', border: 'none', fontSize: 12, color: T.textMuted, cursor: 'pointer', padding: '2px 0' }}>Organization sign in →</button>
         </div>
 
         {/* How it works */}
@@ -878,7 +874,16 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
           </div>
         </div>
         <div style={{ padding: '28px 20px' }}>
-          <div style={{ fontSize: 14, color: T.textSub, marginBottom: 28 }}>Good to see you again.</div>
+          <button onClick={handleGoogleSignIn} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 14, border: `1.5px solid ${T.border}`, background: '#fff', color: T.text, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
+            <GoogleIcon />
+            {loading ? 'Redirecting...' : 'Continue with Google'}
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+            <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Organizations</span>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+          </div>
 
           <div style={{ marginBottom: 16 }}>
             <label style={lbl}>Email address</label>
@@ -898,16 +903,6 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
           {error && <div style={{ background: '#FFF0F0', border: '1px solid #F5C0C0', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: T.danger, marginBottom: 16 }}>{error}</div>}
           <button onClick={handleLogin} disabled={!ready || loading} style={{ width: '100%', padding: 16, borderRadius: 14, border: 'none', fontSize: 15, fontWeight: 700, cursor: ready && !loading ? 'pointer' : 'default', background: ready ? T.primary : T.border, color: ready ? '#fff' : T.textMuted, boxShadow: ready ? '0 4px 14px rgba(24,160,80,0.3)' : 'none', transition: 'all 0.2s' }}>
             {loading ? 'Logging in...' : 'Log in'}
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0 4px' }}>
-            <div style={{ flex: 1, height: 1, background: T.border }} />
-            <span style={{ fontSize: 12, color: T.textMuted }}>or</span>
-            <div style={{ flex: 1, height: 1, background: T.border }} />
-          </div>
-          <button onClick={handleGoogleSignIn} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 14, border: `1.5px solid ${T.border}`, background: '#fff', color: T.text, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            <GoogleIcon />
-            {loading ? 'Redirecting...' : 'Continue with Google'}
           </button>
 
           <div style={{ textAlign: 'center', marginTop: 20 }}>
