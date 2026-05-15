@@ -499,7 +499,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
         <div style={{ padding: '20px 20px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {cards.map(({ emoji, title, sub, r, bg, accent }) => (
-              <button key={r} onClick={() => { setRole(r); setScreen('step1') }} style={{ background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}>
+              <button key={r} onClick={() => { setRole(r); setScreen(isGoogleFlow ? 'step2' : 'step1') }} style={{ background: '#fff', border: `1.5px solid ${T.border}`, borderRadius: 16, padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', textAlign: 'left', transition: 'border-color 0.15s' }}>
                 <div style={{ width: 48, height: 48, borderRadius: 14, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>{title}</div>
