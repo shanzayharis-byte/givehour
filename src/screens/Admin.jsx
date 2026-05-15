@@ -60,7 +60,7 @@ export default function Admin({ authUser }) {
   }
 
   async function handleInvite() {
-    if (!inviteEmail.includes('@') || !inviteName.trim() || !token) return
+    if (!inviteEmail.includes('@') || !token) return
     setInviteStatus('sending')
     setInviteError(null)
     try {
@@ -112,7 +112,7 @@ export default function Admin({ authUser }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <input
               type="text"
-              placeholder="First name"
+              placeholder="First name (optional)"
               value={inviteName}
               onChange={e => setInviteName(e.target.value)}
               style={{ padding: '9px 12px', borderRadius: 8, border: `1px solid ${T.border}`, fontSize: 14, fontFamily: 'inherit', outline: 'none', color: T.text, background: T.bg }}
@@ -128,8 +128,8 @@ export default function Admin({ authUser }) {
               />
               <button
                 onClick={handleInvite}
-                disabled={!inviteEmail.includes('@') || !inviteName.trim() || inviteStatus === 'sending'}
-                style={{ padding: '9px 18px', borderRadius: 8, background: T.primary, color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', opacity: (!inviteEmail.includes('@') || !inviteName.trim()) ? 0.5 : 1 }}
+                disabled={!inviteEmail.includes('@') || inviteStatus === 'sending'}
+                style={{ padding: '9px 18px', borderRadius: 8, background: T.primary, color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', opacity: !inviteEmail.includes('@') ? 0.5 : 1 }}
               >
                 {inviteStatus === 'sending' ? '…' : 'Send Invite'}
               </button>
