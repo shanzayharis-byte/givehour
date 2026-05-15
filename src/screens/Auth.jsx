@@ -874,6 +874,12 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
           </div>
         </div>
         <div style={{ padding: '28px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+            <span style={{ fontSize: 11, color: T.textMuted, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>Volunteers</span>
+            <div style={{ flex: 1, height: 1, background: T.border }} />
+          </div>
+
           <button onClick={handleGoogleSignIn} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 14, border: `1.5px solid ${T.border}`, background: '#fff', color: T.text, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 20 }}>
             <GoogleIcon />
             {loading ? 'Redirecting...' : 'Continue with Google'}
