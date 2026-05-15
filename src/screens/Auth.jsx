@@ -294,12 +294,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
         {/* primary CTAs — kept above the fold */}
         <div style={{ padding: '16px 24px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button onClick={() => setScreen('userType')} style={{ background: T.primary, color: '#fff', padding: '14px', borderRadius: 14, border: 'none', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(24,160,80,0.3)', letterSpacing: '-0.01em' }}>Get started, it's free</button>
-          <button onClick={handleGoogleSignIn} disabled={loading} style={{ background: '#fff', border: `1.5px solid ${T.border}`, color: T.text, padding: '13px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            <GoogleIcon />
-            {loading ? 'Redirecting...' : 'Continue with Google'}
-          </button>
-          <button onClick={() => setScreen('login')} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textSub, cursor: 'pointer', padding: '2px 0' }}>I already have an account →</button>
-          <button onClick={onGuest} style={{ background: 'none', border: 'none', fontSize: 12, color: T.textMuted, cursor: 'pointer', padding: '2px 0' }}>Browse without signing up →</button>
+          <button onClick={() => setScreen('login')} style={{ background: '#fff', border: `2px solid ${T.border}`, color: T.text, padding: '13px', borderRadius: 14, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>I already have an account</button>
+          <button onClick={onGuest} style={{ background: 'none', border: 'none', fontSize: 13, color: T.textMuted, cursor: 'pointer', padding: '2px 0', marginTop: 2 }}>Browse without signing up →</button>
         </div>
 
         {/* How it works */}
