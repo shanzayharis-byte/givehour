@@ -82,6 +82,7 @@ export default function App() {
   const [isDesktop, setIsDesktop]     = useState(window.innerWidth >= 1024)
   const [appLoading, setAppLoading]   = useState(true)
   const [accountError, setAccountError] = useState(false)
+  const [needsGoogleProfile, setNeedsGoogleProfile] = useState(false)
   const [drawerOpen, setDrawerOpen]   = useState(false)
   const [editTargetId, setEditTargetId] = useState(null)
 
@@ -105,6 +106,12 @@ export default function App() {
         try {
           let { data } = await supabase.from('users').select('*').eq('id', session.user.id).maybeSingle()
           if (!data?.name) {
+            const provider = session.user.app_metadata?.provider
+            if (provider === 'google') {
+              setNeedsGoogleProfile(true)
+              setAppLoading(false)
+              return
+            }
             const stored = localStorage.getItem('givehour_pending_profile')
             const profile = stored ? JSON.parse(stored) : (session.user.user_metadata?.name ? session.user.user_metadata : null)
             if (profile?.name) {
@@ -164,6 +171,7 @@ export default function App() {
     setAuthUser(user)
     setDbUser(db)
     setIsGuest(false)
+    setNeedsGoogleProfile(false)
     setActiveScreen(db?.role === 'org' ? 'orgDashboard' : 'feed')
   }
 
@@ -220,6 +228,9 @@ export default function App() {
     }
     if (activeScreen === 'privacy' || activeScreen === 'terms' || activeScreen === 'contact') {
       return <LegalPage slug={activeScreen} onBack={() => setActiveScreen(authUser ? (isOrg ? 'orgDashboard' : 'feed') : 'landing')} />
+    }
+    if (needsGoogleProfile) {
+      return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen="userType" isGoogleFlow googleAuthUser={authUser} />
     }
     if (!authUser && !isGuest) {
       return <Auth onLoggedIn={handleLoggedIn} onGuest={handleGuest} isDesktop={isDesktop} initialScreen={activeScreen === 'auth-login' ? 'login' : activeScreen === 'auth-signup' ? 'userType' : 'landing'} />
