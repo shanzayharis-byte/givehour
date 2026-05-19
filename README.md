@@ -35,8 +35,8 @@ Organizations can sign up independently to post listings and receive application
 | Frontend | React 19 + Vite 8 |
 | Backend / Auth | Supabase (Postgres + Auth + Storage) |
 | Hosting | Vercel (frontend + serverless API routes) |
-| Data pipeline | Azure Databricks + Azure Data Lake Storage Gen2 + Azure Data Factory |
-| Orchestration | Azure Data Factory — daily pipeline at 2 AM Pacific |
+| Data pipeline | Python (stdlib only) — 4-script pipeline in `pipeline/` |
+| Orchestration | GitHub Actions — nightly cron at 2 AM Pacific (10:00 UTC) |
 | Listings source | VolunteerConnector API |
 | Email | Gmail SMTP via Nodemailer (Vercel API routes) |
 
@@ -68,11 +68,15 @@ givehour/
 │   ├── opportunities.js          # Vercel proxy → VolunteerConnector
 │   ├── save-profile.js           # Upsert user profile (server-side, service role)
 │   └── apply.js                  # Submit application + send org email
-└── notebooks/                    # Databricks ETL pipeline
-    ├── 01_ingest.py              # Fetch listings → Azure Data Lake raw/
-    ├── 02_clean.py               # Clean + detect age/cause → Supabase
-    ├── 03_match.py               # Score listings per user → personalized_feed
-    └── 04_impact.py              # Aggregate hours → impact_stats
+└── pipeline/                     # Nightly data pipeline (runs on GitHub Actions)
+    ├── pipeline.py               # Orchestrator — runs all 4 steps in sequence
+    ├── clean_listings.py         # Dedupe + normalize opportunities → clean_listings
+    ├── score_matching.py         # Score listings per user → match_scores
+    ├── aggregate_hours.py        # Sum hours from hours_log → impact_stats
+    ├── build_feed.py             # Top 5 per user from match_scores → personalized_feed
+    ├── supabase_client.py        # Thin HTTP wrapper for Supabase REST API (stdlib only)
+    ├── requirements.txt          # python-dotenv only — zero compiled dependencies
+    └── README.md                 # Pipeline docs
 ```
 
 ---
@@ -120,12 +124,14 @@ Profile is saved via `/api/save-profile` (Vercel serverless, service role key). 
 
 ## Data Pipeline
 
-Runs every night at 2 AM Pacific via Azure Data Factory → Databricks job (`givehour-daily-pipeline`):
+Runs every night at 2 AM Pacific via GitHub Actions (`nightly.yml` — cron `0 10 * * *`). Python scripts use only stdlib + python-dotenv. No pandas, no compiled packages, no Azure required.
 
-1. **01_ingest** — fetches all US listings from VolunteerConnector → Azure Data Lake `raw/`
-2. **02_clean** — filters, detects age group and cause, writes to `processed/` and Supabase `clean_listings`
-3. **03_match** — scores every listing for every user, writes top 20 per user to `personalized_feed`
-4. **04_impact** — reads `hours_log`, calculates stats, writes to `impact_stats`
+1. **clean_listings** — dedupes opportunities table by org+title, normalizes cause labels, writes to `clean_listings`
+2. **score_matching** — scores every clean listing for every teen user (cause, location, remote, grade), writes to `match_scores`
+3. **aggregate_hours** — reads `hours_log`, sums hours by user + cause + org, writes to `impact_stats`
+4. **build_feed** — takes top 5 scores per user from `match_scores`, writes ranked rows to `personalized_feed`
+
+The pipeline can also be triggered manually from the GitHub Actions tab → "Run workflow".
 
 ### Matching Algorithm
 
@@ -143,12 +149,13 @@ Runs every night at 2 AM Pacific via Azure Data Factory → Databricks job (`giv
 | Table | Key columns |
 |---|---|
 | `users` | id, name, role, age, grade, region, preferred_cause, interests, school_name, org_type, website, avatar_url |
-| `clean_listings` | id, title, org, org_id, cause, age_group, location, remote, hours, date, external_url, source |
+| `clean_listings` | id (uuid), org, title, cause, description, location, hours, date |
 | `org_listings` | id, org_id, title, cause, location, remote, date, hours, age_group, description, external_url |
 | `applications` | id, teen_id, org_listing_id, org_id, message, submitted_at, status |
-| `personalized_feed` | user_id, listing_id, score, rank |
+| `match_scores` | user_id, opportunity_id, score — written by pipeline |
+| `personalized_feed` | user_id, opportunity_id, score, rank — top 5 per user, written by pipeline |
 | `hours_log` | user_id, opportunity_id, hours, org, logged_at |
-| `impact_stats` | user_id, total_hours, causes_helped, opportunities_count, streak_days |
+| `impact_stats` | user_id, total_hours, top_cause, orgs_count, entries_count — written by pipeline |
 | `saved_opportunities` | user_id, listing_id, saved_at |
 
 ---
@@ -165,12 +172,13 @@ GMAIL_APP_PASSWORD             — Gmail App Password for SMTP
 VITE_OPENAI_API_KEY            — optional, for college letter generation
 ```
 
-## Databricks Cluster Environment Variables
+## GitHub Actions Secrets
+
+These are set in the givehour GitHub repo under Settings → Secrets → Actions:
 
 ```
-AZURE_STORAGE_KEY   — access key for givehourdata storage account
-SUPABASE_URL        — https://your-project.supabase.co
-SUPABASE_KEY        — service_role key
+SUPABASE_URL              — https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY — service_role key (pipeline writes directly, bypasses RLS)
 ```
 
 ---

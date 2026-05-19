@@ -51,7 +51,7 @@ Fix it to match exactly.
 | Version control | GitHub `givehour` repo | Claude Code pushes here |
 | Live app | Vercel `givehour` deployment | Auto-deploys on every push |
 | Database + Auth | Supabase `givehour` project | App reads and writes here |
-| Data pipeline | Azure Data Factory + Databricks | System 2 only |
+| Data pipeline | GitHub Actions + Python (stdlib) | System 2 — runs nightly at 2 AM Pacific |
 
 ### Critical isolation rule
 
@@ -913,62 +913,95 @@ Settings card (white, border, border-radius 12px, overflow hidden):
 
 ## System 2 — Data pipeline reference
 
-> **Status: NOT STARTED — waiting on Azure account setup by Shanzay**
-> Build System 2 only after System 1 is live and approved. System 1 is complete as of 2026-05-09.
+> **Status: LIVE — migrated from Azure to GitHub Actions on 2026-05-18**
+> System 1 went live 2026-05-09. System 2 pipeline completed and verified 2026-05-18.
 
 ### What it does
 
-Runs automatically every night at midnight via Azure Data Factory. Takes raw data, cleans it, scores it against every teen's profile, aggregates hours, and builds a personalized feed. Writes 4 processed tables back to Supabase.
+Runs automatically every night at 2 AM Pacific (10:00 UTC) via GitHub Actions. Takes the raw `opportunities` table, cleans it, scores listings against every teen's profile, aggregates hours, and builds a personalized feed. Writes 4 processed tables back to Supabase.
 
-### Azure setup checklist (Shanzay creates these)
+No Azure account needed. No compiled packages. Zero cost beyond GitHub Actions free tier.
 
-- [ ] Sign up at portal.azure.com (free tier — $200 credit for 30 days)
-- [ ] Create Resource Group: `givehour-rg`
-- [ ] Create Azure Data Lake Storage account inside `givehour-rg` — containers: `raw/` and `processed/`
-- [ ] Create Azure Data Factory: `givehour-adf` inside `givehour-rg`
-- [ ] Create Databricks workspace inside `givehour-rg`
-- [ ] Share Resource Group name when done so we can start writing notebooks
+### How it runs
 
-### Build checklist (Claude + Faiz do this once Azure exists)
+- **Trigger:** GitHub Actions cron `0 10 * * *` (= 2 AM Pacific) — see `.github/workflows/nightly.yml`
+- **Manual trigger:** GitHub repo → Actions tab → "Give Hour Nightly Pipeline" → "Run workflow"
+- **Runtime:** ~10–20 seconds on `ubuntu-latest`
+- **Isolation:** fresh Python venv per run (`.venv/`) — avoids any system package conflicts
 
-- [ ] Write 4 Python notebooks in Databricks (see table below)
-- [ ] Connect Databricks to Supabase (read users/opportunities, write output tables)
-- [ ] Wire ADF pipeline to run 4 notebooks in sequence nightly at midnight Pacific
-- [ ] Test a full pipeline run end to end
+### Pipeline scripts
 
-### The 4 Databricks notebooks
-
-| Notebook | Input | Output | Does |
+| Script | Input | Output table | Does |
 |---|---|---|---|
-| `clean_listings.py` | Raw CSV from Data Lake | `clean_listings` table | Remove dupes, standardize causes, fill fields |
-| `score_matching.py` | Clean listings + users table | `match_scores` table | Score each listing per teen (cause, location, grade) |
-| `aggregate_hours.py` | `hours_log` from Supabase | `impact_stats` table | Sum hours by user, cause, org |
-| `build_feed.py` | `match_scores` | `personalized_feed` table | Top 5 per teen sorted by score |
+| `clean_listings.py` | `opportunities` (Supabase) | `clean_listings` | Dedupe by org+title, normalize cause labels, fill blank fields |
+| `score_matching.py` | `clean_listings` + `users` | `match_scores` | Score each listing per teen — cause (+40), location (+10), remote (+20), grade (+30) |
+| `aggregate_hours.py` | `hours_log` (Supabase) | `impact_stats` | Sum hours, count orgs, find top cause per user |
+| `build_feed.py` | `match_scores` | `personalized_feed` | Top 5 ranked listings per user |
 
-### ADF pipeline
+Orchestrator: `pipeline.py` runs all 4 steps in sequence, logs progress, exits with code 1 on any failure.
+
+### Supabase output tables
+
+All 4 tables are cleared and rewritten on each run (delete-all then batch insert in chunks of 500).
+
+| Table | Key columns | Notes |
+|---|---|---|
+| `clean_listings` | id (uuid), org, title, cause, description, location, hours, date | id mirrors `opportunities.id` |
+| `match_scores` | user_id (uuid), opportunity_id (uuid), score (int) | all listings × all teen users |
+| `impact_stats` | user_id (uuid), total_hours (float), top_cause, orgs_count, entries_count | one row per user |
+| `personalized_feed` | user_id (uuid), opportunity_id (uuid), rank (int), score (int) | top 5 per user |
+
+**RLS policies required** (add in Supabase SQL editor):
+- `clean_listings` — authenticated users can SELECT
+- `personalized_feed` — users can SELECT their own rows (`auth.uid() = user_id`)
+- `match_scores` — users can SELECT their own rows
+- `impact_stats` — users can SELECT their own rows
+
+The pipeline writes using the service role key (bypasses RLS). The frontend reads using the anon key (respects RLS).
+
+### GitHub Actions secrets
+
+Set in GitHub repo → Settings → Secrets and variables → Actions:
 
 ```
-Trigger: midnight daily (00:00 Pacific)
-Sequence: ingest → clean → score → aggregate → feed → write to Supabase
-On failure: stop pipeline, send email alert, nothing writes to Supabase
-On success: all 4 tables updated in Supabase by about 1:00am
+SUPABASE_URL              — https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY — service_role key
 ```
 
-### Azure resources needed
+### Matching algorithm
 
-- Resource Group: `givehour-rg`
-- Storage Account with hierarchical namespace (Data Lake): containers `raw/` and `processed/`
-- Azure Data Factory: `givehour-adf`
-- Databricks workspace and cluster
+| Signal | Points |
+|---|---|
+| Cause matches user's preferred_cause | +40 |
+| User's grade is in listing's age group ("teen"/"all") | +30 |
+| Listing is remote/online | +20 |
+| Listing location matches user's region | +10 |
 
 ### How System 1 connects to System 2 output
 
-After System 2 runs:
-- `Feed.js` reads from `personalized_feed` instead of `opportunities`
-- `Impact.js` reads from `impact_stats` instead of calculating from `hours_log`
-- Both already have fallback logic if System 2 tables are empty
+After the pipeline runs, `Feed.jsx` reads from `personalized_feed` joined to `clean_listings`:
 
-No code changes needed in System 1 — the fallback logic handles both states.
+```js
+.select('score, rank, clean_listings!inner(*)')
+```
+
+This join requires a foreign key from `personalized_feed.opportunity_id → clean_listings.id`. Both columns must be `uuid` type — if there's a type mismatch the join silently returns 0 rows.
+
+`Impact.jsx` reads from `impact_stats` for the user's total hours and cause breakdown.
+
+Both screens show a "getting ready" placeholder if the pipeline tables are empty.
+
+### Build checklist — completed 2026-05-18
+
+- [x] Create `pipeline/` directory with 6 Python files + requirements.txt
+- [x] Write supabase_client.py using http.client (stdlib only — no supabase SDK)
+- [x] Write all 4 pipeline scripts in plain Python (no pandas)
+- [x] Create `.github/workflows/nightly.yml` with venv isolation
+- [x] Add SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY to GitHub Secrets
+- [x] Create 4 Supabase output tables with correct uuid types
+- [x] Add RLS policies for authenticated frontend reads
+- [x] Verify pipeline runs end to end on GitHub Actions
+- [x] Verify personalized feed shows in app for logged-in teen users
 
 ---
 
