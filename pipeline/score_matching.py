@@ -1,6 +1,5 @@
 import os
 import re
-import pandas as pd
 from supabase import create_client
 
 
@@ -25,7 +24,6 @@ def score_listing_for_user(listing, user):
             score += 10  # partial credit for same general Bay Area
 
     # Grade match — 15 points
-    # Give full points unless listing explicitly excludes the user's grade
     score += 15
 
     return min(score, 100)
@@ -37,11 +35,8 @@ def run():
         os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     )
 
-    listings_resp = supabase.table("clean_listings").select("*").execute()
-    users_resp = supabase.table("users").select("*").eq("role", "teen").execute()
-
-    listings = listings_resp.data
-    users = users_resp.data
+    listings = supabase.table("clean_listings").select("*").execute().data
+    users = supabase.table("users").select("*").eq("role", "teen").execute().data
 
     if not listings or not users:
         print("No listings or users found. Skipping.")
@@ -50,11 +45,10 @@ def run():
     scores = []
     for user in users:
         for listing in listings:
-            score = score_listing_for_user(listing, user)
             scores.append({
                 "user_id": user["id"],
                 "opportunity_id": listing["id"],
-                "score": score
+                "score": score_listing_for_user(listing, user)
             })
 
     supabase.table("match_scores").delete().neq("user_id", "00000000-0000-0000-0000-000000000000").execute()

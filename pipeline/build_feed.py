@@ -1,5 +1,5 @@
 import os
-import pandas as pd
+from collections import defaultdict
 from supabase import create_client
 
 
@@ -9,20 +9,29 @@ def run():
         os.environ["SUPABASE_SERVICE_ROLE_KEY"]
     )
 
-    scores_resp = supabase.table("match_scores").select("*").execute()
-    df = pd.DataFrame(scores_resp.data)
+    rows = supabase.table("match_scores").select("*").execute().data
 
-    if df.empty:
+    if not rows:
         print("No match scores found. Skipping.")
         return
 
-    df_sorted = df.sort_values("score", ascending=False)
-    top5 = df_sorted.groupby("user_id").head(5).reset_index(drop=True)
+    # Group by user_id, sort each group by score descending, take top 5
+    by_user = defaultdict(list)
+    for row in rows:
+        by_user[row["user_id"]].append(row)
 
-    top5["rank"] = top5.groupby("user_id").cumcount() + 1
+    records = []
+    for user_id, scores in by_user.items():
+        top5 = sorted(scores, key=lambda x: x["score"], reverse=True)[:5]
+        for rank, entry in enumerate(top5, start=1):
+            records.append({
+                "user_id": user_id,
+                "opportunity_id": entry["opportunity_id"],
+                "rank": rank,
+                "score": entry["score"]
+            })
 
     supabase.table("personalized_feed").delete().neq("user_id", "00000000-0000-0000-0000-000000000000").execute()
-    records = top5[["user_id", "opportunity_id", "rank", "score"]].to_dict(orient="records")
     supabase.table("personalized_feed").insert(records).execute()
 
-    print(f"personalized_feed: {len(records)} rows written ({top5['user_id'].nunique()} users).")
+    print(f"personalized_feed: {len(records)} rows written ({len(by_user)} users).")
