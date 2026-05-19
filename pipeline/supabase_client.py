@@ -1,8 +1,7 @@
 import os
 import json
-import urllib.request
+import http.client
 import urllib.parse
-import urllib.error
 
 SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
 SERVICE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
@@ -14,20 +13,26 @@ HEADERS = {
     "Prefer": "return=minimal",
 }
 
+_parsed = urllib.parse.urlparse(SUPABASE_URL)
+_host = _parsed.netloc
+
 
 def _request(method, path, params=None, body=None):
-    url = f"{SUPABASE_URL}/rest/v1/{path}"
+    url_path = f"/rest/v1/{path}"
     if params:
-        url += "?" + urllib.parse.urlencode(params)
+        url_path += "?" + urllib.parse.urlencode(params)
+
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, headers=HEADERS, method=method)
-    try:
-        with urllib.request.urlopen(req) as resp:
-            raw = resp.read()
-            return json.loads(raw) if raw else []
-    except urllib.error.HTTPError as e:
-        body = e.read().decode()
-        raise Exception(f"Supabase {method} {path} failed ({e.code}): {body}")
+    conn = http.client.HTTPSConnection(_host)
+    conn.request(method, url_path, body=data, headers=HEADERS)
+    resp = conn.getresponse()
+    raw = resp.read()
+    conn.close()
+
+    if resp.status >= 400:
+        raise Exception(f"Supabase {method} /{path} returned {resp.status}: {raw.decode()}")
+
+    return json.loads(raw) if raw else []
 
 
 def select(table, filters=None):
