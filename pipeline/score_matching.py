@@ -10,17 +10,22 @@ def score_listing_for_user(listing, user):
         score += 60
 
     listing_location = str(listing.get("location", "")).lower()
-    if "remote" in listing_location:
+    if "remote" in listing_location or "online" in listing_location:
         score += 25
-    elif user.get("zip") and listing_location:
-        user_zip = str(user.get("zip", ""))[:3]
+    else:
+        user_zip = str(user.get("zip") or "")[:3]
         zip_match = re.search(r'\b(\d{5})\b', listing_location)
-        if zip_match and zip_match.group(1)[:3] == user_zip:
+        if user_zip and zip_match and zip_match.group(1)[:3] == user_zip:
+            # exact zip-prefix match
             score += 25
-        else:
-            score += 10
-
-    score += 15
+        elif re.search(r'\bca\b|california|bay area|san francisco|oakland|'
+                       r'san jose|berkeley|san mateo|santa clara|'
+                       r'fremont|hayward|richmond|vallejo|concord|'
+                       r'sunnyvale|mountain view|palo alto|redwood|'
+                       r'milpitas|pleasanton|livermore|walnut creek', listing_location):
+            # California / Bay Area listing
+            score += 15
+        # out-of-state in-person → 0 location points
 
     return min(score, 100)
 
