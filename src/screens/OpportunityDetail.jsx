@@ -131,6 +131,12 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
             ⭐ {matchScore}% match
           </span>
         )}
+        {opp.source === 'idealist' && (
+          <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: '#EDE9FE', color: '#6D28D9', fontWeight: 700 }}>🌐 Idealist</span>
+        )}
+        {opp.source === 'volunteerconnector' && (
+          <span style={{ fontSize: 11, padding: '4px 10px', borderRadius: 20, background: '#E0F2FE', color: '#0369A1', fontWeight: 700 }}>🔍 VolunteerConnector</span>
+        )}
       </div>
 
       <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 6, background: cause.bg, color: cause.text, fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 20, marginBottom: 12, border: `1px solid ${cause.text}22` }}>
@@ -216,7 +222,15 @@ export default function OpportunityDetail({ opp, user, onBack, isGuest, onSignUp
         Apply on Give Hour
       </button>
     )
-  ) : null
+  ) : (
+    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 14, padding: 20, textAlign: 'center' }}>
+      <div style={{ fontSize: 24, marginBottom: 8 }}>🔗</div>
+      <div style={{ fontWeight: 700, color: T.text, fontSize: 15, marginBottom: 6 }}>How to sign up</div>
+      <div style={{ fontSize: 14, color: T.textMuted, lineHeight: 1.6 }}>
+        Search for <strong>"{opp.title}"</strong>{opp.org ? <> on <strong>{opp.org}</strong>'s website</> : ''} to find sign-up details and contact information.
+      </div>
+    </div>
+  )
 
   const topBar = (
     <div style={{ background: T.card, borderBottom: `1px solid ${T.border}`, padding: isDesktop ? '12px 40px' : '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
