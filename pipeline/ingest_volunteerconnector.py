@@ -168,34 +168,52 @@ def _fetch_all(label, base_params):
 
 
 def run():
-    # Fetch 1: US-wide (captures remote/nationwide listings)
-    us_results = _fetch_all(
-        "US-wide",
-        {"format": "json", "country": "United States", "page_size": 100},
+    # Live fetch: remote/online US listings only
+    # (VC API has no reliable location filter for in-person, so we only pull remote here)
+    results = _fetch_all(
+        "US remote",
+        {"format": "json", "country": "United States", "remote_or_online": "true", "page_size": 100},
     )
 
-    # Fetch 2: California-specific (ensures Bay Area in-person listings are included)
-    ca_results = _fetch_all(
-        "California",
-        {"format": "json", "country": "United States", "state": "California", "page_size": 100},
-    )
+    filtered = [item for item in results if _is_us(item)]
+    print(f"US/Canada filter: {len(filtered)} / {len(results)} kept")
 
-    # Combine, deduplicate by item id
-    seen     = set()
-    combined = []
-    for item in us_results + ca_results:
-        iid = item.get("id")
-        if iid and iid not in seen:
-            seen.add(iid)
-            combined.append(item)
+    # Also pull Bay Area in-person listings from the opportunities table in Supabase
+    # (this is a curated Bay Area snapshot — reliable local coverage)
+    local_rows = db.select("opportunities")
+    local_seen = set()
+    local_records = []
+    for row in local_rows:
+        key = (row.get("org", ""), row.get("title", ""))
+        if key in local_seen:
+            continue
+        local_seen.add(key)
+        loc = (row.get("location") or "").lower()
+        # Skip rows that are clearly remote — those come from the live fetch
+        if "remote" in loc or "online" in loc:
+            continue
+        local_records.append({
+            "id":           row["id"],
+            "title":        row.get("title", ""),
+            "org":          row.get("org", ""),
+            "org_id":       row.get("org_id"),
+            "cause":        row.get("cause", ""),
+            "age_group":    row.get("age_group") or "Open",
+            "location":     row.get("location") or "Bay Area, CA",
+            "remote":       False,
+            "description":  row.get("description") or "",
+            "hours":        str(row.get("hours") or ""),
+            "date":         str(row.get("date") or ""),
+            "external_url": row.get("external_url") or "",
+            "source":       "volunteerconnector",
+        })
+    print(f"Local Bay Area listings from opportunities table: {len(local_records)}")
 
-    print(f"Combined: {len(combined)} unique listings")
+    live_records = [_map(item) for item in filtered if item.get("id")]
+    print(f"Live remote VC listings: {len(live_records)}")
 
-    filtered = [item for item in combined if _is_us(item)]
-    print(f"US/Canada filter: {len(filtered)} / {len(combined)} kept")
-
-    records = [_map(item) for item in filtered if item.get("id")]
-    print(f"Mapped {len(records)} VolunteerConnector listings")
+    records = live_records + local_records
+    print(f"Total VolunteerConnector listings: {len(records)}")
 
     db.delete_where("clean_listings", "source", "volunteerconnector")
     db.insert("clean_listings", records)
