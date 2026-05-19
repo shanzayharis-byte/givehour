@@ -1,0 +1,41 @@
+name: Give Hour Nightly Pipeline
+
+on:
+  schedule:
+    - cron: '0 10 * * *'  # 2am Pacific = 10am UTC
+  workflow_dispatch:
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Show git commit and key files
+        run: |
+          git log -1 --oneline
+          echo "=== nightly.yml run step ==="
+          grep -A2 "venv" .github/workflows/nightly.yml || echo "no venv line found"
+          echo "=== supabase_client.py line 3 ==="
+          sed -n '3p' pipeline/supabase_client.py
+
+      - name: Create virtualenv and install deps
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install -r pipeline/requirements.txt
+          .venv/bin/pip list
+
+      - name: Run Give Hour pipeline
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: .venv/bin/python pipeline/pipeline.py
