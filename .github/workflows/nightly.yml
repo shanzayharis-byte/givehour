@@ -18,11 +18,26 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: pip install -r pipeline/requirements.txt && pip list
+      - name: Debug Python environment
+        run: |
+          python --version
+          echo "--- sys.path ---"
+          python -c "import sys; [print(p) for p in sys.path]"
+          echo "--- pre-installed packages ---"
+          pip list
+          echo "--- numpy check ---"
+          python -c "import numpy; print('numpy:', numpy.__version__)" 2>&1 || echo "numpy not found"
+
+      - name: Create clean virtualenv and install dependencies
+        run: |
+          python -m venv venv
+          venv/bin/pip install --upgrade pip
+          venv/bin/pip install -r pipeline/requirements.txt
+          echo "--- packages in venv ---"
+          venv/bin/pip list
 
       - name: Run Give Hour pipeline
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: python pipeline/pipeline.py
+        run: venv/bin/python pipeline/pipeline.py

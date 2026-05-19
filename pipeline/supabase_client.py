@@ -1,6 +1,7 @@
 import os
 import json
-import requests
+import urllib.request
+import urllib.parse
 
 SUPABASE_URL = os.environ["SUPABASE_URL"].rstrip("/")
 SERVICE_KEY = os.environ["SUPABASE_SERVICE_ROLE_KEY"]
@@ -13,28 +14,31 @@ HEADERS = {
 }
 
 
+def _request(method, path, params=None, body=None):
+    url = f"{SUPABASE_URL}/rest/v1/{path}"
+    if params:
+        url += "?" + urllib.parse.urlencode(params)
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(url, data=data, headers=HEADERS, method=method)
+    with urllib.request.urlopen(req) as resp:
+        raw = resp.read()
+        return json.loads(raw) if raw else []
+
+
 def select(table, filters=None):
     params = {"select": "*"}
     if filters:
         params.update(filters)
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/{table}", headers=HEADERS, params=params)
-    r.raise_for_status()
-    return r.json()
+    return _request("GET", table, params=params)
 
 
 def insert(table, records):
     if not records:
         return
-    # Insert in batches of 500 to avoid request size limits
     batch_size = 500
     for i in range(0, len(records), batch_size):
-        batch = records[i:i + batch_size]
-        r = requests.post(f"{SUPABASE_URL}/rest/v1/{table}", headers=HEADERS, data=json.dumps(batch))
-        r.raise_for_status()
+        _request("POST", table, body=records[i:i + batch_size])
 
 
 def delete_all(table):
-    # Delete all rows using a filter that matches everything (id != impossible uuid)
-    params = {"id": "neq.00000000-0000-0000-0000-000000000000"}
-    r = requests.delete(f"{SUPABASE_URL}/rest/v1/{table}", headers=HEADERS, params=params)
-    r.raise_for_status()
+    _request("DELETE", table, params={"id": "neq.00000000-0000-0000-0000-000000000000"})
