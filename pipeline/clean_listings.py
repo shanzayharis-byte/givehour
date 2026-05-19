@@ -32,12 +32,17 @@ def run():
     records = []
     for row in deduped:
         cause_raw = (row.get("cause") or "").lower()
-        row["cause"] = CAUSE_MAP.get(cause_raw, row.get("cause"))
-        row["description"] = row.get("description") or "No description provided."
-        row["location"] = row.get("location") or "Bay Area, CA"
-        row["hours"] = row.get("hours") or "TBD"
-        row["date"] = row.get("date") or "Ongoing"
-        records.append(row)
+        # Only include the columns that clean_listings table has
+        records.append({
+            "id": row["id"],
+            "org": row.get("org"),
+            "title": row.get("title"),
+            "cause": CAUSE_MAP.get(cause_raw, row.get("cause")),
+            "description": row.get("description") or "No description provided.",
+            "location": row.get("location") or "Bay Area, CA",
+            "hours": str(row.get("hours") or "TBD"),
+            "date": str(row.get("date") or "Ongoing"),
+        })
 
     db.delete_all("clean_listings")
     db.insert("clean_listings", records)

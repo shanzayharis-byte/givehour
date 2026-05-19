@@ -20,9 +20,13 @@ def _request(method, path, params=None, body=None):
         url += "?" + urllib.parse.urlencode(params)
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, headers=HEADERS, method=method)
-    with urllib.request.urlopen(req) as resp:
-        raw = resp.read()
-        return json.loads(raw) if raw else []
+    try:
+        with urllib.request.urlopen(req) as resp:
+            raw = resp.read()
+            return json.loads(raw) if raw else []
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        raise Exception(f"Supabase {method} {path} failed ({e.code}): {body}")
 
 
 def select(table, filters=None):
