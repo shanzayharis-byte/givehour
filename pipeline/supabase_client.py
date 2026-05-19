@@ -52,3 +52,7 @@ def insert(table, records):
 
 def delete_all(table):
     _request("DELETE", table, params={"id": "neq.00000000-0000-0000-0000-000000000000"})
+
+
+def delete_where(table, column, value):
+    _request("DELETE", table, params={column: f"eq.{value}"})

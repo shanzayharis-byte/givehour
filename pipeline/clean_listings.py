@@ -34,14 +34,19 @@ def run():
         cause_raw = (row.get("cause") or "").lower()
         # Only include the columns that clean_listings table has
         records.append({
-            "id": row["id"],
-            "org": row.get("org"),
-            "title": row.get("title"),
-            "cause": CAUSE_MAP.get(cause_raw, row.get("cause")),
-            "description": row.get("description") or "No description provided.",
-            "location": row.get("location") or "Bay Area, CA",
-            "hours": str(row.get("hours") or "TBD"),
-            "date": str(row.get("date") or "Ongoing"),
+            "id":           row["id"],
+            "org":          row.get("org"),
+            "org_id":       row.get("org_id"),
+            "title":        row.get("title"),
+            "cause":        CAUSE_MAP.get(cause_raw, row.get("cause")),
+            "description":  row.get("description") or "No description provided.",
+            "location":     row.get("location") or "Bay Area, CA",
+            "hours":        str(row.get("hours") or "TBD"),
+            "date":         str(row.get("date") or "Ongoing"),
+            "age_group":    row.get("age_group") or "Open",
+            "remote":       bool(row.get("remote")),
+            "external_url": row.get("external_url") or "",
+            "source":       row.get("source") or "volunteerconnector",
         })
 
     db.delete_all("clean_listings")
