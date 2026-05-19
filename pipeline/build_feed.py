@@ -15,8 +15,8 @@ def run():
 
     records = []
     for user_id, scores in by_user.items():
-        top5 = sorted(scores, key=lambda x: x["score"], reverse=True)[:5]
-        for rank, entry in enumerate(top5, start=1):
+        top10 = sorted(scores, key=lambda x: x["score"], reverse=True)[:10]
+        for rank, entry in enumerate(top10, start=1):
             records.append({
                 "user_id": user_id,
                 "opportunity_id": entry["opportunity_id"],
