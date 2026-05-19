@@ -11,11 +11,17 @@ _CA_PATTERN = re.compile(
 )
 
 
-def is_local(listing_location):
-    """Return True if listing is remote or plausibly in CA / Bay Area."""
-    if "remote" in listing_location or "online" in listing_location:
+def is_remote(listing):
+    loc = str(listing.get("location", "")).lower()
+    return bool(listing.get("remote")) or "remote" in loc or "online" in loc
+
+
+def is_local(listing):
+    """Return True if listing is remote/online or plausibly in CA / Bay Area."""
+    if is_remote(listing):
         return True
-    return bool(_CA_PATTERN.search(listing_location))
+    loc = str(listing.get("location", "")).lower()
+    return bool(_CA_PATTERN.search(loc))
 
 
 def score_listing_for_user(listing, user):
@@ -26,7 +32,7 @@ def score_listing_for_user(listing, user):
         score += 60
 
     listing_location = str(listing.get("location", "")).lower()
-    if "remote" in listing_location or "online" in listing_location:
+    if is_remote(listing):
         score += 25
     else:
         user_zip = str(user.get("zip") or "")[:3]
@@ -50,8 +56,7 @@ def run():
     scores = []
     for user in users:
         for listing in listings:
-            loc = str(listing.get("location", "")).lower()
-            if not is_local(loc):
+            if not is_local(listing):
                 continue
             scores.append({
                 "user_id": user["id"],
