@@ -33,14 +33,14 @@ def score_listing_for_user(listing, user):
 
     listing_location = str(listing.get("location", "")).lower()
     if is_remote(listing):
-        score += 25
+        score += 10
     else:
         user_zip = str(user.get("zip") or "")[:3]
         zip_match = re.search(r'\b(\d{5})\b', listing_location)
         if user_zip and zip_match and zip_match.group(1)[:3] == user_zip:
             score += 25
         elif _CA_PATTERN.search(listing_location):
-            score += 15
+            score += 20
 
     return min(score, 100)
 
