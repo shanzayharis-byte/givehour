@@ -1,21 +1,14 @@
-import os
 from collections import defaultdict
-from supabase import create_client
+import supabase_client as db
 
 
 def run():
-    supabase = create_client(
-        os.environ["SUPABASE_URL"],
-        os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-    )
-
-    rows = supabase.table("match_scores").select("*").execute().data
+    rows = db.select("match_scores")
 
     if not rows:
         print("No match scores found. Skipping.")
         return
 
-    # Group by user_id, sort each group by score descending, take top 5
     by_user = defaultdict(list)
     for row in rows:
         by_user[row["user_id"]].append(row)
@@ -31,7 +24,7 @@ def run():
                 "score": entry["score"]
             })
 
-    supabase.table("personalized_feed").delete().neq("user_id", "00000000-0000-0000-0000-000000000000").execute()
-    supabase.table("personalized_feed").insert(records).execute()
+    db.delete_all("personalized_feed")
+    db.insert("personalized_feed", records)
 
     print(f"personalized_feed: {len(records)} rows written ({len(by_user)} users).")

@@ -1,6 +1,4 @@
-import os
-import re
-from supabase import create_client
+import supabase_client as db
 
 CAUSE_MAP = {
     "housing": "Housing",
@@ -16,13 +14,7 @@ CAUSE_MAP = {
 
 
 def run():
-    supabase = create_client(
-        os.environ["SUPABASE_URL"],
-        os.environ["SUPABASE_SERVICE_ROLE_KEY"]
-    )
-
-    response = supabase.table("opportunities").select("*").execute()
-    rows = response.data
+    rows = db.select("opportunities")
 
     if not rows:
         print("No opportunities found. Skipping.")
@@ -37,7 +29,6 @@ def run():
             seen.add(key)
             deduped.append(row)
 
-    # Standardize cause names and fill missing fields
     records = []
     for row in deduped:
         cause_raw = (row.get("cause") or "").lower()
@@ -48,7 +39,7 @@ def run():
         row["date"] = row.get("date") or "Ongoing"
         records.append(row)
 
-    supabase.table("clean_listings").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
-    supabase.table("clean_listings").insert(records).execute()
+    db.delete_all("clean_listings")
+    db.insert("clean_listings", records)
 
     print(f"clean_listings: {len(records)} listings written.")
