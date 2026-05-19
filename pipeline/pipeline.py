@@ -37,20 +37,42 @@ def run():
         ingest_idealist()
         logging.info("Step 3 complete.")
 
-        logging.info("Step 4: Scoring matches...")
-        from score_matching import run as score
-        score()
+        logging.info("Step 4: Deduplicating listings...")
+        all_listings = db.select("clean_listings")
+        # Prefer org listings, then VC, then Idealist
+        source_rank = {"org": 0, "volunteerconnector": 1, "idealist": 2}
+        all_listings.sort(key=lambda r: source_rank.get(r.get("source", ""), 9))
+        seen, dup_ids = set(), []
+        for row in all_listings:
+            key = (
+                (row.get("org") or "").lower().strip(),
+                (row.get("title") or "").lower().strip(),
+            )
+            if key in seen:
+                dup_ids.append(row["id"])
+            else:
+                seen.add(key)
+        if dup_ids:
+            db.delete_ids("clean_listings", dup_ids)
+            logging.info(f"  Removed {len(dup_ids)} duplicate listings.")
+        else:
+            logging.info("  No duplicates found.")
         logging.info("Step 4 complete.")
 
-        logging.info("Step 5: Aggregating hours...")
-        from aggregate_hours import run as aggregate
-        aggregate()
+        logging.info("Step 5: Scoring matches...")
+        from score_matching import run as score
+        score()
         logging.info("Step 5 complete.")
 
-        logging.info("Step 6: Building personalized feeds...")
+        logging.info("Step 6: Aggregating hours...")
+        from aggregate_hours import run as aggregate
+        aggregate()
+        logging.info("Step 6 complete.")
+
+        logging.info("Step 7: Building personalized feeds...")
         from build_feed import run as feed
         feed()
-        logging.info("Step 6 complete.")
+        logging.info("Step 7 complete.")
 
         logging.info("Pipeline complete. All tables updated in Supabase.")
 

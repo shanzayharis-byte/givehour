@@ -56,3 +56,9 @@ def delete_all(table):
 
 def delete_where(table, column, value):
     _request("DELETE", table, params={column: f"eq.{value}"})
+
+
+def delete_ids(table, ids):
+    if not ids:
+        return
+    _request("DELETE", table, params={"id": f"in.({','.join(str(i) for i in ids)})"})

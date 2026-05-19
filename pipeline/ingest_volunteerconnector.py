@@ -17,6 +17,11 @@ CA_PROVINCE_NAMES   = {
     "Newfoundland and Labrador","Northwest Territories","Nova Scotia",
     "Nunavut","Ontario","Prince Edward Island","Quebec","Saskatchewan","Yukon"
 }
+CA_CITIES = {
+    "Vancouver","Toronto","Montreal","Calgary","Ottawa","Edmonton",
+    "Winnipeg","Halifax","Victoria","Saskatoon","Regina","Kelowna",
+    "Burnaby","Surrey","Richmond","Mississauga","Brampton","Hamilton",
+}
 CA_PROVINCES = CA_PROVINCE_NAMES | CA_PROVINCE_ABBREVS
 
 
@@ -43,19 +48,36 @@ def _is_canadian_region(region):
     return False
 
 
+def _is_canadian_org(item):
+    org_name = (item.get("organization") or {}).get("name", "")
+    for place in CA_PROVINCE_NAMES | CA_CITIES:
+        if re.search(r'\b' + re.escape(place) + r'\b', org_name, re.I):
+            return True
+    return False
+
+
 def _is_us(item):
-    if item.get("remote_or_online"):
-        return True
+    # Check country exclusions first — even remote listings can be Canada-only
     countries = item.get("audience", {}).get("countries", [])
     if countries and all(not re.search(r"united states|usa", c, re.I) for c in countries):
         return False
+
+    # Canadian org name → skip
+    if _is_canadian_org(item):
+        return False
+
+    # Canadian region in audience → skip
     regions = item.get("audience", {}).get("regions", [])
     if any(_is_canadian_region(r) for r in regions):
         return False
-    org_name = (item.get("organization") or {}).get("name", "")
-    for place in CA_PROVINCE_NAMES:
-        if re.search(r'\b' + re.escape(place) + r'\b', org_name, re.I):
+
+    # "Must live in [Canadian city]" in title → skip
+    title = (item.get("title") or "").lower()
+    if re.search(r"must live in|you must live", title):
+        all_ca = "|".join(re.escape(c.lower()) for c in CA_CITIES | CA_PROVINCE_NAMES)
+        if re.search(all_ca, title):
             return False
+
     return True
 
 
