@@ -19,7 +19,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install -r pipeline/requirements.txt
+        run: pip install -r pipeline/requirements.txt && pip list
 
       - name: Run Give Hour pipeline
         env:

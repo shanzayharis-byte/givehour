@@ -35,7 +35,9 @@ def run():
         logging.info("Pipeline complete. All 4 tables updated in Supabase.")
 
     except Exception as e:
+        import traceback
         logging.error("Pipeline failed at: " + str(e))
+        logging.error(traceback.format_exc())
         sys.exit(1)
 
 
