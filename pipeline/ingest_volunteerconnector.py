@@ -146,19 +146,17 @@ def _map(item):
     }
 
 
-def run():
+def _fetch_all(label, base_params):
     results = []
-    params  = urllib.parse.urlencode({"format": "json", "country": "United States", "page_size": 100})
+    params  = urllib.parse.urlencode(base_params)
     path    = f"{VC_BASE_PATH}?{params}"
     page    = 1
-
-    print("Fetching VolunteerConnector listings...")
+    print(f"  [{label}] fetching...")
     while path:
-        data = _get_page(path)
+        data  = _get_page(path)
         batch = data.get("results", [])
         results.extend(batch)
-        print(f"  Page {page}: {len(batch)} results (total: {len(results)})")
-
+        print(f"    Page {page}: {len(batch)} (total {len(results)})")
         next_url = data.get("next")
         if not next_url:
             break
@@ -166,11 +164,37 @@ def run():
         path   = parsed.path + ("?" + parsed.query if parsed.query else "")
         page  += 1
         time.sleep(0.1)
+    return results
 
-    us_only = [item for item in results if _is_us(item)]
-    print(f"US filter: {len(us_only)} / {len(results)} kept")
 
-    records = [_map(item) for item in us_only if item.get("id")]
+def run():
+    # Fetch 1: US-wide (captures remote/nationwide listings)
+    us_results = _fetch_all(
+        "US-wide",
+        {"format": "json", "country": "United States", "page_size": 100},
+    )
+
+    # Fetch 2: California-specific (ensures Bay Area in-person listings are included)
+    ca_results = _fetch_all(
+        "California",
+        {"format": "json", "country": "United States", "state": "California", "page_size": 100},
+    )
+
+    # Combine, deduplicate by item id
+    seen     = set()
+    combined = []
+    for item in us_results + ca_results:
+        iid = item.get("id")
+        if iid and iid not in seen:
+            seen.add(iid)
+            combined.append(item)
+
+    print(f"Combined: {len(combined)} unique listings")
+
+    filtered = [item for item in combined if _is_us(item)]
+    print(f"US/Canada filter: {len(filtered)} / {len(combined)} kept")
+
+    records = [_map(item) for item in filtered if item.get("id")]
     print(f"Mapped {len(records)} VolunteerConnector listings")
 
     db.delete_where("clean_listings", "source", "volunteerconnector")
