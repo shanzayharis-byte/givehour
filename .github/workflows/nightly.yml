@@ -36,6 +36,13 @@ jobs:
           echo "--- packages in venv ---"
           venv/bin/pip list
 
+      - name: Show checked-out pipeline files
+        run: |
+          echo "--- git commit ---"
+          git log -1 --oneline
+          echo "--- supabase_client.py ---"
+          cat pipeline/supabase_client.py
+
       - name: Run Give Hour pipeline
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
