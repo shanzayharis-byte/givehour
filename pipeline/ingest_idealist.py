@@ -7,6 +7,36 @@ import uuid
 
 import supabase_client as db
 
+_CA_PROVINCE_NAMES = {
+    "Alberta","British Columbia","Manitoba","New Brunswick",
+    "Newfoundland and Labrador","Northwest Territories","Nova Scotia",
+    "Nunavut","Ontario","Prince Edward Island","Quebec","Saskatchewan","Yukon"
+}
+_CA_CITIES = {
+    "Vancouver","Toronto","Montreal","Calgary","Ottawa","Edmonton",
+    "Winnipeg","Halifax","Victoria","Saskatoon","Regina","Kelowna",
+    "Burnaby","Surrey","Richmond","Mississauga","Brampton","Hamilton",
+}
+_CA_PROVINCE_ABBREVS = {"AB","BC","MB","NB","NL","NS","NT","NU","ON","PE","QC","SK","YT"}
+
+
+def _is_canadian(item):
+    org   = item.get("org") or item.get("organization") or {}
+    org_name = org.get("name") or org.get("organizationName") or ""
+    title = item.get("name") or item.get("title") or ""
+    addr  = item.get("address") or {}
+    state = addr.get("state") or addr.get("province") or ""
+
+    text = (org_name + " " + title).lower()
+    if re.search(r'\bcanada\b|\bcanadian\b', text, re.I):
+        return True
+    for place in _CA_PROVINCE_NAMES | _CA_CITIES:
+        if re.search(r'\b' + re.escape(place) + r'\b', text, re.I):
+            return True
+    if state in _CA_PROVINCE_ABBREVS or state in _CA_PROVINCE_NAMES:
+        return True
+    return False
+
 IDEALIST_KEY  = "66355e8e431709c2444478cc2e1198b0"
 IDEALIST_HOST = "api-sandbox.idealist.org"
 _NAMESPACE    = uuid.UUID("00000000-0000-0000-0000-000000000001")
@@ -154,7 +184,10 @@ def run():
         print("No Idealist listings fetched. Skipping.")
         return
 
-    records = [_map(item) for item in results if item.get("id")]
+    us_only = [item for item in results if item.get("id") and not _is_canadian(item)]
+    print(f"Canadian filter: {len(us_only)} / {len(results)} kept")
+
+    records = [_map(item) for item in us_only]
     teen_count = sum(1 for r in records if r["age_group"] in ("Teens (13-17)", "All Ages", "Open"))
     print(f"Mapped {len(records)} listings ({teen_count} open to teens)")
 

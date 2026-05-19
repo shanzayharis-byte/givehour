@@ -48,10 +48,12 @@ def _is_canadian_region(region):
     return False
 
 
-def _is_canadian_org(item):
-    org_name = (item.get("organization") or {}).get("name", "")
+def _is_canadian_text(text):
+    """Return True if text contains a clear Canadian indicator."""
+    if re.search(r'\bcanada\b|\bcanadian\b', text, re.I):
+        return True
     for place in CA_PROVINCE_NAMES | CA_CITIES:
-        if re.search(r'\b' + re.escape(place) + r'\b', org_name, re.I):
+        if re.search(r'\b' + re.escape(place) + r'\b', text, re.I):
             return True
     return False
 
@@ -62,21 +64,22 @@ def _is_us(item):
     if countries and all(not re.search(r"united states|usa", c, re.I) for c in countries):
         return False
 
-    # Canadian org name → skip
-    if _is_canadian_org(item):
+    # Canadian keyword in org name → skip
+    org_name = (item.get("organization") or {}).get("name", "")
+    if _is_canadian_text(org_name):
         return False
 
-    # Canadian region in audience → skip
+    # Canadian region in audience → skip (even for remote listings)
     regions = item.get("audience", {}).get("regions", [])
     if any(_is_canadian_region(r) for r in regions):
         return False
+    if any(_is_canadian_text(r) for r in regions):
+        return False
 
-    # "Must live in [Canadian city]" in title → skip
-    title = (item.get("title") or "").lower()
-    if re.search(r"must live in|you must live", title):
-        all_ca = "|".join(re.escape(c.lower()) for c in CA_CITIES | CA_PROVINCE_NAMES)
-        if re.search(all_ca, title):
-            return False
+    # "Canada" or Canadian city in title → skip
+    title = item.get("title") or ""
+    if _is_canadian_text(title):
+        return False
 
     return True
 
