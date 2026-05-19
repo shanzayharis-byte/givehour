@@ -2,6 +2,8 @@ import sys
 import logging
 from datetime import datetime
 
+import supabase_client as db
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s — %(levelname)s — %(message)s'
@@ -12,6 +14,12 @@ def run():
     logging.info("Give Hour pipeline starting — " + datetime.now().strftime("%Y-%m-%d %H:%M"))
 
     try:
+        # Clear downstream tables first so FK constraints don't block clean_listings deletion
+        logging.info("Pre-step: clearing downstream tables...")
+        db.delete_all("personalized_feed")
+        db.delete_all("match_scores")
+        logging.info("Pre-step complete.")
+
         logging.info("Step 1: Cleaning listings...")
         from clean_listings import run as clean
         clean()
