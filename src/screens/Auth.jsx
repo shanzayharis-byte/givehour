@@ -264,22 +264,8 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
       <>
       {wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', flex: isDesktop ? 'none' : 1, minHeight: 0, overflowY: isDesktop ? 'visible' : 'auto', background: T.card, height: isDesktop ? 'auto' : '100%' }}>
-        <div style={{ background: 'linear-gradient(150deg, #0E7A3C 0%, #18A050 55%, #25C068 100%)', padding: '20px 24px 22px', textAlign: 'center', position: 'relative', overflow: 'hidden', flexShrink: 0 }}>
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-
-          {/* logo */}
-          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', background: '#fff', marginBottom: 10, boxShadow: '0 6px 20px rgba(0,0,0,0.22)', padding: 8 }}>
-            <img src="/logo.png" alt="Give Hour" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
-          </div>
-
-          <h1 style={{ fontSize: 24, fontWeight: 800, lineHeight: 1.1, margin: '0 0 6px', color: '#fff', position: 'relative', letterSpacing: '-0.02em' }}>Give Hour</h1>
-
-          {/* by-a-teen badge */}
-          <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.18)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '4px 11px', borderRadius: 20, marginBottom: 10, position: 'relative', letterSpacing: '0.02em' }}>
-            ✨ Built by a teen · for teens
-          </div>
-
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.9)', maxWidth: 320, lineHeight: 1.5, margin: '0 auto', position: 'relative' }}>Find teen-friendly opportunities, log every hour you volunteer (even from school or elsewhere), and turn it all into a service letter when you need one.</p>
+        <div style={{ flexShrink: 0 }}>
+          <img src="/homepage.png" alt="Give Hour — Helping teens turn hours into impact" style={{ width: '100%', display: 'block', objectFit: 'cover' }} />
         </div>
 
         <div style={{ display: 'flex', borderBottom: `1px solid ${T.border}` }}>
