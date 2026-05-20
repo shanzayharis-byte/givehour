@@ -265,7 +265,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
       {wrapCard(
       <div style={{ display: 'flex', flexDirection: 'column', flex: isDesktop ? 'none' : 1, minHeight: 0, overflowY: isDesktop ? 'visible' : 'auto', background: T.card, height: isDesktop ? 'auto' : '100%' }}>
         <div style={{ flexShrink: 0 }}>
-          <img src="/homepage.png" alt="Give Hour — Helping teens turn hours into impact" style={{ width: '100%', display: 'block', objectFit: 'cover' }} />
+          <img src="/GiveHours-homepage.png" alt="Give Hour — Helping teens turn hours into impact" style={{ width: '100%', display: 'block', objectFit: 'cover' }} />
         </div>
 
         <div style={{ display: 'flex', borderBottom: `1px solid ${T.border}` }}>
