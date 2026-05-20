@@ -318,9 +318,9 @@ export default function Impact({ user, onNavigate }) {
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ fontSize: 28 }}>🎓</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>Draft my College Community Essay</div>
-              <div style={{ fontSize: 11, color: T.primary, fontWeight: 600, marginBottom: 6 }}>"What have you done to make your community a better place?"</div>
-              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.6, marginBottom: 12 }}>Log your hours and we'll write your first draft — answering one of the most common college application essay questions about community service.</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: 2 }}>Build my Community Impact Story</div>
+              <div style={{ fontSize: 11, color: T.primary, fontWeight: 600, marginBottom: 6 }}>Everything you've done, turned into a real story</div>
+              <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.6, marginBottom: 12 }}>Log your hours and we'll turn everything you've done into a story worth telling.</div>
               {(() => {
                 const ready = totalHours >= 25 && orgCount >= 2
                 const missing = []

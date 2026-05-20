@@ -304,7 +304,7 @@ export default function Auth({ onLoggedIn, onGuest, isDesktop, initialScreen, is
           {[
             { icon: '🔍', title: 'Find teen-friendly opportunities', sub: 'Most volunteer sites are built for adults. Give Hour filters for orgs that actually accept teens.' },
             { icon: '⏱', title: 'Track every hour in one place', sub: 'School events, religious org, family thing, opportunities you found here. Log it all so nothing gets lost when college apps come around.', track: true },
-            { icon: '🎓', title: 'Draft my College Community Essay', sub: 'Log your hours and we\'ll write your first draft — answering one of the most common college application essay questions about community service.', cta: true },
+            { icon: '🎓', title: 'Build my Community Impact Story', sub: "Log your hours and we'll turn everything you've done into a story worth telling.", cta: true },
           ].map(s => (
             <div key={s.icon} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 14 }}>
               <div style={{ width: 34, height: 34, borderRadius: '50%', background: T.primaryLight, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>{s.icon}</div>
